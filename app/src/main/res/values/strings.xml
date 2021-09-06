@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PartialScreenshot</string>
+    <string name="start">Start Crop Window</string>
+    <string name="recording">Is waiting to take screenshot</string>
+</resources>

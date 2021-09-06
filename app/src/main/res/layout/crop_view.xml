@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/chat_head"
+
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    custom:outsideColor="@color/back_second"
+    custom:cornerSize2="24dp"
+    custom:edgeColor="@color/white"
+    custom:fillColor="@color/back_main"
+    custom:closeDrawable = "@drawable/ic_baseline_cancel_24"
+    custom:layout_constraintBottom_toBottomOf="parent"
+    custom:layout_constraintEnd_toEndOf="parent"
+    custom:layout_constraintStart_toStartOf="parent"
+    custom:layout_constraintTop_toTopOf="parent"
+    custom:minimumSide="72dp" />
+
+
