@@ -16,8 +16,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import com.example.android.partialscreenshot.databinding.ActivityMainBinding
-import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowListener
 import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowService
+import com.example.android.partialscreenshot.utils.FloatingWindowListener
 import kotlin.properties.Delegates
 
 //Use this variables instead of OnActivityResult
@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
     /**
      * @return mData, which contains the permission used to take the screenshot
      */
-    override fun getIntentFromMain(): Intent? {
+    override fun getDataToRecordScreen(): Intent? {
         return mData;
     }
 }

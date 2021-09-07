@@ -20,6 +20,9 @@ import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowService.Companion.manager
+import com.example.android.partialscreenshot.utils.OnMoveCropWindowListener
+import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListener
+import com.example.android.partialscreenshot.utils.removeMyView
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -174,6 +177,8 @@ class CropView @JvmOverloads constructor( context: Context,
         secondRectPoints[3].y = minimumSideLength
     }
 
+
+    //region: Overrides
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         if (isInitialized){
@@ -202,72 +207,6 @@ class CropView @JvmOverloads constructor( context: Context,
 
         }
     }
-
-    private fun setCloseDrawable(canvas: Canvas) {
-
-         closeDrawableLeft = secondRectPoints[1].x - (secondRectPoints[1].x - secondRectPoints[0].x)/2 - halfCloseDrawableSize
-         closeDrawableTop = secondRectPoints[3].y - (secondRectPoints[3].y - secondRectPoints[1].y)/2 - halfCloseDrawableSize
-         closeDrawableBottom = closeDrawableTop + 2 * halfCloseDrawableSize
-         closeDrawableRight = closeDrawableLeft + 2 * halfCloseDrawableSize
-
-        closeDrawable?.setBounds(
-                closeDrawableLeft ,
-            closeDrawableTop ,
-            closeDrawableRight,
-            closeDrawableBottom,
-            )
-
-        closeDrawable?.draw(canvas)
-    }
-
-    private fun drawMyBackground(canvas: Canvas) {
-        //set paint to draw outside color, fill
-
-
-        //top rectangle
-        canvas.drawRect(0f, 0f, canvas.width.toFloat(),
-            (secondRectPoints[0].y + halfDrawableSize).toFloat(), paintForBack)
-        //left rectangle
-        canvas.drawRect(0f,
-            (secondRectPoints[0].y + halfDrawableSize).toFloat(),
-            (secondRectPoints[0].x + halfDrawableSize).toFloat(), canvas.height.toFloat(), paintForBack)
-        //right rectangle
-        canvas.drawRect(
-            (secondRectPoints[1].x + halfDrawableSize ).toFloat(),
-            (secondRectPoints[0].y + halfDrawableSize).toFloat(),
-            canvas.width.toFloat(),
-            (secondRectPoints[3].y + halfDrawableSize).toFloat(),
-            paintForBack)
-        //bottom rectangle
-        canvas.drawRect(
-            (secondRectPoints[0].x + halfDrawableSize).toFloat(),
-            (secondRectPoints[3].y + halfDrawableSize).toFloat(),
-            canvas.width.toFloat(),
-            canvas.height.toFloat(),
-            paintForBack)
-    }
-
-    private fun drawMyRect(canvas: Canvas, rectToDraw: Array<Point>) {
-
-
-           canvas. drawRect(
-               rectToDraw[0].x.plus(halfDrawableSize).toFloat(),
-               rectToDraw[1].y.plus(halfDrawableSize).toFloat(),
-               rectToDraw[3].x.plus(halfDrawableSize).toFloat(),
-               rectToDraw[2].y.plus(halfDrawableSize).toFloat(),
-                paint)
-
-
-    }
-
-    fun setWindowManagerCallback(onVIewCropWindowListener: OnMoveCropWindowListener){
-        this.callBackForWindowManager = onVIewCropWindowListener
-    }
-
-    fun setOnRequestTakeScreenShotListener(onRequestTakeScreenShotListener: OnRequestTakeScreenShotListener){
-        this.requestTakeScreenShotCallback = onRequestTakeScreenShotListener
-    }
-
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
         when(event?.action){
@@ -313,39 +252,39 @@ class CropView @JvmOverloads constructor( context: Context,
                     )
                 }
 
-                    when(moveType){
-                        Type.BOTTOM_RIGHT -> {
-                            resizeXRight(event,corner)
-                            resizeYBottom(event,corner)
-                        }
-
-                        Type.TOP_RIGHT ->{
-                            resizeXRight(event,corner)
-                            resizeYTop(event,corner)
-                        }
-                        Type.TOP_LEFT -> {
-                            resizeXLeft(event, corner)
-                            resizeYTop(event, corner)
-                        }
-                        Type.BOTTOM_LEFT -> {
-                            resizeXLeft(event, corner)
-                            resizeYBottom(event,corner)
-                        }
-                        Type.LEFT -> {
-                            resizeXLeft(event,corner)
-                        }
-                        Type.TOP -> {
-                            resizeYTop(event,corner)
-                        }
-                        Type.RIGHT -> {
-                            resizeXRight(event,corner)
-                        }
-                        Type.BOTTOM -> {
-                            resizeYBottom(event, corner)
-                        }
-                        Type.CENTER -> callBackForWindowManager.onMove(event)
-                        null -> {}
+                when(moveType){
+                    Type.BOTTOM_RIGHT -> {
+                        resizeXRight(event,corner)
+                        resizeYBottom(event,corner)
                     }
+
+                    Type.TOP_RIGHT ->{
+                        resizeXRight(event,corner)
+                        resizeYTop(event,corner)
+                    }
+                    Type.TOP_LEFT -> {
+                        resizeXLeft(event, corner)
+                        resizeYTop(event, corner)
+                    }
+                    Type.BOTTOM_LEFT -> {
+                        resizeXLeft(event, corner)
+                        resizeYBottom(event,corner)
+                    }
+                    Type.LEFT -> {
+                        resizeXLeft(event,corner)
+                    }
+                    Type.TOP -> {
+                        resizeYTop(event,corner)
+                    }
+                    Type.RIGHT -> {
+                        resizeXRight(event,corner)
+                    }
+                    Type.BOTTOM -> {
+                        resizeYBottom(event, corner)
+                    }
+                    Type.CENTER -> callBackForWindowManager.onMove(event)
+                    null -> {}
+                }
 
 
 
@@ -356,58 +295,89 @@ class CropView @JvmOverloads constructor( context: Context,
         }
         return true
     }
-
-    private fun isToClose(event: MotionEvent): Boolean {
-        return event.x < closeDrawableRight && event.x > closeDrawableLeft
-                && event.y < closeDrawableBottom && event.y > closeDrawableTop
-    }
-
-    private fun getMoveType(xPressed: Int, yPressed: Int, rect: Rect): Type? {
-
-        return if (abs(xPressed - rect.right) <= touchRadius && abs(yPressed - rect.bottom) <= touchRadius) {
-            corner = Type.getCorner(Type.BOTTOM_RIGHT)
-            Type.BOTTOM_RIGHT
-        }
-        else if (abs(xPressed - rect.left) <= touchRadius && abs(yPressed - rect.bottom) <= touchRadius) {
-            corner = Type.getCorner(Type.BOTTOM_LEFT)
-            Type.BOTTOM_LEFT
-        }
-        else if (abs(xPressed - rect.right) <= touchRadius && abs(yPressed - rect.top) <= touchRadius) {
-            corner = Type.getCorner(Type.TOP_RIGHT)
-            Type.TOP_RIGHT
-        }
-        else if (abs(xPressed - rect.left) <= touchRadius && abs(yPressed - rect.top) <= touchRadius) {
-            corner = Type.getCorner(Type.TOP_LEFT)
-            Type.TOP_LEFT
-        }
-        else if (xPressed > rect.left && xPressed < rect.right && abs(yPressed - rect.top) <= touchRadius) {
-            corner = Type.getCorner(Type.TOP)
-            Type.TOP
-        }
-
-        else if (xPressed > rect.left && xPressed < rect.right && abs(yPressed - rect.bottom) <= touchRadius) {
-            corner = Type.getCorner(Type.BOTTOM)
-            Type.BOTTOM
-        }
-
-        else if (abs(xPressed - rect.left) <= touchRadius && yPressed > rect.top && yPressed < rect.bottom){
-            corner = Type.getCorner(Type.LEFT)
-            Type.LEFT
-        }
-        else if (abs(xPressed - rect.right) <= touchRadius && yPressed > rect.top && yPressed < rect.bottom){
-            corner = Type.getCorner(Type.RIGHT)
-            Type.RIGHT
-        }
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        widthConstraint = MeasureSpec.getSize(widthMeasureSpec)
+        if (newMeasureSpecSizeForWidth == 0) newMeasureSpecSizeForWidth = widthConstraint
 
 
-        else {
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        heightConstraint = MeasureSpec.getSize(heightMeasureSpec)
+        if (newMeasureSpecSizeForHeight == 0) newMeasureSpecSizeForHeight = heightConstraint
 
-            Type.CENTER
-        }
+        rectangleFullWIdth = widthOfRect + 2 * halfDrawableSize
+
+        val mLayoutWidth = getOnMeasureSpec(
+            true,
+            widthMode,
+            widthConstraint,
+            rectangleFullWIdth
+        )
+
+        rectangleFullSize = heightOfRect + 2 * halfDrawableSize
+
+        val mLayoutHeight =  getOnMeasureSpec(
+            false,
+            heightMode,
+            heightConstraint,
+            rectangleFullSize
+        )
+        widthConstraint = newMeasureSpecSizeForWidth
+        heightConstraint = newMeasureSpecSizeForHeight
+
+        setMeasuredDimension(mLayoutWidth, mLayoutHeight)
 
     }
 
-    // region: Private methods
+    //region: Helper to draw
+    private fun drawMyRect(canvas: Canvas, rectToDraw: Array<Point>) {
+
+
+           canvas. drawRect(
+               rectToDraw[0].x.plus(halfDrawableSize).toFloat(),
+               rectToDraw[1].y.plus(halfDrawableSize).toFloat(),
+               rectToDraw[3].x.plus(halfDrawableSize).toFloat(),
+               rectToDraw[2].y.plus(halfDrawableSize).toFloat(),
+                paint)
+
+
+    }
+    private fun drawMyBackground(canvas: Canvas) {
+        //set paint to draw outside color, fill
+
+
+        //top rectangle
+        canvas.drawRect(0f, 0f, canvas.width.toFloat(),
+            (secondRectPoints[0].y + halfDrawableSize).toFloat(), paintForBack)
+        //left rectangle
+        canvas.drawRect(0f,
+            (secondRectPoints[0].y + halfDrawableSize).toFloat(),
+            (secondRectPoints[0].x + halfDrawableSize).toFloat(), canvas.height.toFloat(), paintForBack)
+        //right rectangle
+        canvas.drawRect(
+            (secondRectPoints[1].x + halfDrawableSize ).toFloat(),
+            (secondRectPoints[0].y + halfDrawableSize).toFloat(),
+            canvas.width.toFloat(),
+            (secondRectPoints[3].y + halfDrawableSize).toFloat(),
+            paintForBack)
+        //bottom rectangle
+        canvas.drawRect(
+            (secondRectPoints[0].x + halfDrawableSize).toFloat(),
+            (secondRectPoints[3].y + halfDrawableSize).toFloat(),
+            canvas.width.toFloat(),
+            canvas.height.toFloat(),
+            paintForBack)
+    }
+
+    //region: Set callbacks
+    fun setWindowManagerCallback(onVIewCropWindowListener: OnMoveCropWindowListener){
+        this.callBackForWindowManager = onVIewCropWindowListener
+    }
+    fun setOnRequestTakeScreenShotListener(onRequestTakeScreenShotListener: OnRequestTakeScreenShotListener){
+        this.requestTakeScreenShotCallback = onRequestTakeScreenShotListener
+    }
+
+    // region: Calculate offset and resize and get move type
     private fun calculateTouchOffset(touchX: Int, touchY: Int, rect: Rect) {
         var touchOffsetX = 0
         var touchOffsetY = 0
@@ -456,19 +426,6 @@ class CropView @JvmOverloads constructor( context: Context,
         mTouchOffset.x = touchOffsetX
         mTouchOffset.y = touchOffsetY
     }
-    private fun getOffset(left: Int, top: Int, corner: Int): Point {
-        val thisOffset = Point()
-        if (corner == 3) {
-            thisOffset.x = left - secondRectPoints[corner].x
-            thisOffset.y = top - secondRectPoints[corner].y
-        }else {
-            thisOffset.x = 0
-            thisOffset.y = 0
-        }
-        return thisOffset
-    }
-
-
     private fun resizeYBottom(event: MotionEvent, corner: Int): Int {
 
         //amount of pixels moved
@@ -513,7 +470,6 @@ class CropView @JvmOverloads constructor( context: Context,
 
         return start.y
     }
-
     private fun resizeYTop(event: MotionEvent, corner: Int): Int {
 
         //amount of pixels moved
@@ -633,7 +589,52 @@ class CropView @JvmOverloads constructor( context: Context,
         start.x = secondRectPoints[corner].x
         return start.x
     }
+    private fun getMoveType(xPressed: Int, yPressed: Int, rect: Rect): Type? {
 
+        return if (abs(xPressed - rect.right) <= touchRadius && abs(yPressed - rect.bottom) <= touchRadius) {
+            corner = Type.getCorner(Type.BOTTOM_RIGHT)
+            Type.BOTTOM_RIGHT
+        }
+        else if (abs(xPressed - rect.left) <= touchRadius && abs(yPressed - rect.bottom) <= touchRadius) {
+            corner = Type.getCorner(Type.BOTTOM_LEFT)
+            Type.BOTTOM_LEFT
+        }
+        else if (abs(xPressed - rect.right) <= touchRadius && abs(yPressed - rect.top) <= touchRadius) {
+            corner = Type.getCorner(Type.TOP_RIGHT)
+            Type.TOP_RIGHT
+        }
+        else if (abs(xPressed - rect.left) <= touchRadius && abs(yPressed - rect.top) <= touchRadius) {
+            corner = Type.getCorner(Type.TOP_LEFT)
+            Type.TOP_LEFT
+        }
+        else if (xPressed > rect.left && xPressed < rect.right && abs(yPressed - rect.top) <= touchRadius) {
+            corner = Type.getCorner(Type.TOP)
+            Type.TOP
+        }
+
+        else if (xPressed > rect.left && xPressed < rect.right && abs(yPressed - rect.bottom) <= touchRadius) {
+            corner = Type.getCorner(Type.BOTTOM)
+            Type.BOTTOM
+        }
+
+        else if (abs(xPressed - rect.left) <= touchRadius && yPressed > rect.top && yPressed < rect.bottom){
+            corner = Type.getCorner(Type.LEFT)
+            Type.LEFT
+        }
+        else if (abs(xPressed - rect.right) <= touchRadius && yPressed > rect.top && yPressed < rect.bottom){
+            corner = Type.getCorner(Type.RIGHT)
+            Type.RIGHT
+        }
+
+
+        else {
+
+            Type.CENTER
+        }
+
+    }
+
+    //region: Position the rectangle
     fun setNewPositionOfSecondRect(newX: Int, newY: Int) {
 
         this.newX =  max(0, newX)
@@ -659,7 +660,6 @@ class CropView @JvmOverloads constructor( context: Context,
 
 
     }
-
     private fun changeWrapMode(mode: Int){
 
         val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -697,44 +697,29 @@ class CropView @JvmOverloads constructor( context: Context,
 
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
-        widthConstraint = MeasureSpec.getSize(widthMeasureSpec)
-        if (newMeasureSpecSizeForWidth == 0) newMeasureSpecSizeForWidth = widthConstraint
+    //region: close feature
+    private fun isToClose(event: MotionEvent): Boolean {
+        return event.x < closeDrawableRight && event.x > closeDrawableLeft
+                && event.y < closeDrawableBottom && event.y > closeDrawableTop
+    }
+    private fun setCloseDrawable(canvas: Canvas) {
 
+        closeDrawableLeft = secondRectPoints[1].x - (secondRectPoints[1].x - secondRectPoints[0].x)/2 - halfCloseDrawableSize
+        closeDrawableTop = secondRectPoints[3].y - (secondRectPoints[3].y - secondRectPoints[1].y)/2 - halfCloseDrawableSize
+        closeDrawableBottom = closeDrawableTop + 2 * halfCloseDrawableSize
+        closeDrawableRight = closeDrawableLeft + 2 * halfCloseDrawableSize
 
-        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
-        heightConstraint = MeasureSpec.getSize(heightMeasureSpec)
-        if (newMeasureSpecSizeForHeight == 0) newMeasureSpecSizeForHeight = heightConstraint
-
-        rectangleFullWIdth = widthOfRect + 2 * halfDrawableSize
-
-        val mLayoutWidth = getOnMeasureSpec(
-            true,
-            widthMode,
-            widthConstraint,
-            rectangleFullWIdth
+        closeDrawable?.setBounds(
+            closeDrawableLeft ,
+            closeDrawableTop ,
+            closeDrawableRight,
+            closeDrawableBottom,
         )
 
-        rectangleFullSize = heightOfRect + 2 * halfDrawableSize
-
-        val mLayoutHeight =  getOnMeasureSpec(
-            false,
-            heightMode,
-            heightConstraint,
-            rectangleFullSize
-        )
-        widthConstraint = newMeasureSpecSizeForWidth
-        heightConstraint = newMeasureSpecSizeForHeight
-
-        setMeasuredDimension(mLayoutWidth, mLayoutHeight)
-
+        closeDrawable?.draw(canvas)
     }
 
-    private fun getOnMeasureSpec( isMeasuringWidth: Boolean,
-        measureSpecMode: Int,
-        measureSpecSize: Int, desiredSize: Int
-    ): Int {
+    private fun getOnMeasureSpec( isMeasuringWidth: Boolean, measureSpecMode: Int, measureSpecSize: Int, desiredSize: Int): Int {
 
         // Measure Width
         return when (measureSpecMode) {
@@ -746,12 +731,10 @@ class CropView @JvmOverloads constructor( context: Context,
                  } else {
                      newMeasureSpecSizeForHeight = measureSpecSize
                  }
-                Log.i("MyVIewAgain","exactly: Is measuring width: $isMeasuringWidth : $measureSpecSize")
                  measureSpecSize
              }
              MeasureSpec.AT_MOST -> {
                  // Can't be bigger than...; match_parent value
-                 Log.i("MyVIewAgain","at most: Is measuring width: $isMeasuringWidth : $measureSpecSize")
                 if (isMeasuringWidth){
                     min(desiredSize, newMeasureSpecSizeForWidth)
                 } else {
@@ -770,81 +753,5 @@ class CropView @JvmOverloads constructor( context: Context,
 
 }
 
-interface OnMoveCropWindowListener{
-   fun onMove(event: MotionEvent?)
-   fun onClose()
-}
-
-interface OnRequestTakeScreenShotListener{
-    fun onRequestScreenShot(rect: Rect)
-}
-
-fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int, initY: Int){
-    val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-    } else {
-        WindowManager.LayoutParams.TYPE_PHONE
-    }
-
-    val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
-    val params = WindowManager.LayoutParams(
-        mode,
-        mode,
-        layoutFlag,
-        flags,
-        PixelFormat.TRANSLUCENT
-    )
-
-    //Specify the view position
-    params.gravity = Gravity.TOP or Gravity.START    //Initially view will be added to top-left corner
-    params.x = initX
-    params.y = initY
 
 
-    myFloatingView.setWindowManagerCallback(object : OnMoveCropWindowListener {
-        private var initialX = 0
-        private var initialY = 0
-        private var initialTouchX = 0f
-        private var initialTouchY = 0f
-        override fun onMove(event: MotionEvent?) {
-            when (event?.action) {
-                ACTION_DOWN -> {
-
-                    //remember the initial position.
-                    initialX = params.x
-                    initialY = params.y
-
-                    //get the touch location
-                    initialTouchX = event.rawX
-                    initialTouchY = event.rawY
-                }
-                ACTION_UP -> {
-
-                }
-                ACTION_MOVE -> {
-                    //Calculate the X and Y coordinates of the view.
-                    params.x = initialX + (event.rawX - initialTouchX).toInt()
-                    params.y = initialY + (event.rawY - initialTouchY).toInt()
-
-
-                    //Update the layout with new X & Y coordinate
-                    updateViewLayout(myFloatingView, params)
-                    myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
-
-                }
-            }
-
-        }
-
-        override fun onClose() {
-          removeView(myFloatingView)
-        }
-
-    })
-
-   addView(myFloatingView, params)
-}
-fun WindowManager.removeMyView(myFloatingView: CropView, mode: Int, newX: Int, newY: Int){
-    removeView(myFloatingView)
-    addMyCropView(myFloatingView, mode, newX, newY)
-}
