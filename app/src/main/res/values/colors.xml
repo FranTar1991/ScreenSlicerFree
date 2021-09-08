@@ -11,7 +11,7 @@
     <color name="transparent">#2B23200F</color>
     <color name="red">#F44336</color>
     <color name="colorAccent">#F44336</color>
-    <color name="back_second">#9B0C0C0C</color>
+    <color name="back_second">#D2009688</color>
     <color name="back_main">#590C0C0C</color>
 
 </resources>

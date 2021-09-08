@@ -183,7 +183,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                 PixelFormat.RGBA_8888, 2).apply {
                 setOnImageAvailableListener(ImageAvailableListener(), mHandler)
             }
-        mVirtualDisplay = mMediaProjection!!.createVirtualDisplay(
+        mVirtualDisplay = mMediaProjection?.createVirtualDisplay(
             SCREENCAP_NAME,
             mWidth,
             mHeight,
@@ -249,8 +249,12 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                     // create bitmap
                     bitmap = Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888
                     ).apply {
-                        this.copyPixelsFromBuffer(buffer)
-                       cropBaseBitmap(this)
+
+                        this?.apply {
+                            this.copyPixelsFromBuffer(buffer)
+                            cropBaseBitmap(this)
+                        }
+
                     }
                 }
             }
@@ -262,14 +266,17 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
         }
     }
     private fun cropBaseBitmap(bitmap: Bitmap) {
-        val croppedBitmap: Bitmap = Bitmap.createBitmap(
+
+        floatingWindowService.floatingView.croppedImage = Bitmap.createBitmap(
             bitmap,
             imageCoordinatesRect.left,
             imageCoordinatesRect.top,
             imageCoordinatesRect.width(),
             imageCoordinatesRect.height()
         )
-        saveBitmap(croppedBitmap)
+
+        Log.i("MyImageCropped","image cropped")
+
     }
     private fun saveBitmap(bitmapToSave: Bitmap){
        val fos = FileOutputStream(mStoreDir + "/myscreen_" + getCurrentTimeStamp() + ".png")
@@ -311,7 +318,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
     }
     inner class ImageAvailableListener : ImageReader.OnImageAvailableListener {
         override fun onImageAvailable(reader: ImageReader) {
-            if (IMAGES_PRODUCED <= 8) {
+            if (IMAGES_PRODUCED == 0) {
 
                 setBitmap()
 

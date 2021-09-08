@@ -2,6 +2,7 @@ package com.example.android.partialscreenshot.utils
 
 import android.graphics.PixelFormat
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
@@ -65,6 +66,7 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
         }
 
         override fun onClose() {
+            Log.i("MyWindows","Closing the window")
             removeView(myFloatingView)
         }
 

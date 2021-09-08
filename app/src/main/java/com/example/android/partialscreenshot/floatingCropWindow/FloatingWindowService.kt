@@ -16,7 +16,7 @@ import com.example.android.partialscreenshot.utils.addMyCropView
 
 class FloatingWindowService: Service() {
 
-    private lateinit var floatingView: CropView
+     lateinit var floatingView: CropView
     private var mData: Intent? = null
     private lateinit var screenShotTaker: ScreenShotTaker
 

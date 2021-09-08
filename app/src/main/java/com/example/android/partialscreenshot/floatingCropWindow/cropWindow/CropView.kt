@@ -1,10 +1,12 @@
 package com.example.android.partialscreenshot.floatingCropWindow.cropWindow
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
@@ -15,7 +17,10 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 import android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+import android.widget.ImageView
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.android.partialscreenshot.R
@@ -47,11 +52,14 @@ enum class Type {
 
 }
 typealias styles = R.styleable
-class CropView @JvmOverloads constructor( context: Context,
-                                          attrs: AttributeSet? = null,
-                                          defStyleAttr: Int = 0): View(context,attrs, defStyleAttr) {
+@SuppressLint("AppCompatCustomView")
+class CropView @JvmOverloads constructor(context: Context,
+                                         attrs: AttributeSet? = null,
+                                         defStyleAttr: Int = 0): ImageView(context,attrs, defStyleAttr) {
 
 
+    private var isFirstLaunch: Boolean = true
+    public var croppedImage: Bitmap? = null
     private lateinit var coordinatesRect: Rect
     private lateinit var mainRect: Rect
     private var closeDrawableRight: Int = 0
@@ -106,10 +114,10 @@ class CropView @JvmOverloads constructor( context: Context,
 
         minimumSideLength = getDimensionPixelSize(styles.CropView_minimumSide, 20)
 
-        widthOfRect = minimumSideLength
-        heightOfRect = minimumSideLength
-        xSide = minimumSideLength
-        ySide = minimumSideLength
+        widthOfRect = minimumSideLength * 2
+        heightOfRect = minimumSideLength * 2
+        xSide = minimumSideLength * 2
+        ySide = minimumSideLength * 2
 
        halfCloseDrawableSize = (getDimensionPixelSize(styles.CropView_cornerSize2, 20))/2
         outsideColor = getColor(styles.CropView_outsideColor, Color.BLACK)
@@ -155,26 +163,26 @@ class CropView @JvmOverloads constructor( context: Context,
         mainRectPoints[0].x = 0
         mainRectPoints[0].y = 0
 
-        mainRectPoints[1].x = minimumSideLength
+        mainRectPoints[1].x = minimumSideLength *2
         mainRectPoints[1].y = 0
 
         mainRectPoints[2].x = 0
-        mainRectPoints[2].y = minimumSideLength
+        mainRectPoints[2].y = minimumSideLength*2
 
-        mainRectPoints[3].x = minimumSideLength
-        mainRectPoints[3].y = minimumSideLength
+        mainRectPoints[3].x = minimumSideLength*2
+        mainRectPoints[3].y = minimumSideLength*2
 
         secondRectPoints[0].x = 0
         secondRectPoints[0].y = 0
 
-        secondRectPoints[1].x = minimumSideLength
+        secondRectPoints[1].x = minimumSideLength*2
         secondRectPoints[1].y = 0
 
         secondRectPoints[2].x = 0
-        secondRectPoints[2].y = minimumSideLength
+        secondRectPoints[2].y = minimumSideLength*2
 
-        secondRectPoints[3].x = minimumSideLength
-        secondRectPoints[3].y = minimumSideLength
+        secondRectPoints[3].x = minimumSideLength*2
+        secondRectPoints[3].y = minimumSideLength*2
     }
 
 
@@ -185,22 +193,39 @@ class CropView @JvmOverloads constructor( context: Context,
 
 
            canvas?.apply {
-               if (inMatchParentMode){
 
+               paint.apply {
+                   style = Paint.Style.STROKE
+                   color = edgeColor
+               }
+
+               if (inMatchParentMode){
+                   setImageBitmap(null)
+                   drawMyBackground(this)
                    drawMyRect(this, secondRectPoints)
                    setCloseDrawable(canvas)
-                   drawMyBackground(this)
+
                } else{
-                    paint.apply {
-                        style = Paint.Style.FILL
-                        color = fillColor
-                    }
-                   drawMyRect(this, mainRectPoints)
-                   paint.apply {
-                       style = Paint.Style.STROKE
-                       color = edgeColor
+
+                   croppedImage?.apply {
+                       setImageBitmap(this)
                    }
                    drawMyRect(this, mainRectPoints)
+
+                   if(isFirstLaunch){
+                       paint.apply {
+                           style = Paint.Style.FILL
+                           color = outsideColor
+                       }
+                       drawMyRect(this, mainRectPoints)
+                       paint.apply {
+                           style = Paint.Style.STROKE
+                           color = edgeColor
+                       }
+                       drawMyRect(this, mainRectPoints)
+                       isFirstLaunch = false
+                   }
+
                }
 
            }
@@ -211,6 +236,7 @@ class CropView @JvmOverloads constructor( context: Context,
 
         when(event?.action){
             ACTION_DOWN-> {
+                croppedImage = null
 
                 mainRect = Rect(mainRectPoints[0].x,mainRectPoints[0].y,mainRectPoints[3].x ,mainRectPoints[3].y )
 
@@ -626,11 +652,13 @@ class CropView @JvmOverloads constructor( context: Context,
             Type.RIGHT
         }
 
-
-        else {
-
+        else if (xPressed > rect.left && xPressed < rect.right && yPressed> rect.top && yPressed< rect.bottom) {
+            Type.CENTER
+        } else {
             Type.CENTER
         }
+
+
 
     }
 
@@ -682,16 +710,20 @@ class CropView @JvmOverloads constructor( context: Context,
 
         lp.gravity = Gravity.TOP or Gravity.START
 
-        if (mode == MATCH_PARENT || viewMoved){
+        if (mode== MATCH_PARENT || viewMoved){
+
             manager.updateViewLayout(this, lp)
             viewMoved = false
+
             invalidate()
             requestLayout()
+
         } else  {
             manager.removeMyView(this,
                 mode,
                 this.newX,
                 this.newY)
+
         }
 
 
