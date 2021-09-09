@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:custom="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+
 
     <com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:custom="http://schemas.android.com/apk/res-auto"
         android:id="@+id/chat_head"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        custom:cropAreaDrawable="@drawable/ic_baseline_crop_free_24"
         custom:closeDrawable="@drawable/ic_baseline_cancel_24"
         custom:cornerSize2="24dp"
         custom:edgeColor="@color/white"
@@ -20,9 +19,3 @@
         custom:layout_constraintTop_toTopOf="parent"
         custom:minimumSide="72dp"
         custom:outsideColor="@color/back_second" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-
-

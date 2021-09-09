@@ -103,6 +103,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
     private var resizeDrawable: Drawable? = null
     private var closeDrawable: Drawable? = null
+    private var cropAreDrawable: Drawable? = null
 
     private var displayMetrics: DisplayMetrics? = null
     private var touchRadius: Float = 0f
@@ -114,10 +115,10 @@ class CropView @JvmOverloads constructor(context: Context,
 
         minimumSideLength = getDimensionPixelSize(styles.CropView_minimumSide, 20)
 
-        widthOfRect = minimumSideLength * 2
-        heightOfRect = minimumSideLength * 2
-        xSide = minimumSideLength * 2
-        ySide = minimumSideLength * 2
+        widthOfRect = minimumSideLength * 1.5.toInt()
+        heightOfRect = minimumSideLength * 1.5.toInt()
+        xSide = minimumSideLength * 1.5.toInt()
+        ySide = minimumSideLength * 1.5.toInt()
 
        halfCloseDrawableSize = (getDimensionPixelSize(styles.CropView_cornerSize2, 20))/2
         outsideColor = getColor(styles.CropView_outsideColor, Color.BLACK)
@@ -128,6 +129,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
         resizeDrawable = getDrawable(styles.CropView_resizeCornerDrawable)
         closeDrawable = getDrawable(styles.CropView_closeDrawable)
+        cropAreDrawable = getDrawable(styles.CropView_cropAreaDrawable)
 
         displayMetrics = Resources.getSystem().displayMetrics
         touchRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, displayMetrics)
@@ -163,26 +165,26 @@ class CropView @JvmOverloads constructor(context: Context,
         mainRectPoints[0].x = 0
         mainRectPoints[0].y = 0
 
-        mainRectPoints[1].x = minimumSideLength *2
+        mainRectPoints[1].x = minimumSideLength * 1.5.toInt()
         mainRectPoints[1].y = 0
 
         mainRectPoints[2].x = 0
-        mainRectPoints[2].y = minimumSideLength*2
+        mainRectPoints[2].y = minimumSideLength* 1.5.toInt()
 
-        mainRectPoints[3].x = minimumSideLength*2
-        mainRectPoints[3].y = minimumSideLength*2
+        mainRectPoints[3].x = minimumSideLength* 1.5.toInt()
+        mainRectPoints[3].y = minimumSideLength* 1.5.toInt()
 
         secondRectPoints[0].x = 0
         secondRectPoints[0].y = 0
 
-        secondRectPoints[1].x = minimumSideLength*2
+        secondRectPoints[1].x = minimumSideLength* 1.5.toInt()
         secondRectPoints[1].y = 0
 
         secondRectPoints[2].x = 0
-        secondRectPoints[2].y = minimumSideLength*2
+        secondRectPoints[2].y = minimumSideLength* 1.5.toInt()
 
-        secondRectPoints[3].x = minimumSideLength*2
-        secondRectPoints[3].y = minimumSideLength*2
+        secondRectPoints[3].x = minimumSideLength* 1.5.toInt()
+        secondRectPoints[3].y = minimumSideLength* 1.5.toInt()
     }
 
 
@@ -223,7 +225,16 @@ class CropView @JvmOverloads constructor(context: Context,
                            color = edgeColor
                        }
                        drawMyRect(this, mainRectPoints)
-                       isFirstLaunch = false
+
+                       cropAreDrawable?.apply {
+                           setBounds(
+                               mainRectPoints[0].x,
+                               mainRectPoints[0].y,
+                               mainRectPoints[3].x,
+                               mainRectPoints[3].y)
+                           this.draw(canvas)
+                       }
+
                    }
 
                }
@@ -245,7 +256,7 @@ class CropView @JvmOverloads constructor(context: Context,
                 calculateTouchOffset(event.x.toInt(), event.y.toInt(), mainRect)
                 when (moveType){
                     Type.CENTER ->  callBackForWindowManager.onMove(event)
-                    else ->    {   inMatchParentMode = true; changeWrapMode(MATCH_PARENT) }
+                    else ->    {  isFirstLaunch = false; inMatchParentMode = true; changeWrapMode(MATCH_PARENT) }
                 }
 
                 start.x = secondRectPoints[corner].x
