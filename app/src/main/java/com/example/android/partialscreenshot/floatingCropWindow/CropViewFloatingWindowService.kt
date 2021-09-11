@@ -14,7 +14,7 @@ import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListen
 import com.example.android.partialscreenshot.utils.addMyCropView
 
 
-class FloatingWindowService: Service() {
+class CropViewFloatingWindowService: Service() {
 
      lateinit var floatingView: CropView
     private var mData: Intent? = null
@@ -30,12 +30,7 @@ class FloatingWindowService: Service() {
 
     inner class LocalBinder : Binder() {
         // Return this instance of LocalService so clients can call public methods
-        fun getService(): FloatingWindowService = this@FloatingWindowService
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        screenShotTaker = ScreenShotTaker(applicationContext,this)
+        fun getService(): CropViewFloatingWindowService = this@CropViewFloatingWindowService
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -49,6 +44,7 @@ class FloatingWindowService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         setUpFloatingWidget()
+        screenShotTaker = ScreenShotTaker(applicationContext,this, floatingView)
         mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
         return START_NOT_STICKY
     }

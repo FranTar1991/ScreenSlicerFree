@@ -25,7 +25,7 @@
 
 
         <service
-            android:name=".floatingCropWindow.FloatingWindowService"
+            android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
 
     </application>

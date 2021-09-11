@@ -24,14 +24,21 @@ import android.util.Log
 import android.view.Display
 import android.view.OrientationEventListener
 import android.view.WindowManager
-import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowService
+import android.widget.Toast
+import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
 import com.example.android.partialscreenshot.getCurrentTimeStamp
+import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.example.android.partialscreenshot.utils.NotificationUtils
+import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListener
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 
-class ScreenShotTaker(private val context: Context, private val floatingWindowService: FloatingWindowService) {
+class ScreenShotTaker(private val context: Context,
+                      private val cropViewFloatingWindowService: CropViewFloatingWindowService,
+                      private val cropView: CropView): OnOptionsWindowSelectedListener {
+    private lateinit var croppedBitmap: Bitmap
+    private lateinit var optionsWindowView: OptionsWindowView
+
     /**
      * Variables for screen capture
      */
@@ -59,14 +66,6 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
     init {
         createDirectory()
 
-        // start capture handling thread
-        object : Thread() {
-            override fun run() {
-                Looper.prepare()
-                mHandler = Handler()
-                Looper.loop()
-            }
-        }.start()
     }
 
     /**
@@ -81,7 +80,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                 // create notification
                 val notification = NotificationUtils.getNotification(context)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    floatingWindowService.startForeground(
+                    cropViewFloatingWindowService.startForeground(
                         notification.first,
                         notification.second,
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
@@ -94,10 +93,10 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
             }
             isStopCommand(intent) -> {
                 stopProjection()
-                floatingWindowService.stopSelf()
+                cropViewFloatingWindowService.stopSelf()
             }
             else -> {
-                floatingWindowService.stopSelf()
+                cropViewFloatingWindowService.stopSelf()
             }
         }
     }
@@ -149,7 +148,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                 val success = storeDirectory.mkdirs()
                 if (!success) {
                     Log.e(TAG, "failed to create file storage directory.")
-                    floatingWindowService.stopSelf()
+                    cropViewFloatingWindowService.stopSelf()
                 }
             }
         } else {
@@ -157,7 +156,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                 TAG,
                 "failed to create file storage directory, getExternalFilesDir is null."
             )
-            floatingWindowService.stopSelf()
+            cropViewFloatingWindowService.stopSelf()
         }
     }
 
@@ -189,7 +188,7 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
             mHeight,
             mDensity,
             getVirtualDisplayFlags(),
-            mImageReader!!.getSurface(),
+            mImageReader?.surface,
             null,
             mHandler
         )
@@ -201,14 +200,14 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
      * Starts section of helper methods to set up the Media projection
      */
     fun getStartIntent(context: Context?, resultCode: Int, data: Intent?): Intent? {
-        val intent = Intent(context, FloatingWindowService::class.java)
+        val intent = Intent(context, CropViewFloatingWindowService::class.java)
         intent.putExtra(ACTION, START)
         intent.putExtra(RESULT_CODE, resultCode)
         intent.putExtra(DATA, data)
         return intent
     }
     fun getStopIntent(context: Context?): Intent? {
-        val intent = Intent(context, FloatingWindowService::class.java)
+        val intent = Intent(context, CropViewFloatingWindowService::class.java)
         intent.putExtra(ACTION, STOP)
         return intent
     }
@@ -236,7 +235,6 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
 
     private fun setBitmap() {
 
-        var bitmap: Bitmap? = null
         try {
             mImageReader?.acquireLatestImage().let { image ->
                 if (image != null) {
@@ -247,12 +245,17 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
                     val rowPadding: Int = rowStride - pixelStride * mWidth
 
                     // create bitmap
-                    bitmap = Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888
-                    ).apply {
+                    Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888
+                    ).let { baseBitmap ->
 
-                        this?.apply {
-                            this.copyPixelsFromBuffer(buffer)
-                            cropBaseBitmap(this)
+                        baseBitmap?.apply {
+                            baseBitmap.copyPixelsFromBuffer(buffer)
+                            croppedBitmap = cropBaseBitmap(baseBitmap)
+                            cropViewFloatingWindowService.floatingView.croppedImage =
+                                croppedBitmap
+                            callOptionsFloatingWindowService(baseBitmap)
+                            baseBitmap.recycle()
+
                         }
 
                     }
@@ -261,21 +264,17 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
 
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
-        } finally {
-            bitmap?.recycle()
         }
     }
-    private fun cropBaseBitmap(bitmap: Bitmap) {
+    private fun cropBaseBitmap(bitmap: Bitmap): Bitmap {
 
-        floatingWindowService.floatingView.croppedImage = Bitmap.createBitmap(
+       return Bitmap.createBitmap(
             bitmap,
             imageCoordinatesRect.left,
             imageCoordinatesRect.top,
             imageCoordinatesRect.width(),
             imageCoordinatesRect.height()
         )
-
-        Log.i("MyImageCropped","image cropped")
 
     }
     private fun saveBitmap(bitmapToSave: Bitmap){
@@ -284,6 +283,18 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
        fos.use {
            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, it)
        }
+        if (!croppedBitmap.isRecycled) croppedBitmap.recycle()
+
+
+    }
+
+    //region: Options window service used to show the user what they can do with the screen shot
+
+    private fun callOptionsFloatingWindowService(bitmap: Bitmap){
+        optionsWindowView = OptionsWindowView(context, bitmap, cropView).apply {
+            this.setOnOnOptionsWindowSelected(this@ScreenShotTaker)
+        }
+        optionsWindowView.createView()
     }
 
     inner class OrientationChangeCallback internal constructor(context: Context?) : OrientationEventListener(context) {
@@ -329,4 +340,30 @@ class ScreenShotTaker(private val context: Context, private val floatingWindowSe
             }
         }
     }
+
+    override fun onSaveScreenshot() {
+        saveBitmap(croppedBitmap).also {
+
+            cropView.setInitDrawable()
+            Toast.makeText(context,"Saved",Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    override fun onDeleteScreenshot() {
+        Toast.makeText(context,"onDeleteScreenshot",Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onShareScreenshot() {
+        Toast.makeText(context,"onShareScreenshot",Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onAddNoteToScreenshot() {
+        Toast.makeText(context,"onAddNoteToScreenshot",Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onEditScreenshot() {
+        Toast.makeText(context,"onEditScreenshot",Toast.LENGTH_SHORT).show()
+    }
+
 }

@@ -5,7 +5,9 @@ import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 
 fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int, initY: Int){
@@ -66,8 +68,9 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
         }
 
         override fun onClose() {
-            Log.i("MyWindows","Closing the window")
+
             removeView(myFloatingView)
+
         }
 
     })

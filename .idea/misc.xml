@@ -10,10 +10,13 @@
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_camera.xml" value="0.19152196118488254" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_drawing_2.xml" value="0.19152196118488254" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_launcher_background.xml" value="0.19152196118488254" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/rounded_button.xml" value="0.16" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/font/font.xml" value="0.2" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/font/my_font.xml" value="0.1125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/activity_main.xml" value="0.18" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/buttons_view.xml" value="0.175" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/crop_view.xml" value="0.25" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/options_view.xml" value="0.33" />
       </map>
     </option>
   </component>

@@ -6,7 +6,6 @@ import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
@@ -18,13 +17,13 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 import android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 import android.widget.ImageView
-import androidx.appcompat.widget.AppCompatImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.android.partialscreenshot.R
-import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowService.Companion.manager
+import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService.Companion.manager
+import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.example.android.partialscreenshot.utils.OnMoveCropWindowListener
 import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListener
 import com.example.android.partialscreenshot.utils.removeMyView
@@ -58,7 +57,10 @@ class CropView @JvmOverloads constructor(context: Context,
                                          defStyleAttr: Int = 0): ImageView(context,attrs, defStyleAttr) {
 
 
-    private var isFirstLaunch: Boolean = true
+    var thisOptionsView: OptionsWindowView? = null
+
+    var showDrawable: Boolean = true
+
     public var croppedImage: Bitmap? = null
     private lateinit var coordinatesRect: Rect
     private lateinit var mainRect: Rect
@@ -68,7 +70,7 @@ class CropView @JvmOverloads constructor(context: Context,
     private var closeDrawableLeft: Int = 0
     private var corner: Int = 0
     private val mTouchOffset: Point = Point()
-    private var viewMoved: Boolean = false
+    private var moveView: Boolean = false
     private var newMeasureSpecSizeForWidth: Int = 0
     private var newMeasureSpecSizeForHeight: Int = 0
     private var rectangleFullSize: Int = 0
@@ -157,8 +159,14 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
 
+    }
 
-  }
+
+    fun setInitDrawable(){
+        showDrawable = true
+        invalidate()
+        requestLayout()
+    }
 
     private fun setInitialRects() {
 
@@ -185,12 +193,26 @@ class CropView @JvmOverloads constructor(context: Context,
 
         secondRectPoints[3].x = minimumSideLength* 1.5.toInt()
         secondRectPoints[3].y = minimumSideLength* 1.5.toInt()
+
     }
 
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        Log.i("DrawableT","attached")
+        invalidate()
+        requestLayout()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        Log.i("DrawableT","detached")
+    }
 
     //region: Overrides
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+
         if (isInitialized){
 
 
@@ -213,29 +235,7 @@ class CropView @JvmOverloads constructor(context: Context,
                        setImageBitmap(this)
                    }
                    drawMyRect(this, mainRectPoints)
-
-                   if(isFirstLaunch){
-                       paint.apply {
-                           style = Paint.Style.FILL
-                           color = outsideColor
-                       }
-                       drawMyRect(this, mainRectPoints)
-                       paint.apply {
-                           style = Paint.Style.STROKE
-                           color = edgeColor
-                       }
-                       drawMyRect(this, mainRectPoints)
-
-                       cropAreDrawable?.apply {
-                           setBounds(
-                               mainRectPoints[0].x,
-                               mainRectPoints[0].y,
-                               mainRectPoints[3].x,
-                               mainRectPoints[3].y)
-                           this.draw(canvas)
-                       }
-
-                   }
+                   setNewCropWindow(this)
 
                }
 
@@ -243,10 +243,40 @@ class CropView @JvmOverloads constructor(context: Context,
 
         }
     }
+
+    private fun setNewCropWindow(canvas: Canvas) {
+        if (showDrawable) {
+            setImageBitmap(null)
+            paint.apply {
+                style = Paint.Style.FILL
+                color = outsideColor
+            }
+            drawMyRect(canvas, mainRectPoints)
+            paint.apply {
+                style = Paint.Style.STROKE
+                color = edgeColor
+            }
+            drawMyRect(canvas, mainRectPoints)
+
+            cropAreDrawable?.apply {
+                setBounds(
+                    mainRectPoints[0].x,
+                    mainRectPoints[0].y,
+                    mainRectPoints[3].x,
+                    mainRectPoints[3].y
+                )
+                this.draw(canvas)
+            }
+
+        }
+    }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
         when(event?.action){
             ACTION_DOWN-> {
+
+
                 croppedImage = null
 
                 mainRect = Rect(mainRectPoints[0].x,mainRectPoints[0].y,mainRectPoints[3].x ,mainRectPoints[3].y )
@@ -255,8 +285,14 @@ class CropView @JvmOverloads constructor(context: Context,
 
                 calculateTouchOffset(event.x.toInt(), event.y.toInt(), mainRect)
                 when (moveType){
-                    Type.CENTER ->  callBackForWindowManager.onMove(event)
-                    else ->    {  isFirstLaunch = false; inMatchParentMode = true; changeWrapMode(MATCH_PARENT) }
+                    Type.CENTER ->  {
+                        callBackForWindowManager.onMove(event)
+                        moveView = true
+                    }
+                    else ->    {
+                        thisOptionsView?.onDestroy()
+                        showDrawable = false;
+                        changeWrapMode(MATCH_PARENT) }
                 }
 
                 start.x = secondRectPoints[corner].x
@@ -264,15 +300,18 @@ class CropView @JvmOverloads constructor(context: Context,
 
             }
             ACTION_UP -> {
-                inMatchParentMode = false
-                changeWrapMode(WRAP_CONTENT)
                 coordinatesRect =  Rect(secondRectPoints[0].x,secondRectPoints[0].y,secondRectPoints[3].x ,secondRectPoints[3].y )
 
-                if(isToClose(event)){
+                val isToClose = isToClose(event)
+                if(isToClose && inMatchParentMode ){
                     callBackForWindowManager.onClose()
-                } else if(!isToClose(event) && !viewMoved){
+
+                } else if(!isToClose && !moveView){
                     requestTakeScreenShotCallback.onRequestScreenShot(coordinatesRect)
+
                 }
+                changeWrapMode(WRAP_CONTENT, isToClose)
+                moveView = false
 
             }
 
@@ -322,10 +361,6 @@ class CropView @JvmOverloads constructor(context: Context,
                     Type.CENTER -> callBackForWindowManager.onMove(event)
                     null -> {}
                 }
-
-
-
-
                 invalidate()
                 requestLayout()
             }
@@ -695,11 +730,8 @@ class CropView @JvmOverloads constructor(context: Context,
         secondRectPoints[3].x = (zeroPosX + xSide)
         secondRectPoints[3].y = (zeroPosY  + ySide)
 
-        viewMoved = true
-
-
     }
-    private fun changeWrapMode(mode: Int){
+    private fun changeWrapMode(mode: Int, isToClose: Boolean = false){
 
         val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -721,27 +753,35 @@ class CropView @JvmOverloads constructor(context: Context,
 
         lp.gravity = Gravity.TOP or Gravity.START
 
-        if (mode== MATCH_PARENT || viewMoved){
+        if (mode== MATCH_PARENT && !moveView){
 
             manager.updateViewLayout(this, lp)
-            viewMoved = false
-
+            inMatchParentMode = true
             invalidate()
             requestLayout()
 
-        } else  {
+        } else if(mode == WRAP_CONTENT && !moveView && !isToClose) {
+            inMatchParentMode = false
             manager.removeMyView(this,
                 mode,
                 this.newX,
                 this.newY)
+
+
+        } else if (mode == WRAP_CONTENT && moveView && !isToClose){
+            inMatchParentMode = false
+            manager.updateViewLayout(this, lp)
 
         }
 
 
     }
 
+
+
     //region: close feature
     private fun isToClose(event: MotionEvent): Boolean {
+
         return event.x < closeDrawableRight && event.x > closeDrawableLeft
                 && event.y < closeDrawableBottom && event.y > closeDrawableTop
     }
@@ -756,7 +796,7 @@ class CropView @JvmOverloads constructor(context: Context,
             closeDrawableLeft ,
             closeDrawableTop ,
             closeDrawableRight,
-            closeDrawableBottom,
+            closeDrawableBottom
         )
 
         closeDrawable?.draw(canvas)

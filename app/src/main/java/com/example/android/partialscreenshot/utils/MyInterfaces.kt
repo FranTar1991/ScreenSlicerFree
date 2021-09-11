@@ -1,6 +1,7 @@
 package com.example.android.partialscreenshot.utils
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Rect
 import android.view.MotionEvent
 
@@ -16,4 +17,12 @@ interface OnMoveCropWindowListener{
 
 interface OnRequestTakeScreenShotListener{
     fun onRequestScreenShot(rect: Rect)
+}
+
+interface OnOptionsWindowSelectedListener{
+    fun onSaveScreenshot()
+    fun onDeleteScreenshot()
+    fun onShareScreenshot()
+    fun onAddNoteToScreenshot()
+    fun onEditScreenshot()
 }

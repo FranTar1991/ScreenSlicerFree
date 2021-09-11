@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+
+        <ImageView
+            android:id="@+id/delete__bk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/share_bk"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/save_bk"
+            android:layout_marginBottom="4dp"
+            android:src="@drawable/rounded_button" />
+
+        <ImageView
+            android:id="@+id/delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/delete__bk"
+            app:layout_constraintEnd_toEndOf="@+id/delete__bk"
+            app:layout_constraintStart_toStartOf="@+id/delete__bk"
+            app:layout_constraintTop_toTopOf="@+id/delete__bk"
+            android:src="@drawable/ic_baseline_delete_forever_24"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/share_bk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/add_note_bk"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/delete__bk"
+            android:src="@drawable/rounded_button" />
+
+        <ImageView
+            android:id="@+id/share"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            app:layout_constraintBottom_toBottomOf="@+id/share_bk"
+            app:layout_constraintEnd_toEndOf="@+id/share_bk"
+            app:layout_constraintStart_toStartOf="@+id/share_bk"
+            app:layout_constraintTop_toTopOf="@+id/share_bk"
+            android:src="@drawable/ic_baseline_share_24"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/save_bk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/delete__bk"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:src="@drawable/rounded_button" />
+
+        <ImageView
+            android:id="@+id/save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/save_bk"
+            app:layout_constraintEnd_toEndOf="@+id/save_bk"
+            app:layout_constraintStart_toStartOf="@+id/save_bk"
+            app:layout_constraintTop_toTopOf="@+id/save_bk"
+            android:src="@drawable/ic_baseline_save_24"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/edit_bk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/add_note_bk"
+            android:src="@drawable/rounded_button" />
+
+        <ImageView
+            android:id="@+id/edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/edit_bk"
+            app:layout_constraintEnd_toEndOf="@+id/edit_bk"
+            app:layout_constraintStart_toStartOf="@+id/edit_bk"
+            app:layout_constraintTop_toTopOf="@+id/edit_bk"
+            android:src="@drawable/ic_baseline_edit_24"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/add_note_bk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/edit_bk"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/share_bk"
+            android:src="@drawable/rounded_button" />
+
+        <ImageView
+            android:id="@+id/add_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/add_note_bk"
+            app:layout_constraintEnd_toEndOf="@+id/add_note_bk"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintStart_toStartOf="@+id/add_note_bk"
+            app:layout_constraintTop_toBottomOf="@+id/add_note_bk"
+            android:src="@drawable/ic_baseline_note_add_24"
+            app:tint="@color/white" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

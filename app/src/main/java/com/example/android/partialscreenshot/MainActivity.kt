@@ -16,7 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import com.example.android.partialscreenshot.databinding.ActivityMainBinding
-import com.example.android.partialscreenshot.floatingCropWindow.FloatingWindowService
+import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
 import kotlin.properties.Delegates
 
@@ -26,23 +26,21 @@ private lateinit var permissionToRecordLauncher: ActivityResultLauncher<Intent>
 
 //These are used to connect the FloatingWindowService with it´s calling activity
 private var bound by Delegates.notNull<Boolean>()
-private lateinit var floatingWindowServiceService: FloatingWindowService
+private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindowService
 
 //Variable that holds all to take the screenshots
 private var mData: Intent? = null
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener {
 
-    private val serviceConnection: ServiceConnection = object : ServiceConnection {
+    private val cropViewFloatingWindowServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get FloatingWindowService instance
-            val binder = service as FloatingWindowService.LocalBinder
-            floatingWindowServiceService = binder.getService()
+            val binder = service as CropViewFloatingWindowService.LocalBinder
+            cropServiceViewFloatingWindowService = binder.getService()
             bound = true
-            floatingWindowServiceService.setServiceCallBacks(this@MainActivity) // register
+            cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity) // register
         }
-
-
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             bound = false
@@ -65,16 +63,17 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
 
         permissionToShowFloatingWidgetLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            startService(Intent(this, FloatingWindowService::class.java))
+            startService(Intent(this, CropViewFloatingWindowService::class.java))
         }
+
 
         binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
             callFloatingWindow()
         })
 
         //Used to connect this activity with the FloatingWindowService
-        val intent = Intent(this, FloatingWindowService::class.java)
-        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+        val intent = Intent(this, CropViewFloatingWindowService::class.java)
+        bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
 
         //This method should be deleted once we can the get permission from the floating window service
         getPermission()
@@ -105,10 +104,13 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
 
         } else {
 
-            startService(Intent(this, FloatingWindowService::class.java))
+                startService(Intent(this@MainActivity,
+                    CropViewFloatingWindowService::class.java))
 
         }
     }
+
+
 
     /**
      * make sure to unregister the service when this activity is destroy
@@ -117,12 +119,11 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
     override fun onDestroy() {
         super.onDestroy()
         if (bound) {
-            floatingWindowServiceService.setServiceCallBacks(null) // unregister
-            unbindService(serviceConnection)
+            cropServiceViewFloatingWindowService.setServiceCallBacks(null) // unregister
+            unbindService(cropViewFloatingWindowServiceConnection)
             bound = false
         }
     }
-
 
     /**
      * This method should be called by the floating window service
