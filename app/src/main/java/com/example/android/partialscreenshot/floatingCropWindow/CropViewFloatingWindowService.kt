@@ -44,7 +44,9 @@ class CropViewFloatingWindowService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         setUpFloatingWidget()
-        screenShotTaker = ScreenShotTaker(applicationContext,this, floatingView)
+        screenShotTaker = ScreenShotTaker(applicationContext,
+            this,
+            floatingView, takeScreenShotServiceCallback)
         mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
         return START_NOT_STICKY
     }
@@ -52,7 +54,6 @@ class CropViewFloatingWindowService: Service() {
         super.onDestroy()
         manager.removeView(floatingView)
     }
-
 
     private fun setUpFloatingWidget() {
 

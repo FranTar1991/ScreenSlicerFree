@@ -1,16 +1,21 @@
 package com.example.android.partialscreenshot
 
+import android.Manifest
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.media.MediaScannerConnection
+import android.media.MediaScannerConnection.OnScanCompletedListener
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +24,11 @@ import com.example.android.partialscreenshot.databinding.ActivityMainBinding
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
 import kotlin.properties.Delegates
+import android.provider.MediaStore.Images
+
+import android.content.ContentValues
+import androidx.core.app.ActivityCompat
+
 
 //Use this variables instead of OnActivityResult
 private lateinit var permissionToShowFloatingWidgetLauncher: ActivityResultLauncher<Intent>
@@ -33,6 +43,7 @@ private var mData: Intent? = null
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener {
 
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private val cropViewFloatingWindowServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get FloatingWindowService instance
@@ -66,6 +77,11 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
             startService(Intent(this, CropViewFloatingWindowService::class.java))
         }
 
+
+
+        ActivityCompat.requestPermissions(this@MainActivity,
+            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            1)
 
         binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
             callFloatingWindow()
@@ -141,4 +157,29 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
     override fun getDataToRecordScreen(): Intent? {
         return mData;
     }
+
+    /**
+     * @param uriToShare is the uri of the image that was just taken and saved
+     */
+    override fun shareImage(uriToShare: Uri) {
+
+
+
+        MediaScannerConnection.scanFile(applicationContext,
+            arrayOf(uriToShare.toString()),
+            arrayOf("image/jpeg")){ path, uri ->
+            val shareIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_STREAM, uri)
+                type = "image/jpeg"
+            }
+            startActivity(Intent.createChooser(shareIntent, resources.getText(R.string.share)))
+
+        }
+
+
+    }
+
+
+
 }

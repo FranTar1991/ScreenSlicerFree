@@ -1,9 +1,10 @@
 package com.example.android.partialscreenshot.floatingCropWindow.optionsWindow
 import android.content.Context
 import android.content.Context.WINDOW_SERVICE
-import android.graphics.Bitmap
 
 import android.graphics.PixelFormat
+import android.os.Build
+import android.util.Log
 
 import android.view.*
 import android.widget.ImageView
@@ -23,7 +24,6 @@ import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListen
 
 
 class OptionsWindowView (private val context: Context,
-                         private val bitmap: Bitmap,
                          private val cropView: CropView) : View.OnTouchListener {
     private var mWindowManager: WindowManager? = null
     private var mFloatingView: OptionsViewBinding? = null
@@ -39,20 +39,24 @@ class OptionsWindowView (private val context: Context,
     private var editButtonBc: ImageView? = null
     private var onOptionsWindowSelectedListener: OnOptionsWindowSelectedListener? = null
 
-    fun OptionsWindowView(){}
 
     fun createView() {
-
+    Log.i("MyView","creating view")
         mFloatingView = OptionsViewBinding.inflate(context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 as LayoutInflater)
 
         //Add the view to the window.
+        val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
 
         //Add the view to the window.
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_PHONE,
+            layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -84,7 +88,7 @@ class OptionsWindowView (private val context: Context,
         cropView.thisOptionsView = this
     }
 
-    fun onDestroy() {
+    fun destroyView() {
         mFloatingView?.root?.let {
             if(it.isAttachedToWindow){
                 if (mFloatingView != null) mWindowManager?.removeView(mFloatingView?.root)
@@ -110,8 +114,8 @@ class OptionsWindowView (private val context: Context,
 
     private fun setChangeColor(id: Int?, action: Int) {
 
-        val downColor = R.color.teal_700
-        val upColor = R.color.teal_200
+        val downColor = R.color.teal_200
+        val upColor = R.color.teal_700
 
         if (action == ACTION_DOWN){
             when(id){
@@ -143,7 +147,7 @@ class OptionsWindowView (private val context: Context,
      private fun onTouchButton(id: Int?) {
 
         when(id){
-            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshot(); onDestroy() }
+            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshot(); destroyView() }
             R.id.delete ->{onOptionsWindowSelectedListener?.onDeleteScreenshot()}
             R.id.share ->{onOptionsWindowSelectedListener?.onShareScreenshot()}
             R.id.add_note ->{onOptionsWindowSelectedListener?.onAddNoteToScreenshot()}

@@ -3,11 +3,13 @@ package com.example.android.partialscreenshot.utils
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.net.Uri
 import android.view.MotionEvent
 
 interface FloatingWindowListener  {
     fun getPermissionToRecordScreen()
     fun getDataToRecordScreen(): Intent?
+    fun shareImage(uriToShare: Uri)
 }
 
 interface OnMoveCropWindowListener{
