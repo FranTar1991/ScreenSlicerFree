@@ -49,6 +49,7 @@ class CropViewFloatingWindowService: Service() {
         screenShotTaker = ScreenShotTaker(applicationContext,
             this,
             floatingView, takeScreenShotServiceCallback)
+
         mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
         return START_NOT_STICKY
     }

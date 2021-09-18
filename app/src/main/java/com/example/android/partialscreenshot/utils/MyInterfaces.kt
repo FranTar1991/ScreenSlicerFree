@@ -9,7 +9,6 @@ import android.view.MotionEvent
 interface FloatingWindowListener  {
     fun getPermissionToRecordScreen()
     fun getDataToRecordScreen(): Intent?
-    fun shareImage(uriToShare: Uri)
 }
 
 interface OnMoveCropWindowListener{

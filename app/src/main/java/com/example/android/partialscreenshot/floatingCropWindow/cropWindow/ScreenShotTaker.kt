@@ -30,15 +30,19 @@ import java.io.*
 import android.os.Build
 
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.view.*
 import com.example.android.partialscreenshot.utils.saveImageToPhotoGallery
+import androidx.core.content.ContextCompat.startActivity
+import com.example.android.partialscreenshot.MainActivity
+import com.example.android.partialscreenshot.R
 
 
 class ScreenShotTaker(
     private val context: Context,
     private val cropViewFloatingWindowService: CropViewFloatingWindowService,
     private val cropView: CropView,
-    private val takeScreenShotServiceCallback: FloatingWindowListener?
+    private val mainActivityReference: FloatingWindowListener?
 ): OnOptionsWindowSelectedListener {
 
     private lateinit var path: String
@@ -192,7 +196,19 @@ class ScreenShotTaker(
         onSaveScreenshot()
         optionsWindowView.destroyView()
         uriToImage?.let {
-            takeScreenShotServiceCallback?.shareImage(it)
+            MediaScannerConnection.scanFile(context,
+                arrayOf(uriToImage.toString()),
+                arrayOf("image/jpeg")){ path, uri ->
+                val shareIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    type = "image/jpeg"
+                }
+                startActivity((mainActivityReference as MainActivity),
+                    Intent.createChooser(shareIntent, context.resources.getText(R.string.share)),
+                    null)
+
+            }
         }
 
 
@@ -203,7 +219,10 @@ class ScreenShotTaker(
     }
 
     override fun onEditScreenshot() {
-        Toast.makeText(context,"onEditScreenshot",Toast.LENGTH_SHORT).show()
+        val intent = Intent(Intent.ACTION_EDIT)
+        intent.setDataAndType(uriToImage, "image/*")
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        startActivity((mainActivityReference as MainActivity),Intent.createChooser(intent, null),null)
     }
 
     /**

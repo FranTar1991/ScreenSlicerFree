@@ -111,7 +111,10 @@ class CropView @JvmOverloads constructor(context: Context,
 
     private var resizeDrawable: Drawable? = null
     private var closeDrawable: Drawable? = null
-    private var cropAreDrawable: Drawable? = null
+    private var cropLeftUpDrawable: Drawable? = null
+    private var cropLeftDownDrawable: Drawable? = null
+    private var cropRightUpDrawable: Drawable? = null
+    private var cropRightDownDrawable: Drawable? = null
 
     private var displayMetrics: DisplayMetrics? = null
     private var touchRadius: Float = 0f
@@ -121,9 +124,9 @@ class CropView @JvmOverloads constructor(context: Context,
     init {
     context.withStyledAttributes(attrs, styles.CropView){
 
-        minimumSideLength = getDimensionPixelSize(styles.CropView_minimumSide, 20) + 60
+        minimumSideLength = (getDimensionPixelSize(styles.CropView_minimumSide, 20))
 
-        halfCloseDrawableSize = (getDimensionPixelSize(styles.CropView_cornerSize2, 20))/2
+        halfCloseDrawableSize = ((getDimensionPixelSize(styles.CropView_cornerSize2, 20))/2)
         outsideColor = getColor(styles.CropView_outsideColor, Color.BLACK)
         edgeColor = getColor(styles.CropView_edgeColor,Color.WHITE)
         fillColor = getColor(styles.CropView_fillColor,Color.BLACK)
@@ -132,7 +135,10 @@ class CropView @JvmOverloads constructor(context: Context,
 
         resizeDrawable = getDrawable(styles.CropView_resizeCornerDrawable)
         closeDrawable = getDrawable(styles.CropView_closeDrawable)
-        cropAreDrawable = getDrawable(styles.CropView_cropAreaDrawable)
+        cropLeftUpDrawable = getDrawable(styles.CropView_crop_left_up_drawable)
+        cropLeftDownDrawable = getDrawable(styles.CropView_crop_left_down_drawable)
+        cropRightUpDrawable = getDrawable(styles.CropView_crop_right_up_drawable)
+        cropRightDownDrawable = getDrawable(styles.CropView_crop_right_down_drawable)
 
         displayMetrics = Resources.getSystem().displayMetrics
         touchRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, displayMetrics)
@@ -151,12 +157,10 @@ class CropView @JvmOverloads constructor(context: Context,
             style = Paint.Style.FILL
             strokeJoin = Paint.Join.ROUND
             color = outsideColor
-            strokeWidth = 2f
+            strokeWidth = 8f
         }
 
         isInitialized = true
-
-
     }
 
     }
@@ -173,6 +177,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
 
     }
+
 
     private fun Array<Point>.setTheRect(initialPoint: Int){
         this[0].x = 0
@@ -248,17 +253,52 @@ class CropView @JvmOverloads constructor(context: Context,
             }
             drawMyRect(canvas, mainRectPoints)
 
-            cropAreDrawable?.apply {
-                setBounds(
-                    mainRectPoints[0].x,
-                    mainRectPoints[0].y,
-                    mainRectPoints[3].x,
-                    mainRectPoints[3].y
-                )
-                this.draw(canvas)
-            }
+            setCropDrawables(canvas)
 
         }
+    }
+
+    private fun setCropDrawables(canvas: Canvas) {
+        cropLeftUpDrawable?.apply {
+            setBounds(
+                mainRectPoints[0].x,
+                mainRectPoints[0].y,
+                (widthOfRect/4).dp,
+                (widthOfRect/4).dp
+            )
+            this.draw(canvas)
+        }
+
+        cropRightDownDrawable?.apply {
+            setBounds(
+                mainRectPoints[3].x - (widthOfRect/4).dp,
+                mainRectPoints[3].y - (widthOfRect/4).dp,
+                mainRectPoints[3].x,
+                mainRectPoints[3].y
+            )
+            this.draw(canvas)
+        }
+
+        cropRightUpDrawable?.apply {
+            setBounds(
+                mainRectPoints[1].x - (widthOfRect/4).dp,
+                mainRectPoints[1].y,
+                mainRectPoints[1].x,
+                mainRectPoints[1].y + (widthOfRect/4).dp
+            )
+            this.draw(canvas)
+        }
+
+        cropLeftDownDrawable?.apply {
+            setBounds(
+                mainRectPoints[2].x,
+                mainRectPoints[2].y - (widthOfRect/4).dp,
+                (widthOfRect/4).dp,
+                mainRectPoints[2].y
+            )
+            this.draw(canvas)
+        }
+
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {

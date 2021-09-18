@@ -160,28 +160,4 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
         return mData;
     }
 
-    /**
-     * @param uriToShare is the uri of the image that was just taken and saved
-     */
-    override fun shareImage(uriToShare: Uri) {
-
-
-
-        MediaScannerConnection.scanFile(applicationContext,
-            arrayOf(uriToShare.toString()),
-            arrayOf("image/jpeg")){ path, uri ->
-            val shareIntent: Intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, uri)
-                type = "image/jpeg"
-            }
-            startActivity(Intent.createChooser(shareIntent, resources.getText(R.string.share)))
-
-        }
-
-
-    }
-
-
-
 }

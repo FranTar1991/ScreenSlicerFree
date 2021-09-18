@@ -4,6 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.19152196118488254" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/crop_left_down.xml" value="0.1953125" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/crop_right_down.xml" value="0.1953125" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/crop_right_up.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_cancel_24.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_close_24.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_crop_free_24.xml" value="0.19152196118488254" />
@@ -15,7 +18,7 @@
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/font/my_font.xml" value="0.1125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/activity_main.xml" value="0.18" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/buttons_view.xml" value="0.175" />
-        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/crop_view.xml" value="0.25" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/crop_view.xml" value="0.18" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/options_view.xml" value="0.33" />
       </map>
     </option>

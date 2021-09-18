@@ -3,6 +3,7 @@ package com.example.android.partialscreenshot.utils
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
@@ -28,8 +29,13 @@ val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
     TYPE_PHONE
 }
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
-const val INITIAL_POINT = 120
+var INITIAL_POINT = 120
 
+val Float.dp: Int
+    get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()
+
+val Int.dp: Int
+    get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()
 
  fun saveImageToPhotoGallery(cr: ContentResolver, source: Bitmap?, title: String?, description: String?): String? {
     val values = ContentValues().apply {
