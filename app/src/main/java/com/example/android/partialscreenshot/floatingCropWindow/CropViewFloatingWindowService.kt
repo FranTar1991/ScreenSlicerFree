@@ -10,6 +10,8 @@ import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.ScreenShotTaker
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
+import com.example.android.partialscreenshot.utils.INITIAL_POINT
+
 import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListener
 import com.example.android.partialscreenshot.utils.addMyCropView
 
@@ -66,7 +68,7 @@ class CropViewFloatingWindowService: Service() {
                 }
             }
         })
-        manager.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0,0)
+        manager.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0, INITIAL_POINT)
     }
 
 }

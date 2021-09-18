@@ -14,8 +14,6 @@ import android.view.*
 import android.view.MotionEvent.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-import android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
@@ -23,10 +21,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService.Companion.manager
 import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
-import com.example.android.partialscreenshot.utils.OnMoveCropWindowListener
-import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListener
-import com.example.android.partialscreenshot.utils.addMyCropView
-import com.example.android.partialscreenshot.utils.removeMyView
+import com.example.android.partialscreenshot.utils.*
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -89,7 +84,7 @@ class CropView @JvmOverloads constructor(context: Context,
     private var inMatchParentMode = false
 
     private var newX = 0
-    private var newY = 0
+    private var newY = INITIAL_POINT
     private var xSide: Int = 0
     private var ySide: Int = 0
     private var heightConstraint: Int = 0
@@ -126,7 +121,7 @@ class CropView @JvmOverloads constructor(context: Context,
     init {
     context.withStyledAttributes(attrs, styles.CropView){
 
-        minimumSideLength = getDimensionPixelSize(styles.CropView_minimumSide, 20)
+        minimumSideLength = getDimensionPixelSize(styles.CropView_minimumSide, 20) + 60
 
         halfCloseDrawableSize = (getDimensionPixelSize(styles.CropView_cornerSize2, 20))/2
         outsideColor = getColor(styles.CropView_outsideColor, Color.BLACK)
@@ -161,58 +156,55 @@ class CropView @JvmOverloads constructor(context: Context,
 
         isInitialized = true
 
+
     }
+
     }
 
 
     private fun setInitialRects() {
 
-        widthOfRect = minimumSideLength * 1.5.toInt()
-        heightOfRect = minimumSideLength * 1.5.toInt()
-        xSide = minimumSideLength * 1.5.toInt()
-        ySide = minimumSideLength * 1.5.toInt()
+        widthOfRect = minimumSideLength
+        heightOfRect = minimumSideLength
+        xSide = minimumSideLength
+        ySide = minimumSideLength
+        mainRectPoints.setTheRect(0)
+        secondRectPoints.setTheRect(INITIAL_POINT)
 
-        mainRectPoints[0].x = 0
-        mainRectPoints[0].y = 0
-
-        mainRectPoints[1].x = minimumSideLength * 1.5.toInt()
-        mainRectPoints[1].y = 0
-
-        mainRectPoints[2].x = 0
-        mainRectPoints[2].y = minimumSideLength* 1.5.toInt()
-
-        mainRectPoints[3].x = minimumSideLength* 1.5.toInt()
-        mainRectPoints[3].y = minimumSideLength* 1.5.toInt()
-
-        secondRectPoints[0].x = 0
-        secondRectPoints[0].y = 0
-
-        secondRectPoints[1].x = minimumSideLength* 1.5.toInt()
-        secondRectPoints[1].y = 0
-
-        secondRectPoints[2].x = 0
-        secondRectPoints[2].y = minimumSideLength* 1.5.toInt()
-
-        secondRectPoints[3].x = minimumSideLength* 1.5.toInt()
-        secondRectPoints[3].y = minimumSideLength* 1.5.toInt()
 
     }
 
+    private fun Array<Point>.setTheRect(initialPoint: Int){
+        this[0].x = 0
+        this[0].y = initialPoint
+
+        this[1].x = minimumSideLength
+        this[1].y = initialPoint
+
+        this[2].x = 0
+        this[2].y = initialPoint+minimumSideLength
+
+        this[3].x = minimumSideLength
+        this[3].y = initialPoint+minimumSideLength
+    }
     fun resetView(){
         setInitialRects()
         this.newX = 0
-        this.newY = 0
-        manager.removeMyView(this, WRAP_CONTENT,0,0)
+        this.newY = INITIAL_POINT
+        manager.removeMyView(this, WRAP_CONTENT,0, INITIAL_POINT)
 
     }
 
-
     //region: Overrides
     override fun onDraw(canvas: Canvas?) {
+
+       if(croppedImage?.isRecycled == true){
+           setImageBitmap(null)
+       }
+
         super.onDraw(canvas)
 
         if (isInitialized){
-
 
            canvas?.apply {
 
@@ -228,13 +220,9 @@ class CropView @JvmOverloads constructor(context: Context,
                    setCloseDrawable(canvas)
 
                } else{
-
-
                        croppedImage?.apply {
                                setImageBitmap(this)
                        }
-
-
                    drawMyRect(this, mainRectPoints)
                    setNewCropWindow(this)
 
@@ -243,6 +231,7 @@ class CropView @JvmOverloads constructor(context: Context,
            }
 
         }
+
     }
 
     private fun setNewCropWindow(canvas: Canvas) {
@@ -731,14 +720,6 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
     private fun changeWrapMode(mode: Int, isToClose: Boolean = false){
-
-        val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-
-        val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
         val lp = WindowManager.LayoutParams(
             mode,
             mode,
@@ -751,6 +732,13 @@ class CropView @JvmOverloads constructor(context: Context,
             lp.y = this.newY
 
         lp.gravity = Gravity.TOP or Gravity.START
+
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                lp.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+
 
         if (mode== MATCH_PARENT && !moveView){
 

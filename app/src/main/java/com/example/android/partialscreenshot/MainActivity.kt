@@ -28,6 +28,7 @@ import android.provider.MediaStore.Images
 
 import android.content.ContentValues
 import androidx.core.app.ActivityCompat
+import androidx.core.view.WindowCompat
 
 
 //Use this variables instead of OnActivityResult
@@ -56,13 +57,14 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
         override fun onServiceDisconnected(arg0: ComponentName) {
             bound = false
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding =
             DataBindingUtil.setContentView<ActivityMainBinding>(this,R.layout.activity_main)
-
+        WindowCompat.setDecorFitsSystemWindows(window, false)
          permissionToRecordLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                     result ->

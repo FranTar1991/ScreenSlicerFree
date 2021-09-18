@@ -3,7 +3,6 @@ package com.example.android.partialscreenshot.floatingCropWindow.cropWindow
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Service
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -15,31 +14,24 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.*
-import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.Display
-import android.view.OrientationEventListener
-import android.view.WindowManager
 import android.widget.Toast
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
-import com.example.android.partialscreenshot.getCurrentTimeStamp
+import com.example.android.partialscreenshot.utils.getCurrentTimeStamp
 import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.example.android.partialscreenshot.utils.NotificationUtils
 import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListener
 
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
-import android.provider.MediaStore.Images
 
-import android.content.ContentUris
-
-import android.content.ContentResolver
 import android.graphics.*
 import java.io.*
 import android.os.Build
 
 import android.graphics.Bitmap
-import com.example.android.partialscreenshot.saveImageToPhotoGallery
+import android.view.*
+import com.example.android.partialscreenshot.utils.saveImageToPhotoGallery
 
 
 class ScreenShotTaker(
@@ -159,14 +151,15 @@ class ScreenShotTaker(
     }
     private fun saveCroppedBitmap(bitmapToSave: Bitmap){
 
-        name = "${getCurrentTimeStamp()}.png"
+        name = "${getCurrentTimeStamp()}"
         path = "$mStoreDir/$name"
         fileOutputStream = FileOutputStream(path)
         uriToImage = Uri.parse(path)
-        Log.i("MyUri","$uriToImage")
+
         fileOutputStream.use {
            bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, it)
        }
+
 
     }
 
@@ -316,14 +309,43 @@ class ScreenShotTaker(
     private fun createVirtualDisplay() {
 
         val wm = context.getSystemService(Service.WINDOW_SERVICE) as WindowManager
-        val display = wm.defaultDisplay
-        val metrics = DisplayMetrics()
-        display.getMetrics(metrics)
-        val size = Point()
-        display.getRealSize(size)
-        mWidth = size.x
-        mHeight = size.y
-        val mDensity = metrics.densityDpi
+
+        var  mDensity = 0
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics: WindowMetrics =   wm.currentWindowMetrics
+            // Gets all excluding insets
+            // Gets all excluding insets
+            val windowInsets = metrics.windowInsets
+            val insets: Insets = windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.navigationBars()
+                        or WindowInsets.Type.displayCutout()
+            )
+
+            val insetsWidth = insets.right + insets.left
+            val insetsHeight = insets.top + insets.bottom
+
+            // Legacy size that Display#getSize reports
+
+            // Legacy size that Display#getSize reports
+            val bounds = metrics.bounds
+            mDensity =context.resources.displayMetrics.density.toInt()
+
+            mWidth = bounds.width() - 0
+            mHeight = bounds.height() - 0
+        } else {
+            val display = wm.defaultDisplay
+            val metrics = DisplayMetrics()
+            display.getMetrics(metrics)
+            val size = Point()
+            display.getRealSize(size)
+            mWidth = size.x
+            mHeight = size.y
+            mDensity = metrics.densityDpi
+        }
+
+
+        // sta
 
         // start capture reader
         mImageReader = ImageReader

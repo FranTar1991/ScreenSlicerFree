@@ -2,22 +2,14 @@ package com.example.android.partialscreenshot.utils
 
 import android.graphics.PixelFormat
 import android.os.Build
-import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.View
 import android.view.WindowManager
-import androidx.constraintlayout.widget.ConstraintLayout
+import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 
 fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int, initY: Int){
-    val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-    } else {
-        WindowManager.LayoutParams.TYPE_PHONE
-    }
 
-    val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
     val params = WindowManager.LayoutParams(
         mode,
         mode,
@@ -30,6 +22,10 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
     params.gravity = Gravity.TOP or Gravity.START    //Initially view will be added to top-left corner
     params.x = initX
     params.y = initY
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        params.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+    }
 
 
     myFloatingView.setWindowManagerCallback(object : OnMoveCropWindowListener {

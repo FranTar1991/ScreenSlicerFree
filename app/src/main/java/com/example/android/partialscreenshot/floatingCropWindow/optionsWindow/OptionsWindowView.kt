@@ -3,7 +3,6 @@ import android.content.Context
 import android.content.Context.WINDOW_SERVICE
 
 import android.graphics.PixelFormat
-import android.os.Build
 import android.util.Log
 
 import android.view.*
@@ -20,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.example.android.partialscreenshot.databinding.OptionsViewBinding
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
+import com.example.android.partialscreenshot.utils.layoutFlag
 import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListener
 
 
@@ -44,13 +44,6 @@ class OptionsWindowView (private val context: Context,
     Log.i("MyView","creating view")
         mFloatingView = OptionsViewBinding.inflate(context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 as LayoutInflater)
-
-        //Add the view to the window.
-        val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-        } else {
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
 
         //Add the view to the window.
         val params = WindowManager.LayoutParams(

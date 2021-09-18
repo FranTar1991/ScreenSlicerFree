@@ -1,4 +1,4 @@
-package com.example.android.partialscreenshot
+package com.example.android.partialscreenshot.utils
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.*
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
@@ -20,6 +22,14 @@ import java.util.*
         val dateFormat = SimpleDateFormat("yyyyMMdd_HH_mm_ss")
         return dateFormat.format(Date())
     }
+val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    TYPE_APPLICATION_OVERLAY
+} else {
+    TYPE_PHONE
+}
+const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
+const val INITIAL_POINT = 120
+
 
  fun saveImageToPhotoGallery(cr: ContentResolver, source: Bitmap?, title: String?, description: String?): String? {
     val values = ContentValues().apply {
