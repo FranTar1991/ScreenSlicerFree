@@ -36,6 +36,7 @@ import com.example.android.partialscreenshot.utils.saveImageToPhotoGallery
 import androidx.core.content.ContextCompat.startActivity
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
+import com.example.android.partialscreenshot.editFeature.EditImageActivity
 
 
 class ScreenShotTaker(
@@ -45,6 +46,7 @@ class ScreenShotTaker(
     private val mainActivityReference: FloatingWindowListener?
 ): OnOptionsWindowSelectedListener {
 
+    private var uriToEdit: String? = null
     private lateinit var path: String
     private lateinit var name: String
     private var uriToImage: Uri? = null
@@ -177,9 +179,10 @@ class ScreenShotTaker(
 
             cropView.showDrawable = true
             cropView.resetView()
-           saveImageToPhotoGallery(context.contentResolver,
+           uriToEdit = saveImageToPhotoGallery(context.contentResolver,
                croppedBitmap,
                name,"Screenshot description")
+            optionsWindowView.destroyView()
 
             Toast.makeText(context,"Screenshot Saved",Toast.LENGTH_SHORT).show()
         }
@@ -194,7 +197,7 @@ class ScreenShotTaker(
 
     override fun onShareScreenshot() {
         onSaveScreenshot()
-        optionsWindowView.destroyView()
+
         uriToImage?.let {
             MediaScannerConnection.scanFile(context,
                 arrayOf(uriToImage.toString()),
@@ -219,10 +222,17 @@ class ScreenShotTaker(
     }
 
     override fun onEditScreenshot() {
-        val intent = Intent(Intent.ACTION_EDIT)
-        intent.setDataAndType(uriToImage, "image/*")
-        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        startActivity((mainActivityReference as MainActivity),Intent.createChooser(intent, null),null)
+
+        onSaveScreenshot()
+
+        val intent = Intent(Intent.ACTION_EDIT).apply {
+            setDataAndType(Uri.parse(uriToEdit), "image/*")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        }
+
+
+
+        startActivity((mainActivityReference as MainActivity),intent,null)
     }
 
     /**
