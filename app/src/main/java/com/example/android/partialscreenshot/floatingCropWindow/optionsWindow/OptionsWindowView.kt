@@ -140,7 +140,7 @@ class OptionsWindowView (private val context: Context,
      private fun onTouchButton(id: Int?) {
 
         when(id){
-            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshot(); destroyView() }
+            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshot()}
             R.id.delete ->{onOptionsWindowSelectedListener?.onDeleteScreenshot()}
             R.id.share ->{onOptionsWindowSelectedListener?.onShareScreenshot()}
             R.id.add_note ->{onOptionsWindowSelectedListener?.onAddNoteToScreenshot()}

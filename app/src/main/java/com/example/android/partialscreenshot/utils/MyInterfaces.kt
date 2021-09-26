@@ -7,7 +7,7 @@ import android.net.Uri
 import android.view.MotionEvent
 
 interface FloatingWindowListener  {
-    fun getPermissionToRecordScreen()
+    fun checkIfPermissionToSave(): Boolean
     fun getDataToRecordScreen(): Intent?
 }
 

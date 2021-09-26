@@ -3,6 +3,7 @@ package com.example.android.partialscreenshot.editFeature;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 import static com.example.android.partialscreenshot.editFeature.FileSaveHelper.isSdkHigherThan28;
+import static com.example.android.partialscreenshot.utils.UtilsKt.getCurrentTimeStamp;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -299,7 +300,7 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
 
 
     private void saveImage() {
-        final String fileName = System.currentTimeMillis() + ".png";
+        final String fileName = getCurrentTimeStamp() + ".png";
         final boolean hasStoragePermission =
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED;
         if (hasStoragePermission || isSdkHigherThan28()) {

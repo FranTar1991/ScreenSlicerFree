@@ -28,6 +28,10 @@ val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 } else {
     TYPE_PHONE
 }
+
+const val PERMISSION_TO_OVERLAY ="overlay"
+const val PERMISSION_TO_SAVE ="save"
+
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
 var INITIAL_POINT = 120
 

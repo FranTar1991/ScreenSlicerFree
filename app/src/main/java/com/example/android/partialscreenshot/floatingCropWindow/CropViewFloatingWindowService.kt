@@ -20,7 +20,7 @@ class CropViewFloatingWindowService: Service() {
 
      lateinit var floatingView: CropView
     private var mData: Intent? = null
-    private lateinit var screenShotTaker: ScreenShotTaker
+    lateinit var screenShotTaker: ScreenShotTaker
 
     private var takeScreenShotServiceCallback: FloatingWindowListener? = null
     private val binder: IBinder = LocalBinder()

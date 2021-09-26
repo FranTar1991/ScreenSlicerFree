@@ -36,7 +36,6 @@ import com.example.android.partialscreenshot.utils.saveImageToPhotoGallery
 import androidx.core.content.ContextCompat.startActivity
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
-import com.example.android.partialscreenshot.editFeature.EditImageActivity
 
 
 class ScreenShotTaker(
@@ -175,17 +174,22 @@ class ScreenShotTaker(
 
 
     override fun onSaveScreenshot() {
-        saveCroppedBitmap(croppedBitmap).also {
 
-            cropView.showDrawable = true
-            cropView.resetView()
-           uriToEdit = saveImageToPhotoGallery(context.contentResolver,
-               croppedBitmap,
-               name,"Screenshot description")
-            optionsWindowView.destroyView()
+        if ((mainActivityReference as MainActivity).checkIfPermissionToSave()){
+            saveCroppedBitmap(croppedBitmap).also {
 
-            Toast.makeText(context,"Screenshot Saved",Toast.LENGTH_SHORT).show()
+                cropView.showDrawable = true
+                cropView.resetView()
+                uriToEdit = saveImageToPhotoGallery(context.contentResolver,
+                    croppedBitmap,
+                    name,"Screenshot description")
+                optionsWindowView.destroyView()
+
+                Toast.makeText(context,"Screenshot Saved",Toast.LENGTH_SHORT).show()
+            }
         }
+
+
 
     }
 

@@ -5,35 +5,38 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.media.MediaScannerConnection
-import android.media.MediaScannerConnection.OnScanCompletedListener
+import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.example.android.partialscreenshot.databinding.ActivityMainBinding
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
 import kotlin.properties.Delegates
-import android.provider.MediaStore.Images
 
-import android.content.ContentValues
-import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
+import androidx.fragment.app.DialogFragment
+import com.example.android.partialscreenshot.utils.PERMISSION_TO_OVERLAY
+import com.example.android.partialscreenshot.utils.PERMISSION_TO_SAVE
+import com.example.android.partialscreenshot.utils.PermissionsDialog
 
 
 //Use this variables instead of OnActivityResult
 private lateinit var permissionToShowFloatingWidgetLauncher: ActivityResultLauncher<Intent>
 private lateinit var permissionToRecordLauncher: ActivityResultLauncher<Intent>
+private lateinit var requestPermissionToSaveLauncher: ActivityResultLauncher<String>
+
 
 //These are used to connect the FloatingWindowService with it´s calling activity
 private var bound by Delegates.notNull<Boolean>()
@@ -41,10 +44,11 @@ private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindo
 
 //Variable that holds all to take the screenshots
 private var mData: Intent? = null
+public var hasPermissionToSave = false
+val permissionsDialog = PermissionsDialog()
 
-class MainActivity : AppCompatActivity(), FloatingWindowListener {
+class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener {
 
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private val cropViewFloatingWindowServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get FloatingWindowService instance
@@ -71,34 +75,43 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
                 if (result.resultCode == Activity.RESULT_OK) {
                     val data: Intent? = result.data
                     mData = data
+
+                    callFloatingWindow()
+
+                } else {
+                    //show toast explaining that without this permission the app can´t work
+                    Log.i("NotGranted", "permission to record not granted")
                 }
             }
 
-        permissionToShowFloatingWidgetLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            startService(Intent(this, CropViewFloatingWindowService::class.java))
+         permissionToShowFloatingWidgetLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                    result ->
+                checkIfPermissionToShowOverlay()
+            }
+
+        requestPermissionToSaveLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            isGranted: Boolean ->
+                if (isGranted){
+                    cropServiceViewFloatingWindowService.screenShotTaker.onSaveScreenshot()
+                } else {
+                    Toast.makeText(this,"Sorry, you won´t be able to save any screenshots then",Toast.LENGTH_SHORT).show()
+                }
         }
 
 
-
-        ActivityCompat.requestPermissions(this@MainActivity,
-            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            1)
-
         binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
-            callFloatingWindow()
+            checkIfPermissionToShowOverlay()
         })
 
         //Used to connect this activity with the FloatingWindowService
         val intent = Intent(this, CropViewFloatingWindowService::class.java)
         bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
 
-        //This method should be deleted once we can the get permission from the floating window service
-        getPermission()
-
     }
 
-    private fun getPermission() {
+    private fun getPermissionToRecord() {
 
         val mProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE)
                 as MediaProjectionManager
@@ -111,21 +124,18 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
      * If Marshmallow or greater call the floating window service
      * else ask for overlay permission
      */
-    private fun callFloatingWindow() {
+    private fun checkIfPermissionToShowOverlay(){
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            permissionToRecordLauncher.launch(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            !Settings.canDrawOverlays(this)) {
 
-        } else {
+            callPermissionToOverlayDialog()
 
-                startService(Intent(this@MainActivity,
-                    CropViewFloatingWindowService::class.java))
-
+        } else{
+            getPermissionToRecord()
         }
+
+
     }
 
 
@@ -146,11 +156,14 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
     /**
      * This method should be called by the floating window service
      */
-    override fun getPermissionToRecordScreen() {
-        val mProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE)
-                as MediaProjectionManager
-
-        permissionToRecordLauncher.launch(mProjectionManager.createScreenCaptureIntent())
+    override fun checkIfPermissionToSave(): Boolean {
+      return  if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+          true
+        }
+        else {
+          callPermissionToSaveDialog()
+          false
+        }
     }
 
     /**
@@ -158,6 +171,37 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener {
      */
     override fun getDataToRecordScreen(): Intent? {
         return mData;
+    }
+
+    private fun callPermissionToOverlayDialog() {
+        permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
+    }
+
+    private fun callPermissionToSaveDialog(){
+        permissionsDialog.show(supportFragmentManager, PERMISSION_TO_SAVE)
+    }
+
+
+    private fun callFloatingWindow() {
+        startService(Intent(this@MainActivity, CropViewFloatingWindowService::class.java))
+    }
+
+    override fun onOverlayPositiveClick() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val myIntent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            permissionToShowFloatingWidgetLauncher.launch(myIntent)
+        }
+
+    }
+
+    override fun onSavePositiveClick() {
+        // You can directly ask for the permission.
+        // The registered ActivityResultCallback gets the result of this request.
+        requestPermissionToSaveLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
     }
 
 }
