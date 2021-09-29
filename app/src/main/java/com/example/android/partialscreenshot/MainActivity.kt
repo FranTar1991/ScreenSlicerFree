@@ -183,7 +183,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
 
     private fun callFloatingWindow() {
-        startService(Intent(this@MainActivity, CropViewFloatingWindowService::class.java))
+        val intent = Intent(this@MainActivity, CropViewFloatingWindowService::class.java)
+        startService(intent)
     }
 
     override fun onOverlayPositiveClick() {

@@ -1,19 +1,18 @@
 package com.example.android.partialscreenshot.floatingCropWindow
 
+import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.os.*
+import android.util.Log
 import android.view.*
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.ScreenShotTaker
-import com.example.android.partialscreenshot.utils.FloatingWindowListener
-import com.example.android.partialscreenshot.utils.INITIAL_POINT
+import com.example.android.partialscreenshot.utils.*
 
-import com.example.android.partialscreenshot.utils.OnRequestTakeScreenShotListener
-import com.example.android.partialscreenshot.utils.addMyCropView
 
 
 class CropViewFloatingWindowService: Service() {
@@ -45,6 +44,7 @@ class CropViewFloatingWindowService: Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.e("ClosingService","Starting service");
         setUpFloatingWidget()
         screenShotTaker = ScreenShotTaker(applicationContext,
             this,
@@ -55,6 +55,7 @@ class CropViewFloatingWindowService: Service() {
     }
     override fun onDestroy() {
         super.onDestroy()
+        Log.e("ClosingService","Service killed");
         manager.removeView(floatingView)
     }
 

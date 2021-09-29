@@ -253,18 +253,27 @@ class ScreenShotTaker(
         when {
             isStartCommand(intent) -> {
                 // create notification
-                val notification = NotificationUtils.getNotification(context)
+                val notification = NotificationUtils.getNotification(context,NotificationUtils.N_ID_F_ScreenShot)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
                     cropViewFloatingWindowService.startForeground(
                         notification.first,
                         notification.second,
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
                     )
+                }else{
+                    cropViewFloatingWindowService.startForeground(
+                        notification.first,
+                        notification.second
+                    )
                 }
                 // start projection
                 val resultCode = intent.getIntExtra(RESULT_CODE, Activity.RESULT_CANCELED)
                 val data = intent.getParcelableExtra<Intent>(DATA)
-                startProjection(resultCode, data!!)
+                data?.let {
+                    startProjection(resultCode, data)
+                }
+
             }
             isStopCommand(intent) -> {
                 stopProjection()
@@ -304,7 +313,6 @@ class ScreenShotTaker(
      * Method called to stop taking the screenshots
      */
     private fun stopProjection() {
-        Log.i("Istoartcommand","Stopping projection")
         mHandler?.post {
             mMediaProjection?.stop()
         }
@@ -469,6 +477,7 @@ class ScreenShotTaker(
 
             } else {
                 stopProjection()
+                cropViewFloatingWindowService.stopForeground(true)
             }
         }
     }

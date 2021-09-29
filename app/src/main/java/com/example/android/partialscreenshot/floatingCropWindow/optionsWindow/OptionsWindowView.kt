@@ -58,7 +58,7 @@ class OptionsWindowView (private val context: Context,
 
         //Specify the view position
         params.gravity =
-            Gravity.BOTTOM or Gravity.END //Initially view will be added to top-left corner
+            Gravity.CENTER or Gravity.END //Initially view will be added to top-left corner
 
         //Add the view to the window
 

@@ -17,17 +17,18 @@ import com.example.android.partialscreenshot.R;
 
 public class NotificationUtils {
 
-    public static final int NOTIFICATION_ID = 1337;
-    private static final String NOTIFICATION_CHANNEL_ID = "com.mtsahakis.mediaprojectiondemo.app";
-    private static final String NOTIFICATION_CHANNEL_NAME = "com.mtsahakis.mediaprojectiondemo.app";
+    public static final int N_ID_F_ScreenShot = 1337;
+    public static final int N_ID_F_Floating = 1338;
+    private static final String NOTIFICATION_CHANNEL_ID = "com.partialscreenshot.app";
+    private static final String NOTIFICATION_CHANNEL_NAME ="com.partialscreenshot.app";
 
-    public static Pair<Integer, Notification> getNotification(@NonNull Context context) {
+    public static Pair<Integer, Notification> getNotification(@NonNull Context context, int id) {
         createNotificationChannel(context);
         Notification notification = createNotification(context);
         NotificationManager notificationManager
                 = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID, notification);
-        return new Pair<>(NOTIFICATION_ID, notification);
+        notificationManager.notify(id, notification);
+        return new Pair<>(id, notification);
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -55,5 +56,6 @@ public class NotificationUtils {
         builder.setShowWhen(true);
         return builder.build();
     }
+
 
 }

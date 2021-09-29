@@ -26,6 +26,13 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import androidx.appcompat.content.res.AppCompatResources
+
+
+
+
+
+
 
 // endregion
 // region: Inner class: Type
@@ -52,6 +59,10 @@ class CropView @JvmOverloads constructor(context: Context,
                                          defStyleAttr: Int = 0): ImageView(context,attrs, defStyleAttr) {
 
 
+    private var gradientBottom: Drawable? = null
+    private var gradientTop: Drawable? = null
+    private var mIsToClose: Boolean = false
+    private var isMultiTouch: Boolean = false
     var thisOptionsView: OptionsWindowView? = null
 
     var showDrawable: Boolean = true
@@ -115,6 +126,7 @@ class CropView @JvmOverloads constructor(context: Context,
     private var cropLeftDownDrawable: Drawable? = null
     private var cropRightUpDrawable: Drawable? = null
     private var cropRightDownDrawable: Drawable? = null
+    private var mActivePointerId: Int = 0
 
     private var displayMetrics: DisplayMetrics? = null
     private var touchRadius: Float = 0f
@@ -160,6 +172,8 @@ class CropView @JvmOverloads constructor(context: Context,
             strokeWidth = 8f
         }
 
+        gradientTop = AppCompatResources.getDrawable(context, R.drawable.gradient_top)
+        gradientBottom = AppCompatResources.getDrawable(context, R.drawable.gradient_bottom)
         isInitialized = true
     }
 
@@ -177,8 +191,6 @@ class CropView @JvmOverloads constructor(context: Context,
 
 
     }
-
-
     private fun Array<Point>.setTheRect(initialPoint: Int){
         this[0].x = 0
         this[0].y = initialPoint
@@ -225,9 +237,11 @@ class CropView @JvmOverloads constructor(context: Context,
                    setCloseDrawable(canvas)
 
                } else{
-                       croppedImage?.apply {
-                               setImageBitmap(this)
+                       croppedImage?.let {
+                           setImageBitmap(it)
                        }
+                   gradientTop?.draw(canvas)
+                   gradientBottom?.draw(canvas)
                    drawMyRect(this, mainRectPoints)
                    setNewCropWindow(this)
 
@@ -239,6 +253,33 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
 
+    private fun setBackgroundShadowBounds() {
+
+        gradientTop?. apply {
+            setBounds(
+                mainRectPoints[0].x ,
+                mainRectPoints[0].y-100.dp,
+                mainRectPoints[1].x,
+                heightOfRect/6
+            )
+        }
+
+        gradientBottom?.apply {
+            setBounds(
+                mainRectPoints[2].x,
+                mainRectPoints[3].y - (heightOfRect/6),
+                mainRectPoints[3].x,
+                mainRectPoints[3].y+100.dp
+            )
+
+        }
+
+    }
+
+    /**
+     * This method draws the crop window when the view is not in match parenting mode
+     * draws the background and sets the drawable on top of it
+     */
     private fun setNewCropWindow(canvas: Canvas) {
         if (showDrawable) {
             setImageBitmap(null)
@@ -257,14 +298,13 @@ class CropView @JvmOverloads constructor(context: Context,
 
         }
     }
-
     private fun setCropDrawables(canvas: Canvas) {
         cropLeftUpDrawable?.apply {
             setBounds(
                 mainRectPoints[0].x,
                 mainRectPoints[0].y,
                 (widthOfRect/4).dp,
-                (widthOfRect/4).dp
+                (heightOfRect/4).dp
             )
             this.draw(canvas)
         }
@@ -272,7 +312,7 @@ class CropView @JvmOverloads constructor(context: Context,
         cropRightDownDrawable?.apply {
             setBounds(
                 mainRectPoints[3].x - (widthOfRect/4).dp,
-                mainRectPoints[3].y - (widthOfRect/4).dp,
+                mainRectPoints[3].y - (heightOfRect/4).dp,
                 mainRectPoints[3].x,
                 mainRectPoints[3].y
             )
@@ -284,7 +324,7 @@ class CropView @JvmOverloads constructor(context: Context,
                 mainRectPoints[1].x - (widthOfRect/4).dp,
                 mainRectPoints[1].y,
                 mainRectPoints[1].x,
-                mainRectPoints[1].y + (widthOfRect/4).dp
+                mainRectPoints[1].y + (heightOfRect/4).dp
             )
             this.draw(canvas)
         }
@@ -292,7 +332,7 @@ class CropView @JvmOverloads constructor(context: Context,
         cropLeftDownDrawable?.apply {
             setBounds(
                 mainRectPoints[2].x,
-                mainRectPoints[2].y - (widthOfRect/4).dp,
+                mainRectPoints[2].y - (heightOfRect/4).dp,
                 (widthOfRect/4).dp,
                 mainRectPoints[2].y
             )
@@ -300,18 +340,23 @@ class CropView @JvmOverloads constructor(context: Context,
         }
 
     }
-
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        val action = event?.actionMasked
 
-        when(event?.action){
+        event?.let {
+            if (event.pointerCount > 1){
+                isMultiTouch = true
+            }
+            mActivePointerId = event.getPointerId(0)
+        }
+
+        when(action){
             ACTION_DOWN-> {
-
-
                 croppedImage = null
 
                 mainRect = Rect(mainRectPoints[0].x,mainRectPoints[0].y,mainRectPoints[3].x ,mainRectPoints[3].y )
 
-                moveType = getMoveType(event.x.toInt(), event.y.toInt(), mainRect)
+                moveType = getMoveType(event, mainRect)
 
                 calculateTouchOffset(event.x.toInt(), event.y.toInt(), mainRect)
                 when (moveType){
@@ -332,67 +377,83 @@ class CropView @JvmOverloads constructor(context: Context,
             ACTION_UP -> {
                 coordinatesRect =  Rect(secondRectPoints[0].x,secondRectPoints[0].y,secondRectPoints[3].x ,secondRectPoints[3].y )
 
-                val isToClose = isToClose(event)
-                if(isToClose && inMatchParentMode ){
+                mIsToClose = isToClose(event)
+                if(mIsToClose && inMatchParentMode ){
                     callBackForWindowManager.onClose()
 
-                } else if(!isToClose && !moveView){
+                } else if(!mIsToClose && !moveView){
                     requestTakeScreenShotCallback.onRequestScreenShot(coordinatesRect)
 
                 }
-                changeWrapMode(WRAP_CONTENT, isToClose)
+                changeWrapMode(WRAP_CONTENT, mIsToClose)
                 moveView = false
+                isMultiTouch = false
+                setBackgroundShadowBounds()
 
             }
-
             ACTION_MOVE -> {
-                if (isToClose(event)){
-                    DrawableCompat.setTint(
-                        DrawableCompat.wrap(closeDrawable!!),
-                        ContextCompat.getColor(context, R.color.teal_200)
-                    )
-                } else{
-                    DrawableCompat.setTint(
-                        DrawableCompat.wrap(closeDrawable!!),
-                        ContextCompat.getColor(context, R.color.back_second)
-                    )
+
+                mIsToClose = isToClose(event)
+
+                event.actionIndex.also { pointerIndex ->
+                    if(pointerIndex == event.findPointerIndex(mActivePointerId)){
+                        if (isMultiTouch){
+                            onMultiTouchMove(event, corner)
+
+                        } else {
+                            if (mIsToClose){
+                                DrawableCompat.setTint(
+                                    DrawableCompat.wrap(closeDrawable!!),
+                                    ContextCompat.getColor(context, R.color.teal_200)
+                                )
+                            } else{
+                                DrawableCompat.setTint(
+                                    DrawableCompat.wrap(closeDrawable!!),
+                                    ContextCompat.getColor(context, R.color.back_second)
+                                )
+                            }
+
+                            when(moveType){
+                                Type.BOTTOM_RIGHT -> {
+                                    resizeXRight(event,corner)
+                                    resizeYBottom(event,corner)
+                                }
+                                Type.TOP_RIGHT ->{
+                                    resizeXRight(event,corner)
+                                    resizeYTop(event,corner)
+                                }
+                                Type.TOP_LEFT -> {
+                                    resizeXLeft(event, corner)
+                                    resizeYTop(event, corner)
+                                }
+                                Type.BOTTOM_LEFT -> {
+                                    resizeXLeft(event, corner)
+                                    resizeYBottom(event,corner)
+                                }
+                                Type.LEFT -> {
+                                    resizeXLeft(event,corner)
+                                }
+                                Type.TOP -> {
+                                    resizeYTop(event,corner)
+                                }
+                                Type.RIGHT -> {
+                                    resizeXRight(event,corner)
+                                }
+                                Type.BOTTOM -> {
+                                    resizeYBottom(event, corner)
+                                }
+                                Type.CENTER -> callBackForWindowManager.onMove(event)
+                                null -> {}
+                            }
+                        }
+                    }
                 }
 
-                when(moveType){
-                    Type.BOTTOM_RIGHT -> {
-                        resizeXRight(event,corner)
-                        resizeYBottom(event,corner)
-                    }
-
-                    Type.TOP_RIGHT ->{
-                        resizeXRight(event,corner)
-                        resizeYTop(event,corner)
-                    }
-                    Type.TOP_LEFT -> {
-                        resizeXLeft(event, corner)
-                        resizeYTop(event, corner)
-                    }
-                    Type.BOTTOM_LEFT -> {
-                        resizeXLeft(event, corner)
-                        resizeYBottom(event,corner)
-                    }
-                    Type.LEFT -> {
-                        resizeXLeft(event,corner)
-                    }
-                    Type.TOP -> {
-                        resizeYTop(event,corner)
-                    }
-                    Type.RIGHT -> {
-                        resizeXRight(event,corner)
-                    }
-                    Type.BOTTOM -> {
-                        resizeYBottom(event, corner)
-                    }
-                    Type.CENTER -> callBackForWindowManager.onMove(event)
-                    null -> {}
-                }
                 invalidate()
                 requestLayout()
+            }
+            ACTION_POINTER_UP ->{
+                isMultiTouch = false
             }
         }
         return true
@@ -433,8 +494,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
     //region: Helper to draw
     private fun drawMyRect(canvas: Canvas, rectToDraw: Array<Point>) {
-
-
+        Log.i("drawingRect","drawing rect")
            canvas. drawRect(
                rectToDraw[0].x.plus(halfDrawableSize).toFloat(),
                rectToDraw[1].y.plus(halfDrawableSize).toFloat(),
@@ -446,7 +506,11 @@ class CropView @JvmOverloads constructor(context: Context,
     }
     private fun drawMyBackground(canvas: Canvas) {
         //set paint to draw outside color, fill
-
+        if (mIsToClose){
+            paintForBack.color = ContextCompat.getColor(context, R.color.red_color_picker)
+        } else{
+            paintForBack.color = outsideColor
+        }
 
         //top rectangle
         canvas.drawRect(0f, 0f, canvas.width.toFloat(),
@@ -568,8 +632,6 @@ class CropView @JvmOverloads constructor(context: Context,
 
             start.y = secondRectPoints[corner].y
 
-
-
         return start.y
     }
     private fun resizeYTop(event: MotionEvent, corner: Int): Int {
@@ -601,7 +663,6 @@ class CropView @JvmOverloads constructor(context: Context,
         heightOfRect = min(restrictionOnSizeInY, maximumAllowedHeight)
 
         ySide = heightOfRect
-        Log.i("MyVIww","$heightOfRect")
 
         mainRectPoints[2].y = mainRectPoints[0].y + heightOfRect
         mainRectPoints[3].y = mainRectPoints[0].y + heightOfRect
@@ -652,12 +713,12 @@ class CropView @JvmOverloads constructor(context: Context,
     }
     private fun resizeXLeft(event: MotionEvent, corner: Int): Int {
         //amount of pixels moved
-        val cornerMovedInPixels = Math.floor((event.x - start.x + mTouchOffset.x).toDouble())
+        val cornerMovedInPixels = floor((event.x - start.x + mTouchOffset.x).toDouble())
 
         //If we go up the (heightOfRect - cornerMovedInPixels) will be more than minimumSideLength
         // if we go down the minimumSideLength will decrease and at some point will be greater than
         //(heightOfRect - cornerMovedInPixels)
-        val restrictionOnSizeInX = Math.max(
+        val restrictionOnSizeInX = max(
             minimumSideLength,
             (widthOfRect - cornerMovedInPixels).toInt()
         )
@@ -691,7 +752,9 @@ class CropView @JvmOverloads constructor(context: Context,
         start.x = secondRectPoints[corner].x
         return start.x
     }
-    private fun getMoveType(xPressed: Int, yPressed: Int, rect: Rect): Type? {
+    private fun getMoveType(event: MotionEvent, rect: Rect): Type {
+
+        val (xPressed: Int, yPressed: Int) = event.x.toInt() to event.y.toInt()
 
         return  if (xPressed - touchRadius> rect.left  && xPressed + touchRadius < rect.right  && yPressed - touchRadius> rect.top  && yPressed + touchRadius< rect.bottom) {
             Type.CENTER
@@ -733,6 +796,26 @@ class CropView @JvmOverloads constructor(context: Context,
         }
 
 
+
+    }
+    private fun onMultiTouchMove(event: MotionEvent, corner: Int){
+
+        secondRectPoints[0].x = max(secondRectPoints[0].x + min(floor(event.x - start.x + mTouchOffset.x), floor(width - secondRectPoints[0].x - 2 * halfDrawableSize - xSide.toFloat())).toInt(), 0)
+        secondRectPoints[1].x = max(secondRectPoints[1].x + min(floor(event.x - start.x + mTouchOffset.x), floor(width - secondRectPoints[1].x - 2 * halfDrawableSize.toFloat())).toInt(), xSide)
+        secondRectPoints[2].x = max(secondRectPoints[2].x + min(floor(event.x - start.x + mTouchOffset.x), floor(width - secondRectPoints[2].x - 2 * halfDrawableSize - xSide.toFloat())).toInt(), 0)
+        secondRectPoints[3].x = max(secondRectPoints[3].x + min(floor(event.x - start.x + mTouchOffset.x), floor(width - secondRectPoints[3].x - 2 * halfDrawableSize.toFloat())).toInt(), xSide)
+
+        secondRectPoints[0].y = max(secondRectPoints[0].y + min(floor(event.y - start.y + mTouchOffset.y), floor(height - secondRectPoints[0].y - 2 * halfDrawableSize - ySide.toFloat())).toInt(), 0)
+        secondRectPoints[1].y = max(secondRectPoints[1].y + min(floor(event.y - start.y + mTouchOffset.y), floor(height - secondRectPoints[1].y - 2 * halfDrawableSize - ySide.toFloat())).toInt(), 0)
+        secondRectPoints[2].y = max(secondRectPoints[2].y + min(floor(event.y - start.y + mTouchOffset.y), floor(height - secondRectPoints[2].y - 2 * halfDrawableSize.toFloat())).toInt(), ySide)
+        secondRectPoints[3].y = max(secondRectPoints[3].y + min(floor(event.y - start.y + mTouchOffset.y), floor(height - secondRectPoints[3].y - 2 * halfDrawableSize.toFloat())).toInt(), ySide)
+
+
+        this.newX = secondRectPoints[0].x
+        this.newY = secondRectPoints[0].y
+
+        start.x = secondRectPoints[corner].x
+        start.y = secondRectPoints[corner].y
 
     }
 
@@ -804,8 +887,6 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
 
-
-
     //region: close feature
     private fun isToClose(event: MotionEvent): Boolean {
 
@@ -828,7 +909,6 @@ class CropView @JvmOverloads constructor(context: Context,
 
         closeDrawable?.draw(canvas)
     }
-
 
     private fun getOnMeasureSpec( isMeasuringWidth: Boolean, measureSpecMode: Int, measureSpecSize: Int, desiredSize: Int): Int {
 

@@ -2,6 +2,7 @@ package com.example.android.partialscreenshot.utils
 
 import android.graphics.PixelFormat
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
@@ -53,7 +54,7 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()
 
-
+                    Log.i("MYviewI","updating")
                     //Update the layout with new X & Y coordinate
                     updateViewLayout(myFloatingView, params)
                     myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
@@ -66,6 +67,7 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
         override fun onClose() {
 
             removeView(myFloatingView)
+
 
         }
 
