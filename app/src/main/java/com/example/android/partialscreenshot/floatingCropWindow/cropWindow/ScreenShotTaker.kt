@@ -5,7 +5,6 @@ import android.app.Activity
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.Image
@@ -20,7 +19,6 @@ import android.widget.Toast
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
 import com.example.android.partialscreenshot.utils.getCurrentTimeStamp
 import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
-import com.example.android.partialscreenshot.utils.NotificationUtils
 import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListener
 
 import com.example.android.partialscreenshot.utils.FloatingWindowListener
@@ -128,8 +126,7 @@ class ScreenShotTaker(
                         baseBitmap?.apply {
                             baseBitmap.copyPixelsFromBuffer(buffer)
                             croppedBitmap = cropBaseBitmap(baseBitmap).copy(baseBitmap.config,true)
-                            cropViewFloatingWindowService.floatingView.croppedImage =
-                                croppedBitmap
+                            cropViewFloatingWindowService.setCroppedImage(croppedBitmap)
                             callOptionsFloatingWindowService()
                             baseBitmap.recycle()
 
@@ -173,11 +170,10 @@ class ScreenShotTaker(
      */
 
 
-    override fun onSaveScreenshot() {
+    override fun onSaveScreenshot(isToShare: Boolean) {
 
         if ((mainActivityReference as MainActivity).checkIfPermissionToSave()){
             saveCroppedBitmap(croppedBitmap).also {
-
                 cropView.showDrawable = true
                 cropView.resetView()
                 uriToEdit = saveImageToPhotoGallery(context.contentResolver,
@@ -186,6 +182,9 @@ class ScreenShotTaker(
                 optionsWindowView.destroyView()
 
                 Toast.makeText(context,"Screenshot Saved",Toast.LENGTH_SHORT).show()
+                if (isToShare) {
+                    shareScreenShot()
+                }
             }
         }
 
@@ -200,13 +199,18 @@ class ScreenShotTaker(
     }
 
     override fun onShareScreenshot() {
-        onSaveScreenshot()
+        onSaveScreenshot(true)
+       shareScreenShot()
 
+    }
+
+    private fun shareScreenShot() {
         uriToImage?.let {
             MediaScannerConnection.scanFile(context,
                 arrayOf(uriToImage.toString()),
                 arrayOf("image/jpeg")){ path, uri ->
                 val shareIntent: Intent = Intent().apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_STREAM, uri)
                     type = "image/jpeg"
@@ -217,8 +221,6 @@ class ScreenShotTaker(
 
             }
         }
-
-
     }
 
     override fun onAddNoteToScreenshot() {
@@ -231,7 +233,7 @@ class ScreenShotTaker(
 
         val intent = Intent(Intent.ACTION_EDIT).apply {
             setDataAndType(Uri.parse(uriToEdit), "image/*")
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
 
@@ -252,21 +254,7 @@ class ScreenShotTaker(
         this.imageCoordinatesRect = imageCoordinatesRect
         when {
             isStartCommand(intent) -> {
-                // create notification
-                val notification = NotificationUtils.getNotification(context,NotificationUtils.N_ID_F_ScreenShot)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
-                    cropViewFloatingWindowService.startForeground(
-                        notification.first,
-                        notification.second,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-                    )
-                }else{
-                    cropViewFloatingWindowService.startForeground(
-                        notification.first,
-                        notification.second
-                    )
-                }
                 // start projection
                 val resultCode = intent.getIntExtra(RESULT_CODE, Activity.RESULT_CANCELED)
                 val data = intent.getParcelableExtra<Intent>(DATA)
@@ -477,7 +465,6 @@ class ScreenShotTaker(
 
             } else {
                 stopProjection()
-                cropViewFloatingWindowService.stopForeground(true)
             }
         }
     }

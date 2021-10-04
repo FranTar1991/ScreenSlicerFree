@@ -117,6 +117,9 @@ public class FileSaveHelper implements LifecycleObserver {
 
     private Uri getEditedImageUri(String fileNameToSave, ContentValues newImageDetails, Uri imageCollection) throws IOException {
         newImageDetails.put(MediaStore.Images.Media.DISPLAY_NAME, fileNameToSave);
+        newImageDetails.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis());
+        newImageDetails.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+
         final Uri editedImageUri = mContentResolver.insert(imageCollection, newImageDetails);
         final OutputStream outputStream = mContentResolver.openOutputStream(editedImageUri);
         outputStream.close();

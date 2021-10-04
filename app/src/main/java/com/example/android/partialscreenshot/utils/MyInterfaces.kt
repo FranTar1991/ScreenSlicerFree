@@ -21,7 +21,7 @@ interface OnRequestTakeScreenShotListener{
 }
 
 interface OnOptionsWindowSelectedListener{
-    fun onSaveScreenshot()
+    fun onSaveScreenshot(isToShare: Boolean = false)
     fun onDeleteScreenshot()
     fun onShareScreenshot()
     fun onAddNoteToScreenshot()

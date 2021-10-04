@@ -458,6 +458,7 @@ class CropView @JvmOverloads constructor(context: Context,
         }
         return true
     }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         widthConstraint = MeasureSpec.getSize(widthMeasureSpec)

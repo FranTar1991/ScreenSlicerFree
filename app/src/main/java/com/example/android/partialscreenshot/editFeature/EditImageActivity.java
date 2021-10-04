@@ -4,12 +4,15 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 import static com.example.android.partialscreenshot.editFeature.FileSaveHelper.isSdkHigherThan28;
 import static com.example.android.partialscreenshot.utils.UtilsKt.getCurrentTimeStamp;
+import static com.example.android.partialscreenshot.utils.UtilsKt.saveImageToPhotoGallery;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.IpSecManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,6 +22,7 @@ import android.view.View;
 import android.view.animation.AnticipateOvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,6 +48,7 @@ import com.example.android.partialscreenshot.editFeature.tools.ToolType;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import ja.burhanrashid52.photoeditor.OnPhotoEditorListener;
@@ -61,8 +66,7 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         View.OnClickListener,
         PropertiesBSFragment.Properties,
         ShapeBSFragment.Properties,
-        EmojiBSFragment.EmojiListener,
-        StickerBSFragment.StickerListener, EditingToolsAdapter.OnItemSelected, FilterListener {
+        EmojiBSFragment.EmojiListener, EditingToolsAdapter.OnItemSelected, FilterListener {
 
     private static final String TAG = EditImageActivity.class.getSimpleName();
     public static final String FILE_PROVIDER_AUTHORITY = "com.burhanrashid52.photoeditor.fileprovider";
@@ -77,7 +81,6 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
     private ShapeBSFragment mShapeBSFragment;
     private ShapeBuilder mShapeBuilder;
     private EmojiBSFragment mEmojiBSFragment;
-    private StickerBSFragment mStickerBSFragment;
     private TextView mTxtCurrentTool;
     private Typeface mWonderFont;
     private RecyclerView mRvTools, mRvFilters;
@@ -92,6 +95,9 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
     Uri mSaveImageUri;
 
     private FileSaveHelper mSaveFileHelper;
+    private Typeface mTextRobotoTf;
+    private Typeface mEmojiTypeFace;
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,16 +106,14 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         setContentView(R.layout.activity_edit_image);
 
         initViews();
-
-        handleIntentImage(mPhotoEditorView.getSource());
+        intent = getIntent();
+        handleIntentImage(mPhotoEditorView.getSource(),intent);
 
         mWonderFont = Typeface.createFromAsset(getAssets(), "beyond_wonderland.ttf");
 
         mPropertiesBSFragment = new PropertiesBSFragment();
         mEmojiBSFragment = new EmojiBSFragment();
-        mStickerBSFragment = new StickerBSFragment();
         mShapeBSFragment = new ShapeBSFragment();
-        mStickerBSFragment.setStickerListener(this);
         mEmojiBSFragment.setEmojiListener(this);
         mPropertiesBSFragment.setPropertiesChangeListener(this);
         mShapeBSFragment.setPropertiesChangeListener(this);
@@ -122,11 +126,17 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         mRvFilters.setLayoutManager(llmFilters);
         mRvFilters.setAdapter(mFilterViewAdapter);
 
-        // NOTE(lucianocheng): Used to set integration testing parameters to PhotoEditor
-        boolean pinchTextScalable = getIntent().getBooleanExtra(PINCH_TEXT_SCALABLE_INTENT_KEY, true);
 
-        Typeface mTextRobotoTf = ResourcesCompat.getFont(this, R.font.roboto_medium);
-        Typeface mEmojiTypeFace = Typeface.createFromAsset(getAssets(), "emojione-android.ttf");
+            // NOTE(lucianocheng): Used to set integration testing parameters to PhotoEditor
+            boolean pinchTextScalable = getIntent().getBooleanExtra(PINCH_TEXT_SCALABLE_INTENT_KEY, true);
+        try {
+            mTextRobotoTf = ResourcesCompat.getFont(this, R.font.roboto_medium);
+            mEmojiTypeFace = Typeface.createFromAsset(getAssets(), "emojione-android.ttf");
+        }catch (Resources.NotFoundException e){
+            Log.i("GooglePlay","Needs to be updated");
+        }
+
+
 
         mPhotoEditor = new PhotoEditor.Builder(this, mPhotoEditorView)
                 .setPinchTextScalable(pinchTextScalable) // set flag to make text scalable when pinch
@@ -140,8 +150,8 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         mSaveFileHelper = new FileSaveHelper(this);
     }
 
-    private void handleIntentImage(ImageView source) {
-        Intent intent = getIntent();
+    private void handleIntentImage(ImageView source, Intent intent) {
+
         if (intent != null) {
             // NOTE(lucianocheng): Using "yoda conditions" here to guard against
             //                     a null Action in the Intent.
@@ -300,7 +310,7 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
 
 
     private void saveImage() {
-        final String fileName = getCurrentTimeStamp() + ".png";
+        final String fileName = getCurrentTimeStamp();
         final boolean hasStoragePermission =
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED;
         if (hasStoragePermission || isSdkHigherThan28()) {
@@ -317,9 +327,16 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
                         public void onSuccess(@NonNull String imagePath) {
                             mSaveFileHelper.notifyThatFileIsNowPubliclyAvailable(getContentResolver());
                             hideLoading();
-                            showSnackbar("Image Saved Successfully");
+
                             mSaveImageUri = uri;
                             mPhotoEditorView.getSource().setImageURI(mSaveImageUri);
+                            if (intent != null){
+                                finish();
+                                Toast.makeText(getApplicationContext(), "Image saved Successfully", Toast.LENGTH_SHORT).show();
+                            } else {
+                                showSnackbar("Image Saved Successfully");
+                            }
+
                         }
 
                         @Override
@@ -337,6 +354,7 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         } else {
             requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
+
     }
 
 
@@ -393,11 +411,6 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
         mTxtCurrentTool.setText(R.string.label_emoji);
     }
 
-    @Override
-    public void onStickerClick(Bitmap bitmap) {
-        mPhotoEditor.addImage(bitmap);
-        mTxtCurrentTool.setText(R.string.label_sticker);
-    }
 
     @Override
     public void isPermissionGranted(boolean isGranted, String permission) {
@@ -451,9 +464,6 @@ public class EditImageActivity extends BaseActivity implements OnPhotoEditorList
                 break;
             case EMOJI:
                 showBottomSheetDialogFragment(mEmojiBSFragment);
-                break;
-            case STICKER:
-                showBottomSheetDialogFragment(mStickerBSFragment);
                 break;
         }
     }

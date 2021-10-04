@@ -3,6 +3,9 @@
     <string name="start">Start Crop Window</string>
     <string name="recording">Is ready to take screenshot</string>
     <string name="share">Share partial screenshot</string>
+    <string name="crop_window">Crop</string>
+    <string name="close">Close</string>
+    <string name="home">Home</string>
 
     <string name="label_brush">Brush</string>
     <string name="label_shape">Shape</string>
@@ -21,7 +24,9 @@
     <string name="gotIt">OK</string>
     <string name="title_dialog">Hint</string>
     <string name="permission_overlay">To activate screen capture you need to grant the Draw over other apps permission</string>
-    <string name="permission_save">To save your screenshot, please grant the following permission.</string>
+    <string name="permission_save">To save or share your screenshot, please grant the following permission.</string>
+    <string name="view_created">Crop view has been created</string>
+    <string name="cant_save">"Sorry, you won´t be able to save or share screenshots any screenshots then"</string>
 
     <string-array name="photo_editor_emoji">
 

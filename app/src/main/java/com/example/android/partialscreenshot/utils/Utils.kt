@@ -28,7 +28,7 @@ val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 } else {
     TYPE_PHONE
 }
-
+const val STOP_INTENT = "com.partialscreenshot.stop"
 const val PERMISSION_TO_OVERLAY ="overlay"
 const val PERMISSION_TO_SAVE ="save"
 

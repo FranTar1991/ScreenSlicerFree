@@ -29,7 +29,7 @@
             android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
 
-
+        <receiver android:name=".notification_utils.NotificationBroadcastReceiver"/>
 
         <activity
             android:name=".editFeature.EditImageActivity"

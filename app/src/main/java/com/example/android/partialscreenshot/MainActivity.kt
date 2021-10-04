@@ -2,9 +2,7 @@ package com.example.android.partialscreenshot
 
 import android.Manifest
 import android.app.Activity
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
@@ -18,18 +16,17 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ServiceCompat.stopForeground
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.example.android.partialscreenshot.databinding.ActivityMainBinding
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
-import com.example.android.partialscreenshot.utils.FloatingWindowListener
 import kotlin.properties.Delegates
 
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.DialogFragment
-import com.example.android.partialscreenshot.utils.PERMISSION_TO_OVERLAY
-import com.example.android.partialscreenshot.utils.PERMISSION_TO_SAVE
-import com.example.android.partialscreenshot.utils.PermissionsDialog
+import android.widget.ArrayAdapter
+import com.example.android.partialscreenshot.utils.*
 
 
 //Use this variables instead of OnActivityResult
@@ -45,10 +42,14 @@ private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindo
 //Variable that holds all to take the screenshots
 private var mData: Intent? = null
 public var hasPermissionToSave = false
-val permissionsDialog = PermissionsDialog()
+
+var adapter: ArrayAdapter<String>? = null
+
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener {
 
+    private lateinit var permissionsDialog: PermissionsDialog
+    private var receiver: BroadcastReceiver? = null
     private val cropViewFloatingWindowServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get FloatingWindowService instance
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             cropServiceViewFloatingWindowService = binder.getService()
             bound = true
             cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity) // register
+            permissionsDialog = PermissionsDialog(cropServiceViewFloatingWindowService)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -66,6 +68,9 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        cancelOnCloseBtn()
+
         val binding =
             DataBindingUtil.setContentView<ActivityMainBinding>(this,R.layout.activity_main)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -80,13 +85,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
                 } else {
                     //show toast explaining that without this permission the app can´t work
-                    Log.i("NotGranted", "permission to record not granted")
+                   Toast.makeText(this, "Without this permission we won´t be able to take the screenshots",Toast.LENGTH_SHORT).show()
                 }
             }
 
          permissionToShowFloatingWidgetLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                    result ->
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
                 checkIfPermissionToShowOverlay()
             }
 
@@ -94,10 +98,13 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             isGranted: Boolean ->
                 if (isGranted){
+
                     cropServiceViewFloatingWindowService.screenShotTaker.onSaveScreenshot()
                 } else {
-                    Toast.makeText(this,"Sorry, you won´t be able to save any screenshots then",Toast.LENGTH_SHORT).show()
+
+                    Toast.makeText(this,getString(R.string.cant_save),Toast.LENGTH_SHORT).show()
                 }
+                cropServiceViewFloatingWindowService.hideCropView(View.VISIBLE)
         }
 
 
@@ -110,6 +117,22 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
 
     }
+
+    /**
+     * Method used to set up the broadcast receiver that will stop the activity when the "close btn" is
+     * called from the notification panel
+     */
+    private fun cancelOnCloseBtn() {
+        receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                finishAndRemoveTask()
+            }
+        }
+        val filter = IntentFilter()
+        filter.addAction(STOP_INTENT)
+        registerReceiver(receiver, filter)
+    }
+
 
     private fun getPermissionToRecord() {
 
@@ -145,12 +168,17 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      */
 
     override fun onDestroy() {
+        unregisterReceiver(receiver)
         super.onDestroy()
         if (bound) {
+            cropServiceViewFloatingWindowService.stopForeground(true)
             cropServiceViewFloatingWindowService.setServiceCallBacks(null) // unregister
             unbindService(cropViewFloatingWindowServiceConnection)
             bound = false
         }
+
+        stopService(Intent(this, CropViewFloatingWindowService::class.java))
+
     }
 
     /**
@@ -201,6 +229,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
     override fun onSavePositiveClick() {
         // You can directly ask for the permission.
         // The registered ActivityResultCallback gets the result of this request.
+
         requestPermissionToSaveLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     }

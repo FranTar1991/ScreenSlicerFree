@@ -1,18 +1,23 @@
-package com.example.android.partialscreenshot.utils;
+package com.example.android.partialscreenshot.notification_utils;
 
 
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
+import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.util.Pair;
 
+import com.example.android.partialscreenshot.MainActivity;
 import com.example.android.partialscreenshot.R;
+import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService;
 
 
 public class NotificationUtils {
@@ -37,7 +42,7 @@ public class NotificationUtils {
             NotificationChannel channel = new NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
                     NOTIFICATION_CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -46,14 +51,35 @@ public class NotificationUtils {
     }
 
     private static Notification createNotification(@NonNull Context context) {
+
+        Intent cropWindowIntent = new Intent(context, CropViewFloatingWindowService.class);
+        cropWindowIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent cropWindowPendingIntent = PendingIntent.getService(context, 0 , cropWindowIntent, 0);
+
+
+        Intent closeIntent = new Intent(context, NotificationBroadcastReceiver.class);
+        PendingIntent closePendingIntent = PendingIntent.getBroadcast(context, 0 ,
+                closeIntent, 0);
+
+        Intent homeIntent = new Intent(context, MainActivity.class);
+        PendingIntent homePendingIntent = PendingIntent.getActivity(context, 0 ,
+                homeIntent, 0);
+
+
+        RemoteViews notificationLayout = new RemoteViews(context.getPackageName(), R.layout.custom_layout_notification);
+        notificationLayout.setOnClickPendingIntent(R.id.crop_window_btn, cropWindowPendingIntent);
+        notificationLayout.setOnClickPendingIntent(R.id.close_btn,closePendingIntent);
+        notificationLayout.setOnClickPendingIntent(R.id.home_btn,homePendingIntent);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
-        builder.setSmallIcon(R.drawable.ic_camera);
-        builder.setContentTitle(context.getString(R.string.app_name));
-        builder.setContentText(context.getString(R.string.recording));
-        builder.setOngoing(true);
-        builder.setCategory(Notification.CATEGORY_SERVICE);
-        builder.setPriority(Notification.PRIORITY_LOW);
-        builder.setShowWhen(true);
+        builder.setSmallIcon(R.drawable.ic_camera)
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(context.getString(R.string.recording))
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setCustomContentView(notificationLayout)
+                .setShowWhen(false);
         return builder.build();
     }
 

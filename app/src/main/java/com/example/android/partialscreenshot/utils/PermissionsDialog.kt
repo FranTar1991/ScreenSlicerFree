@@ -4,12 +4,15 @@ import android.app.Dialog
 import android.content.Context
 import android.content.res.Resources
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import com.example.android.partialscreenshot.R
+import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
+import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 
-class PermissionsDialog: DialogFragment() {
+class PermissionsDialog(private val cropViewFloatingWindowService: CropViewFloatingWindowService): DialogFragment() {
 
     // Use this instance of the interface to deliver action events
     private lateinit var listener: NoticeDialogListener
@@ -30,6 +33,7 @@ class PermissionsDialog: DialogFragment() {
             if (tag.equals(PERMISSION_TO_OVERLAY)){
                 text.text = getString(R.string.permission_overlay)
             } else if (tag.equals(PERMISSION_TO_SAVE)){
+                cropViewFloatingWindowService.hideCropView(View.GONE)
                 text.text = getString(R.string.permission_save)
             }
 

@@ -65,15 +65,15 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
         }
 
         override fun onClose() {
-
             removeView(myFloatingView)
-
-
         }
 
     })
 
-    addView(myFloatingView, params)
+
+        addView(myFloatingView, params)
+
+
 }
 fun WindowManager.removeMyView(myFloatingView: CropView, mode: Int, newX: Int, newY: Int){
     removeView(myFloatingView)
