@@ -11,6 +11,7 @@ interface FloatingWindowListener  {
     fun getDataToRecordScreen(): Intent?
 }
 
+
 interface OnMoveCropWindowListener{
     fun onMove(event: MotionEvent?)
     fun onClose()
@@ -21,9 +22,9 @@ interface OnRequestTakeScreenShotListener{
 }
 
 interface OnOptionsWindowSelectedListener{
-    fun onSaveScreenshot(isToShare: Boolean = false)
-    fun onDeleteScreenshot()
-    fun onShareScreenshot()
-    fun onAddNoteToScreenshot()
-    fun onEditScreenshot()
+    fun onSaveScreenshotSelected()
+    fun onDeleteScreenshotSelected()
+    fun onShareScreenshotSelected()
+    fun onAddNoteToScreenshotSelected()
+    fun onEditScreenshotSelected()
 }

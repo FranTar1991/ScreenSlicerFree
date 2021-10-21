@@ -3,6 +3,8 @@ package com.example.android.partialscreenshot
 import android.Manifest
 import android.app.Activity
 import android.content.*
+import android.content.Intent.*
+
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
@@ -16,17 +18,22 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ServiceCompat.stopForeground
+import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import androidx.databinding.DataBindingUtil
-import com.example.android.partialscreenshot.databinding.ActivityMainBinding
+import androidx.core.view.WindowCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import com.example.android.partialscreenshot.database.ScreenshotItem
+import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
+import com.example.android.partialscreenshot.main_fragment.MainFragment
+import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
+import com.example.android.partialscreenshot.main_fragment.MainFragmentViewmodelFactory
+import com.example.android.partialscreenshot.utils.*
 import kotlin.properties.Delegates
 
-import androidx.core.view.WindowCompat
-import androidx.fragment.app.DialogFragment
-import android.widget.ArrayAdapter
-import com.example.android.partialscreenshot.utils.*
+
 
 
 //Use this variables instead of OnActivityResult
@@ -41,23 +48,23 @@ private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindo
 
 //Variable that holds all to take the screenshots
 private var mData: Intent? = null
-public var hasPermissionToSave = false
-
-var adapter: ArrayAdapter<String>? = null
 
 
-class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener {
+class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener{
 
+    private lateinit var screenshotViewModel: MainFragmentViewModel
+    private val viewModel: MainActivityViewModel by viewModels()
     private lateinit var permissionsDialog: PermissionsDialog
     private var receiver: BroadcastReceiver? = null
-    private val cropViewFloatingWindowServiceConnection: ServiceConnection = object : ServiceConnection {
+    private val cropViewFloatingWindowServiceConnection: ServiceConnection = object :
+        ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get FloatingWindowService instance
             val binder = service as CropViewFloatingWindowService.LocalBinder
             cropServiceViewFloatingWindowService = binder.getService()
             bound = true
             cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity) // register
-            permissionsDialog = PermissionsDialog(cropServiceViewFloatingWindowService)
+            permissionsDialog = PermissionsDialog()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -68,13 +75,26 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
         cancelOnCloseBtn()
 
-        val binding =
-            DataBindingUtil.setContentView<ActivityMainBinding>(this,R.layout.activity_main)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-         permissionToRecordLauncher =
+
+        viewModel.overlayCall.observe(this, Observer { call ->
+            if (call){
+                checkIfPermissionToShowOverlay()
+            }
+        })
+
+        val application = requireNotNull(this).application
+        val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
+        val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
+
+
+        screenshotViewModel =
+            ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
+        permissionToRecordLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                     result ->
                 if (result.resultCode == Activity.RESULT_OK) {
@@ -85,36 +105,39 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
                 } else {
                     //show toast explaining that without this permission the app can´t work
-                   Toast.makeText(this, "Without this permission we won´t be able to take the screenshots",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Without this permission we won´t be able to take the screenshots",
+                        Toast.LENGTH_SHORT).show()
                 }
             }
 
-         permissionToShowFloatingWidgetLauncher =
+        permissionToShowFloatingWidgetLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
                 checkIfPermissionToShowOverlay()
             }
 
         requestPermissionToSaveLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            isGranted: Boolean ->
+                    isGranted: Boolean ->
                 if (isGranted){
+                   cropServiceViewFloatingWindowService.screenShotTaker?.saveScreenshot()
 
-                    cropServiceViewFloatingWindowService.screenShotTaker.onSaveScreenshot()
                 } else {
 
-                    Toast.makeText(this,getString(R.string.cant_save),Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,getString(R.string.cant_save), Toast.LENGTH_SHORT).show()
                 }
                 cropServiceViewFloatingWindowService.hideCropView(View.VISIBLE)
-        }
-
-
-        binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
-            checkIfPermissionToShowOverlay()
-        })
+            }
 
         //Used to connect this activity with the FloatingWindowService
         val intent = Intent(this, CropViewFloatingWindowService::class.java)
         bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
+
+        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
+                this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            PermissionsDialog()
+                .show(supportFragmentManager, PERMISSION_TO_SAVE)
+        }
+
 
     }
 
@@ -123,14 +146,17 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      * called from the notification panel
      */
     private fun cancelOnCloseBtn() {
-        receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                finishAndRemoveTask()
+
+            receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    finishAndRemoveTask()
+                }
             }
-        }
-        val filter = IntentFilter()
-        filter.addAction(STOP_INTENT)
-        registerReceiver(receiver, filter)
+            val filter = IntentFilter()
+            filter.addAction(STOP_INTENT)
+            registerReceiver(receiver, filter)
+
+
     }
 
 
@@ -168,16 +194,17 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      */
 
     override fun onDestroy() {
-        unregisterReceiver(receiver)
-        super.onDestroy()
-        if (bound) {
-            cropServiceViewFloatingWindowService.stopForeground(true)
-            cropServiceViewFloatingWindowService.setServiceCallBacks(null) // unregister
-            unbindService(cropViewFloatingWindowServiceConnection)
-            bound = false
-        }
 
-        stopService(Intent(this, CropViewFloatingWindowService::class.java))
+            unregisterReceiver(receiver)
+            super.onDestroy()
+            if (bound) {
+                cropServiceViewFloatingWindowService.stopForeground(true)
+                cropServiceViewFloatingWindowService.setServiceCallBacks(null) // unregister
+                unbindService(cropViewFloatingWindowServiceConnection)
+                bound = false
+            }
+
+            stopService(Intent(this, CropViewFloatingWindowService::class.java))
 
     }
 
@@ -185,41 +212,41 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      * This method should be called by the floating window service
      */
     override fun checkIfPermissionToSave(): Boolean {
-      return  if (PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-          true
-        }
-        else {
-          callPermissionToSaveDialog()
-          false
-        }
+        return PackageManager.PERMISSION_GRANTED ==
+                ContextCompat.checkSelfPermission(
+                   this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
     /**
      * @return mData, which contains the permission used to take the screenshot
      */
     override fun getDataToRecordScreen(): Intent? {
-        return mData;
+        return mData
     }
 
     private fun callPermissionToOverlayDialog() {
-        permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
+            permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
+
     }
 
-    private fun callPermissionToSaveDialog(){
-        permissionsDialog.show(supportFragmentManager, PERMISSION_TO_SAVE)
+    fun callPermissionToSaveDialog(){
+        requestPermissionToSaveLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
     }
 
 
     private fun callFloatingWindow() {
-        val intent = Intent(this@MainActivity, CropViewFloatingWindowService::class.java)
-        startService(intent)
+
+            val intent = Intent(this, CropViewFloatingWindowService::class.java)
+            startService(intent)
+
     }
 
     override fun onOverlayPositiveClick() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val myIntent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
+                Uri.parse("package:${packageName}")
             )
             permissionToShowFloatingWidgetLauncher.launch(myIntent)
         }
@@ -233,5 +260,11 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         requestPermissionToSaveLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     }
+
+    fun saveScreenshotWIthPermission(uriToSave: String){
+     screenshotViewModel.onSaveScreenshot(ScreenshotItem(screenshotURI= uriToSave))
+
+    }
+
 
 }

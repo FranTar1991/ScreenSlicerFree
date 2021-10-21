@@ -15,6 +15,7 @@ import android.view.MotionEvent.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
@@ -27,6 +28,20 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import androidx.appcompat.content.res.AppCompatResources
+import android.content.Context.VIBRATOR_SERVICE
+
+import androidx.core.content.ContextCompat.getSystemService
+
+import android.os.Vibrator
+
+import android.os.VibrationEffect
+import androidx.core.content.ContextCompat.getSystemService
+
+
+
+
+
+
 
 
 
@@ -59,6 +74,7 @@ class CropView @JvmOverloads constructor(context: Context,
                                          defStyleAttr: Int = 0): ImageView(context,attrs, defStyleAttr) {
 
 
+    private lateinit var doubleTapGesture: GestureDetector
     private var gradientBottom: Drawable? = null
     private var gradientTop: Drawable? = null
     private var mIsToClose: Boolean = false
@@ -176,7 +192,21 @@ class CropView @JvmOverloads constructor(context: Context,
         gradientBottom = AppCompatResources.getDrawable(context, R.drawable.gradient_bottom)
         isInitialized = true
     }
+    setGestureDetector()
+    shakeItBaby(context)
+    }
 
+
+    private fun setGestureDetector() {
+
+      doubleTapGesture = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+
+          override fun onDoubleTap(e: MotionEvent?): Boolean {
+              callBackForWindowManager.onClose()
+              thisOptionsView?.destroyView()
+              return super.onDoubleTap(e)
+          }
+      })
     }
 
 
@@ -341,6 +371,8 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+
+        doubleTapGesture.onTouchEvent(event)
         val action = event?.actionMasked
 
         event?.let {
@@ -861,6 +893,10 @@ class CropView @JvmOverloads constructor(context: Context,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 lp.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                lp.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
 
 

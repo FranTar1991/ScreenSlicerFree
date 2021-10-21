@@ -15,8 +15,10 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_UP
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.view.isVisible
 import com.example.android.partialscreenshot.databinding.OptionsViewBinding
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 import com.example.android.partialscreenshot.utils.layoutFlag
@@ -24,20 +26,21 @@ import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListen
 
 
 class OptionsWindowView (private val context: Context,
-                         private val cropView: CropView) : View.OnTouchListener {
+                         private val cropView: CropView?) : View.OnTouchListener {
     private var mWindowManager: WindowManager? = null
     private var mFloatingView: OptionsViewBinding? = null
     private var saveButton: ImageView? = null
     private var deleteButton: ImageView? = null
     private var shareButton: ImageView? = null
-    private var addNoteButton: ImageView? = null
+    private var minMaxButton: ImageView? = null
     private var editButton: ImageView? = null
     private var saveButtonBc: ImageView? = null
     private var deleteButtonBc: ImageView? = null
     private var shareButtonBc: ImageView? = null
-    private var addNoteButtonBc: ImageView? = null
+    private var minMaxButtonBk: ImageView? = null
     private var editButtonBc: ImageView? = null
     private var onOptionsWindowSelectedListener: OnOptionsWindowSelectedListener? = null
+    private var mainContainer: ConstraintLayout? = null
 
 
     fun createView() {
@@ -69,16 +72,17 @@ class OptionsWindowView (private val context: Context,
        saveButton = mFloatingView?.save?.apply { setOnTouchListener(this@OptionsWindowView) }
        deleteButton =  mFloatingView?.delete?.apply { setOnTouchListener(this@OptionsWindowView) }
        shareButton = mFloatingView?.share?.apply { setOnTouchListener(this@OptionsWindowView) }
-       addNoteButton = mFloatingView?.addNote?.apply { setOnTouchListener(this@OptionsWindowView) }
+       minMaxButton = mFloatingView?.minMax?.apply { setOnTouchListener(this@OptionsWindowView) }
        editButton = mFloatingView?.edit?.apply { setOnTouchListener(this@OptionsWindowView) }
+        mainContainer = mFloatingView?.mainBtnContainer
 
         saveButtonBc = mFloatingView?.saveBk
         deleteButtonBc =  mFloatingView?.deleteBk
         shareButtonBc = mFloatingView?.shareBk
-        addNoteButtonBc = mFloatingView?.addNoteBk
+        minMaxButtonBk = mFloatingView?.minMaxBk
         editButtonBc= mFloatingView?.editBk
 
-        cropView.thisOptionsView = this
+        cropView?.thisOptionsView = this
     }
 
     fun destroyView() {
@@ -115,16 +119,16 @@ class OptionsWindowView (private val context: Context,
                 R.id.save ->{ setTint(saveButtonBc!!, downColor) }
                 R.id.delete ->{   setTint(deleteButtonBc!!, downColor)}
                 R.id.share ->{  setTint(shareButtonBc!!, downColor)}
-                R.id.add_note ->{  setTint(addNoteButtonBc!!, downColor)}
-                R.id.edit ->{   setTint(editButtonBc!!, downColor)}
+                R.id.edit ->{  setTint(editButtonBc!!, downColor)}
+                R.id.min_max ->{   setTint(minMaxButtonBk!!, downColor)}
             }
         } else{
             when(id){
                 R.id.save ->{ setTint(saveButtonBc!!, upColor) }
                 R.id.delete ->{   setTint(deleteButtonBc!!, upColor)}
                 R.id.share ->{  setTint(shareButtonBc!!, upColor)}
-                R.id.add_note ->{  setTint(addNoteButtonBc!!, upColor)}
-                R.id.edit ->{   setTint(editButtonBc!!, upColor)}
+                R.id.edit ->{  setTint(editButtonBc!!, upColor)}
+                R.id.min_max ->{   setTint(minMaxButtonBk!!, upColor)}
             }
             onTouchButton(id)
         }
@@ -140,11 +144,25 @@ class OptionsWindowView (private val context: Context,
      private fun onTouchButton(id: Int?) {
 
         when(id){
-            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshot()}
-            R.id.delete ->{onOptionsWindowSelectedListener?.onDeleteScreenshot()}
-            R.id.share ->{onOptionsWindowSelectedListener?.onShareScreenshot()}
-            R.id.add_note ->{onOptionsWindowSelectedListener?.onAddNoteToScreenshot()}
-            R.id.edit ->{onOptionsWindowSelectedListener?.onEditScreenshot()}
+            R.id.save ->{ onOptionsWindowSelectedListener?.onSaveScreenshotSelected()}
+            R.id.delete ->{onOptionsWindowSelectedListener?.onDeleteScreenshotSelected()}
+            R.id.share ->{onOptionsWindowSelectedListener?.onShareScreenshotSelected()}
+            R.id.edit ->{onOptionsWindowSelectedListener?.onEditScreenshotSelected()}
+            R.id.min_max  ->{setMinMax()}
         }
+    }
+
+    private fun setMinMax() {
+        if (mainContainer?.isVisible == true){
+            mainContainer?.visibility = View.GONE
+            minMaxButton?.setImageResource(R.drawable.ic_max)
+        } else {
+            mainContainer?.visibility = View.VISIBLE
+            minMaxButton?.setImageResource(R.drawable.ic_min)
+        }
+    }
+
+    fun hideOptionsView(visibility: Int){
+        mFloatingView?.root?.visibility = visibility
     }
 }

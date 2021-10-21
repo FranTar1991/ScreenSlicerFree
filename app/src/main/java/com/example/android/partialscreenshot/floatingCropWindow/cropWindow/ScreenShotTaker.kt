@@ -17,11 +17,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.widget.Toast
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
-import com.example.android.partialscreenshot.utils.getCurrentTimeStamp
 import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
-import com.example.android.partialscreenshot.utils.OnOptionsWindowSelectedListener
-
-import com.example.android.partialscreenshot.utils.FloatingWindowListener
 
 import android.graphics.*
 import java.io.*
@@ -30,27 +26,29 @@ import android.os.Build
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.view.*
-import com.example.android.partialscreenshot.utils.saveImageToPhotoGallery
 import androidx.core.content.ContextCompat.startActivity
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
+import com.example.android.partialscreenshot.utils.*
 
 
 class ScreenShotTaker(
     private val context: Context,
     private val cropViewFloatingWindowService: CropViewFloatingWindowService,
-    private val cropView: CropView,
+    private val cropView: CropView?,
     private val mainActivityReference: FloatingWindowListener?
 ): OnOptionsWindowSelectedListener {
 
-    private var uriToEdit: String? = null
+    private var isToEdit: Boolean = false
+    private var mainActivity: MainActivity? = null
+    private var uriToEdit: Uri? = null
     private lateinit var path: String
     private lateinit var name: String
     private var uriToImage: Uri? = null
 
     //This is the cropped bitmap that´s going to be saved when the user saves
     private lateinit var croppedBitmap: Bitmap
-    private lateinit var optionsWindowView: OptionsWindowView
+    lateinit var optionsWindowView: OptionsWindowView
     private lateinit var fileOutputStream: FileOutputStream
 
     /**
@@ -77,7 +75,11 @@ class ScreenShotTaker(
     private var mRotation: Int? = 0
     private lateinit var mOrientationChangeCallback: OrientationChangeCallback
 
+    private var isToShare: Boolean = false
+
     init {
+
+        mainActivity = (mainActivityReference as MainActivity)
         createDirectory()
 
         // start capture handling thread
@@ -151,7 +153,7 @@ class ScreenShotTaker(
         )
 
     }
-    private fun saveCroppedBitmap(bitmapToSave: Bitmap){
+    private fun saveCroppedBitmap(bitmapToSave: Bitmap?){
 
         name = "${getCurrentTimeStamp()}"
         path = "$mStoreDir/$name"
@@ -159,10 +161,73 @@ class ScreenShotTaker(
         uriToImage = Uri.parse(path)
 
         fileOutputStream.use {
-           bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 100, it)
+           bitmapToSave?.compress(Bitmap.CompressFormat.JPEG, 100, it)
        }
 
 
+    }
+    fun saveScreenshot(){
+        saveCroppedBitmap(croppedBitmap)
+        cropView?.showDrawable = true
+        cropView?.resetView()
+        uriToEdit = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, name)
+        optionsWindowView.destroyView()
+
+        mainActivity?.saveScreenshotWIthPermission(uriToImage.toString())
+
+        if (isToShare){
+            shareScreenShot(uriToImage)
+        } else if(isToEdit){
+            editScreenShot()
+        }
+
+    }
+    private fun shareScreenShot(uriToScan: Uri?) {
+        Log.i("Myuri","$uriToScan")
+        uriToScan?.let {
+            MediaScannerConnection.scanFile(context,
+                arrayOf(uriToImage.toString()),
+                arrayOf("image/jpeg")){ path, uri ->
+                val shareIntent: Intent
+
+                if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
+                     shareIntent = Intent().apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        type = "image/jpeg"
+                    }
+                }else {
+                    shareIntent = Intent().apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_STREAM, uriToEdit)
+                        type = "image/jpeg"
+                    }
+                }
+
+                mainActivity?.let {
+                    startActivity(it,
+                        Intent.createChooser(shareIntent,
+                            context.resources.getText(R.string.share)),
+                        null)
+                }
+
+            }
+        }
+        isToShare = false
+    }
+    private fun editScreenShot() {
+
+        val intent = Intent(Intent.ACTION_EDIT).apply {
+            setDataAndType(uriToEdit, "image/*")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        mainActivity?.let {
+            startActivity(it,intent,null)
+        }
+        isToEdit = false
     }
 
     /**
@@ -170,76 +235,47 @@ class ScreenShotTaker(
      */
 
 
-    override fun onSaveScreenshot(isToShare: Boolean) {
-
-        if ((mainActivityReference as MainActivity).checkIfPermissionToSave()){
-            saveCroppedBitmap(croppedBitmap).also {
-                cropView.showDrawable = true
-                cropView.resetView()
-                uriToEdit = saveImageToPhotoGallery(context.contentResolver,
-                    croppedBitmap,
-                    name,"Screenshot description")
-                optionsWindowView.destroyView()
-
-                Toast.makeText(context,"Screenshot Saved",Toast.LENGTH_SHORT).show()
-                if (isToShare) {
-                    shareScreenShot()
-                }
-            }
-        }
-
-
-
+    override fun onSaveScreenshotSelected() {
+        saveScreenshot()
+//        if (mainActivity?.checkIfPermissionToSave() == true){
+//            saveScreenshot()
+//        } else {
+//           mainActivity?. callPermissionToSaveDialog()
+//        }
     }
 
-    override fun onDeleteScreenshot() {
-        cropView.showDrawable = true
+    override fun onDeleteScreenshotSelected() {
+        cropView?.showDrawable = true
         optionsWindowView.destroyView()
         Toast.makeText(context,"Screenshot Deleted",Toast.LENGTH_SHORT).show()
     }
 
-    override fun onShareScreenshot() {
-        onSaveScreenshot(true)
-       shareScreenShot()
-
-    }
-
-    private fun shareScreenShot() {
-        uriToImage?.let {
-            MediaScannerConnection.scanFile(context,
-                arrayOf(uriToImage.toString()),
-                arrayOf("image/jpeg")){ path, uri ->
-                val shareIntent: Intent = Intent().apply {
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_STREAM, uri)
-                    type = "image/jpeg"
-                }
-                startActivity((mainActivityReference as MainActivity),
-                    Intent.createChooser(shareIntent, context.resources.getText(R.string.share)),
-                    null)
-
-            }
+    override fun onShareScreenshotSelected() {
+        isToShare = true
+        if (mainActivity?.checkIfPermissionToSave() == true){
+            saveScreenshot()
+        } else {
+            mainActivity?. callPermissionToSaveDialog()
         }
+
     }
 
-    override fun onAddNoteToScreenshot() {
+    override fun onAddNoteToScreenshotSelected() {
         Toast.makeText(context,"onAddNoteToScreenshot",Toast.LENGTH_SHORT).show()
     }
 
-    override fun onEditScreenshot() {
-
-        onSaveScreenshot()
-
-        val intent = Intent(Intent.ACTION_EDIT).apply {
-            setDataAndType(Uri.parse(uriToEdit), "image/*")
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    override fun onEditScreenshotSelected() {
+        isToEdit = true
+        if (mainActivity?.checkIfPermissionToSave() == true){
+            saveScreenshot()
+        } else {
+            mainActivity?.callPermissionToSaveDialog()
         }
 
 
-
-        startActivity((mainActivityReference as MainActivity),intent,null)
     }
+
+
 
     /**
      * Starts section of helper methods to set up the Media projection
@@ -449,7 +485,7 @@ class ScreenShotTaker(
             mHandler?.post(Runnable {
                 mVirtualDisplay?.release()
                 mImageReader?.setOnImageAvailableListener(null, null)
-                mOrientationChangeCallback?.disable()
+                mOrientationChangeCallback.disable()
                 mMediaProjection?.unregisterCallback(this@MediaProjectionStopCallback)
                 mMediaProjection = null
             })

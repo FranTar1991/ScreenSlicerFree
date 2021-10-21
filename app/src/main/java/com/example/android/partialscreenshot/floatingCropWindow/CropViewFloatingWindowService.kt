@@ -23,9 +23,9 @@ import com.example.android.partialscreenshot.utils.*
 class CropViewFloatingWindowService: Service() {
 
 
-    private lateinit var floatingView: CropView
+    private var floatingView: CropView? = null
     private var mData: Intent? = null
-    lateinit var screenShotTaker: ScreenShotTaker
+    var screenShotTaker: ScreenShotTaker? = null
     private var isCropWindowOn = false
 
     private var takeScreenShotServiceCallback: FloatingWindowListener? = null
@@ -67,7 +67,8 @@ class CropViewFloatingWindowService: Service() {
     }
 
     fun hideCropView(visibility: Int){
-        floatingView.visibility = visibility
+        floatingView?.visibility = visibility
+        screenShotTaker?.optionsWindowView?.hideOptionsView(visibility)
     }
     private fun setUpNotification() {
 
@@ -91,8 +92,9 @@ class CropViewFloatingWindowService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if(floatingView.isShown){
+        if(floatingView?.isShown == true){
             manager.removeView(floatingView)
+            screenShotTaker?.optionsWindowView?.destroyView()
         }
 
     }
@@ -101,15 +103,15 @@ class CropViewFloatingWindowService: Service() {
 
         manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null) as CropView
-        floatingView.setOnRequestTakeScreenShotListener(object: OnRequestTakeScreenShotListener {
+        floatingView?.setOnRequestTakeScreenShotListener(object: OnRequestTakeScreenShotListener {
             override fun onRequestScreenShot(rect: Rect) {
-                screenShotTaker.getStartIntent(applicationContext, -1, mData)?.let {
-                    screenShotTaker.setUpScreenCapture(it, rect)
+                screenShotTaker?.getStartIntent(applicationContext, -1, mData)?.let {
+                    screenShotTaker?.setUpScreenCapture(it, rect)
                 }
             }
         })
 
-        floatingView.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
+        floatingView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(p0: View?) {
                 isCropWindowOn = true
             }
@@ -127,7 +129,7 @@ class CropViewFloatingWindowService: Service() {
     }
 
     fun setCroppedImage(croppedBitmap: Bitmap?) {
-        floatingView.croppedImage = croppedBitmap
+        floatingView?.croppedImage = croppedBitmap
     }
 
 }

@@ -3,18 +3,20 @@ package com.example.android.partialscreenshot.utils
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.provider.MediaStore
+import android.util.Log
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.OutputStream
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,81 +43,88 @@ val Float.dp: Int
 val Int.dp: Int
     get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()
 
- fun saveImageToPhotoGallery(cr: ContentResolver, source: Bitmap?, title: String?, description: String?): String? {
+//the function I already explained, it is used to save the Bitmap to external storage
+ fun saveMediaToStorage(contentResolver: ContentResolver, source: Bitmap?,
+                        title: String, context: Context): Uri? {
+
+    var fos: OutputStream? = null
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        contentResolver.also { resolver ->
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.TITLE, title)
+                put(MediaStore.Images.Media.DISPLAY_NAME, title)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                // Add the date meta data to ensure the image is added at the front of the gallery
+                put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
+                put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+            }
+            val imageUri: Uri? =
+                resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            fos = imageUri?.let { resolver.openOutputStream(it) }
+        }
+    } else {
+        val imagesDir =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        val image = File(imagesDir, title)
+        fos = FileOutputStream(image)
+    }
+    fos?.use {
+        source?.compress(Bitmap.CompressFormat.JPEG, 100, it)
+    }
+
+    return Uri.fromFile(context.getFileStreamPath(title))
+}
+ fun saveImageToPhotoGallery(cr: ContentResolver, source: Bitmap,
+                             title: String?): Uri? {
     val values = ContentValues().apply {
         put(MediaStore.Images.Media.TITLE, title)
         put(MediaStore.Images.Media.DISPLAY_NAME, title)
-        put(MediaStore.Images.Media.DESCRIPTION, description)
         put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
         // Add the date meta data to ensure the image is added at the front of the gallery
         put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
         put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        with(values) {
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-        }
-    }
 
     var url: Uri? = null
-    var stringUrl: String? = null /* value to be returned */
-    try {
-        val allImages =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                MediaStore.Images.Media.getContentUri(
-                    MediaStore.VOLUME_EXTERNAL_PRIMARY
-                )
 
-            } else {
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            }
+    try {
+        val allImages = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         url = cr.insert(allImages, values)
 
-        if (source != null) {
-
-            var imageOut: OutputStream? = null
-
-            if(url != null){
-                imageOut = cr.openOutputStream(url)
+        Log.i("MyUri","$url")
+        var imageOut: OutputStream? = null
+        try {
+            imageOut = url?.let {
+                cr.openOutputStream(it)
             }
+            source.compress(Bitmap.CompressFormat.JPEG, 100, imageOut)
+        }
+        finally {
+            imageOut?.close()
+        }
 
-
-            try {
-                source.compress(Bitmap.CompressFormat.JPEG, 100, imageOut)
-            } finally {
-                imageOut?.close()
-
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            Log.i("MyUri","calling thumbnail")
             val id = ContentUris.parseId(url!!)
-            // Wait until MINI_KIND thumbnail is generated.
-
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-
-                val thumbBitmap: Bitmap? = MediaStore.Images.Thumbnails.getThumbnail(cr, id, MediaStore.Images.Thumbnails.MINI_KIND, null)
-                //This is for backward compatibility.
-                thumbBitmap?.let {
-                    storeThumbnail(
-                        cr, it, id, 50f, 50f,
-                        MediaStore.Images.Thumbnails.MICRO_KIND
-                    )
-                }
+            val thumbBitmap: Bitmap? = MediaStore.Images.Thumbnails.getThumbnail(cr, id, MediaStore.Images.Thumbnails.MINI_KIND, null)
+            //This is for backward compatibility.
+            thumbBitmap?.let {
+                storeThumbnail(
+                    cr, it, id, 50f, 50f,
+                    MediaStore.Images.Thumbnails.MICRO_KIND
+                )
             }
+        }
 
-        }
-        else {
-            cr.delete(url!!, null, null)
-            url = null
-        }
     } catch (e: java.lang.Exception) {
+        Log.i("MyUri","${e.message}")
         if (url != null) {
             cr.delete(url, null, null)
             url = null
         }
     }
-    if (url != null) {
-        stringUrl = url.toString()
-    }
-    return stringUrl
+
+    return url
 }
 private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width: Float, height: Float, kind: Int): Bitmap? {
 
@@ -148,5 +157,15 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
         null
     } catch (ex: IOException) {
         null
+    }
+}
+
+ fun shakeItBaby(context: Context) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator?.vibrate(VibrationEffect.createOneShot(125, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        vibrator?.vibrate(125)
     }
 }

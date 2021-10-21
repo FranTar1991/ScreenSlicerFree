@@ -6,10 +6,10 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
-import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+import android.view.WindowManager.LayoutParams.*
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 
-fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int, initY: Int){
+fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int, initY: Int){
 
     val params = WindowManager.LayoutParams(
         mode,
@@ -24,12 +24,21 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
     params.x = initX
     params.y = initY
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        params.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
-    }
 
 
-    myFloatingView.setWindowManagerCallback(object : OnMoveCropWindowListener {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            params.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        params.layoutInDisplayCutoutMode = LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+         }
+
+
+
+
+
+
+    myFloatingView?.setWindowManagerCallback(object : OnMoveCropWindowListener {
         private var initialX = 0
         private var initialY = 0
         private var initialTouchX = 0f
@@ -57,7 +66,7 @@ fun WindowManager.addMyCropView(myFloatingView: CropView, mode: Int, initX: Int,
                     Log.i("MYviewI","updating")
                     //Update the layout with new X & Y coordinate
                     updateViewLayout(myFloatingView, params)
-                    myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
+                    myFloatingView?.setNewPositionOfSecondRect(params.x,params.y)
 
                 }
             }
