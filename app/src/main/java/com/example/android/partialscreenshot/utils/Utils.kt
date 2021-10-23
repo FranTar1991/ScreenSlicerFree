@@ -14,8 +14,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
 import android.util.Log
-import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
+import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -167,5 +167,27 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
         vibrator?.vibrate(VibrationEffect.createOneShot(125, VibrationEffect.DEFAULT_AMPLITUDE))
     } else {
         vibrator?.vibrate(125)
+    }
+}
+
+ fun deleteTheList(listToDelete: List<String>, mainFragmentViewModel: MainFragmentViewModel) {
+
+    mainFragmentViewModel.onDeleteListWithUri(listToDelete).also {
+        for(fileUri in listToDelete){
+            deleteFile(Uri.parse(fileUri))
+        }
+    }
+
+}
+
+ fun deleteFile(uriToDelete: Uri){
+
+    val file = File(uriToDelete.path)
+    if (file.exists()) {
+        if (file.delete()) {
+            Log.i("MyFile","file Deleted :" + uriToDelete.path)
+        } else {
+            Log.i("MyFile","file not Deleted :" + uriToDelete.path)
+        }
     }
 }

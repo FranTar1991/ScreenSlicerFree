@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -21,13 +20,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
-import com.example.android.partialscreenshot.main_fragment.MainFragment
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewmodelFactory
 import com.example.android.partialscreenshot.utils.*
@@ -261,10 +258,9 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
-    fun saveScreenshotWIthPermission(uriToSave: String){
-     screenshotViewModel.onSaveScreenshot(ScreenshotItem(screenshotURI= uriToSave))
+    fun saveScreenshotWIthPermission(storeUri: String, shareUri: String){
+     screenshotViewModel.onSaveScreenshot(ScreenshotItem(storeUri= storeUri, shareUri = shareUri))
 
     }
-
 
 }

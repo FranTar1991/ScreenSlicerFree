@@ -173,7 +173,7 @@ class ScreenShotTaker(
         uriToEdit = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, name)
         optionsWindowView.destroyView()
 
-        mainActivity?.saveScreenshotWIthPermission(uriToImage.toString())
+        mainActivity?.saveScreenshotWIthPermission(uriToImage.toString(), uriToEdit.toString())
 
         if (isToShare){
             shareScreenShot(uriToImage)

@@ -1,12 +1,8 @@
 package com.example.android.partialscreenshot.main_fragment.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.ItemKeyProvider
@@ -18,24 +14,25 @@ import com.example.android.partialscreenshot.database.ScreenshotItem
 
 import com.example.android.partialscreenshot.databinding.ListItemPictureBinding
 
-import android.content.Context
-
-import android.graphics.drawable.Drawable
-import com.example.android.partialscreenshot.R
-
 
 class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListAdapter<ScreenshotItem,
         ScreenshotsAdapter.ViewHolder>(ScreenshotAdapterDiffCallback()) {
-
+    var tracker: SelectionTracker<String>? = null
 
     init {
         setHasStableIds(true)
     }
-    override fun getItemId(position: Int): Long = position.toLong()
+    override fun getItemId(position: Int): Long {
+        return getItem(position).screenshotID
+    }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-            holder.bind(clickListener,item)
+    tracker?.let {
+        holder.bind(clickListener, item,it.isSelected(item.storeUri))
+    }
+
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -46,11 +43,19 @@ class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListA
      class ViewHolder private constructor(private val binding: ListItemPictureBinding, private val adapter: ScreenshotsAdapter)
         : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(clickListener: ScreenshotListener, item: ScreenshotItem) {
-
+         fun getItemDetails(): ItemDetailsLookup.ItemDetails<String> =
+             object : ItemDetailsLookup.ItemDetails<String>() {
+                 override fun getPosition(): Int = adapterPosition
+                 override fun getSelectionKey(): String = adapter.getItem(adapterPosition).storeUri
+             }
+        fun bind(clickListener: ScreenshotListener, item: ScreenshotItem, isActivated: Boolean = false) {
             binding.screenshot = item
             binding.clickListener = clickListener
             binding.executePendingBindings()
+
+            binding.selectedItem.isVisible = isActivated
+            itemView.isSelected = isActivated
+
 
         }
 
@@ -73,7 +78,7 @@ class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListA
  */
 class ScreenshotAdapterDiffCallback : DiffUtil.ItemCallback<ScreenshotItem>() {
     override fun areItemsTheSame(oldItem: ScreenshotItem, newItem: ScreenshotItem): Boolean {
-        return oldItem.screenshotID == newItem.screenshotID
+        return oldItem.storeUri == newItem.storeUri
     }
 
     override fun areContentsTheSame(oldItem: ScreenshotItem, newItem: ScreenshotItem): Boolean {
@@ -85,6 +90,24 @@ class ScreenshotListener(val clickListener: (sleepId: Long) -> Unit){
     fun onClick(screenshot: ScreenshotItem) = clickListener(screenshot.screenshotID)
 }
 
+class MyItemDetailsLookup(private val recyclerView: RecyclerView) :
+    ItemDetailsLookup<String>() {
+    override fun getItemDetails(event: MotionEvent): ItemDetails<String>? {
+        val view = recyclerView.findChildViewUnder(event.x, event.y)
+        if (view != null) {
+            return (recyclerView.getChildViewHolder(view) as ScreenshotsAdapter.ViewHolder).getItemDetails()
+        }
+        return null
+    }
+}
+
+class MyItemKeyProvider(private val adapter: ScreenshotsAdapter) : ItemKeyProvider<String>(SCOPE_CACHED)
+{
+    override fun getKey(position: Int): String? =
+        adapter.currentList[position].storeUri
+    override fun getPosition(key: String): Int =
+        adapter.currentList.indexOfFirst {it.storeUri == key}
+}
 
 
 

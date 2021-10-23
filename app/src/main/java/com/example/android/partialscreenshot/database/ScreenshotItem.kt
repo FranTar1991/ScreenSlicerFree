@@ -9,6 +9,7 @@ data class ScreenshotItem(
     @PrimaryKey(autoGenerate = true)
     var screenshotID: Long = 0L,
 
-    @ColumnInfo(name = "image_uri")
-    val screenshotURI: String
+    val storeUri: String,
+
+    val shareUri: String
 )

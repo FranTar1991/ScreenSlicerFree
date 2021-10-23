@@ -11,7 +11,7 @@ class ScreenshotDetailViewModel  (private val screenshotId: Long = 0L,
     fun getScreenshot() = screenshot
 
     init {
-        screenshot.addSource(dataSource.get(screenshotId)) { screenshot.setValue(it) }
+        screenshot.addSource(dataSource.getById(screenshotId)) { screenshot.setValue(it) }
     }
 
 }

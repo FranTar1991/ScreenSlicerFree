@@ -1,8 +1,6 @@
 package com.example.android.partialscreenshot.main_fragment
 
 import android.app.Application
-import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -20,9 +18,17 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
         get() = _navigateToScreenshot
 
 
+
+
     fun onSaveScreenshot(newScreenshotItem: ScreenshotItem){
         viewModelScope.launch {
             insert(newScreenshotItem)
+        }
+    }
+
+    fun onDeleteListWithUri(listToDelete: List<String>){
+        viewModelScope.launch {
+            deleteList(listToDelete)
         }
     }
 
@@ -32,6 +38,13 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
                 database.insertScreenshot(screenshot)
         }
     }
+
+    private suspend fun deleteList(uriToDeleteList: List<String>){
+        withContext(Dispatchers.IO){
+            database.deleteByStoreUri(uriToDeleteList)
+        }
+    }
+
     fun onScreenshotClicked(id: Long) {
         _navigateToScreenshot.value = id
     }

@@ -1,9 +1,6 @@
 package com.example.android.partialscreenshot.main_fragment
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -12,18 +9,58 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.android.partialscreenshot.R
-import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.databinding.FragmentMainBinding
+import com.example.android.partialscreenshot.main_fragment.adapter.MyItemDetailsLookup
+import com.example.android.partialscreenshot.main_fragment.adapter.MyItemKeyProvider
 import com.example.android.partialscreenshot.main_fragment.adapter.ScreenshotListener
 import com.example.android.partialscreenshot.main_fragment.adapter.ScreenshotsAdapter
 import com.example.android.partialscreenshot.utils.MainActivityViewModel
+import android.widget.Toast
+
+import android.view.*
+
+import androidx.recyclerview.selection.*
+import com.example.android.partialscreenshot.utils.deleteTheList
 
 
 class MainFragment : Fragment() {
 
-    private lateinit var screenshotViewModel: MainFragmentViewModel
+    private lateinit var screenshotsSelected: Selection<String>
+    private lateinit var tracker: SelectionTracker<String>
+    private var actionMode: ActionMode? = null
+    private lateinit var mainFragmentViewModel: MainFragmentViewModel
     private val mainActivityViewModel: MainActivityViewModel by activityViewModels()
+    private val actionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
+            val inflater = mode.menuInflater
+            inflater.inflate(R.menu.my_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            return false
+        }
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            return when (item.itemId) {
+                R.id.delete_on_menu -> {
+                    deleteTheList(screenshotsSelected.toList(),mainFragmentViewModel)
+                    Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
+                    mode.finish()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode?) {
+
+            tracker.clearSelection()
+            actionMode = null
+        }
+    }
+
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -40,15 +77,14 @@ class MainFragment : Fragment() {
         val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
 
 
-        screenshotViewModel =
+        mainFragmentViewModel =
             ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
 
 
-        binding.allScreenshotsViewModel = screenshotViewModel
+        binding.allScreenshotsViewModel = mainFragmentViewModel
         binding.lifecycleOwner = this
 
         val adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener))
-
 
         binding.allPictures.adapter = adapter
 
@@ -56,25 +92,78 @@ class MainFragment : Fragment() {
         binding.allPictures.layoutManager = manager
 
 
-        screenshotViewModel.screenshots.observe(viewLifecycleOwner, Observer {
+        mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
             it?.let {
                 adapter.submitList(it)
             }
         })
 
-        screenshotViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer {screenshot ->
+
+
+        mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshot ->
             screenshot?.let {
                 this.findNavController().navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot))
-                screenshotViewModel.onScreenshotNavigated()
+                mainFragmentViewModel.onScreenshotNavigated()
             }
         })
+
+        tracker = SelectionTracker.Builder<String>(
+            "mySelection",
+            binding.allPictures,
+           MyItemKeyProvider(adapter),
+            MyItemDetailsLookup(binding.allPictures),
+           StorageStrategy.createStringStorage()
+        ).withSelectionPredicate(
+            SelectionPredicates.createSelectAnything()
+        )
+           .build()
+        adapter.tracker = tracker
+
+        tracker.addObserver(
+            object : SelectionTracker.SelectionObserver<String>() {
+                override fun onSelectionRestored() {
+                    super.onSelectionRestored()
+                  setActionMode()
+                }
+
+                override fun onSelectionChanged() {
+                    super.onSelectionChanged()
+                    setActionMode()
+                }
+
+            })
 
 
         return binding.root
     }
 
-    private fun clickListener(screenshotId: Long){
-        screenshotViewModel.onScreenshotClicked(screenshotId)
+    private fun setActionMode() {
+        screenshotsSelected = tracker.selection
+        val items = screenshotsSelected.size()
+
+        when (actionMode) {
+            null -> {
+                // Start the CAB using the ActionMode.Callback defined above
+                actionMode = activity?.startActionMode(actionModeCallback)
+            }
+        }
+        actionMode?.title = getString(R.string.items_selected, items)
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        tracker.onSaveInstanceState(outState)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        tracker.onRestoreInstanceState(savedInstanceState)
+    }
+
+    private fun clickListener(screenshotId: Long){
+        mainFragmentViewModel.onScreenshotClicked(screenshotId)
+    }
+
+
 
 }
