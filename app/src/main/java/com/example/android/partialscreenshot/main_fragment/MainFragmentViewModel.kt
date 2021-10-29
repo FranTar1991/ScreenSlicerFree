@@ -1,6 +1,7 @@
 package com.example.android.partialscreenshot.main_fragment
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -11,14 +12,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Application) : AndroidViewModel(application) {
-    val screenshots = database.getAllScreenshots()
+
+
+    private val _screenshots = database.getAllScreenshots()
+    val screenshots
+        get() = _screenshots
+
+    private val _screenshotCount = MutableLiveData<Int>()
+    val screenshotCount
+        get() = _screenshotCount
 
     private val _navigateToScreenshot = MutableLiveData<Long>()
     val navigateToScreenshot
         get() = _navigateToScreenshot
 
 
-
+    fun setScreenShotCount(count: Int) {
+        _screenshotCount.value = count
+    }
 
     fun onSaveScreenshot(newScreenshotItem: ScreenshotItem){
         viewModelScope.launch {

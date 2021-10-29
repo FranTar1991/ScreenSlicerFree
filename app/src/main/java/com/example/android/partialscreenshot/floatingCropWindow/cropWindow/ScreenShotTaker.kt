@@ -1,5 +1,7 @@
 package com.example.android.partialscreenshot.floatingCropWindow.cropWindow
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Service
@@ -27,9 +29,11 @@ import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.view.*
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.view.isVisible
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.utils.*
+import kotlin.math.hypot
 
 
 class ScreenShotTaker(
@@ -167,7 +171,7 @@ class ScreenShotTaker(
 
     }
     fun saveScreenshot(){
-        saveCroppedBitmap(croppedBitmap)
+       saveCroppedBitmap(croppedBitmap)
         cropView?.showDrawable = true
         cropView?.resetView()
         uriToEdit = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, name)
@@ -176,59 +180,15 @@ class ScreenShotTaker(
         mainActivity?.saveScreenshotWIthPermission(uriToImage.toString(), uriToEdit.toString())
 
         if (isToShare){
-            shareScreenShot(uriToImage)
+            shareScreenShot(uriToImage,context,uriToEdit,mainActivity)
+            isToShare = false
         } else if(isToEdit){
-            editScreenShot()
+            editScreenShot(uriToEdit, mainActivity)
+            isToEdit = false
         }
 
     }
-    private fun shareScreenShot(uriToScan: Uri?) {
-        Log.i("Myuri","$uriToScan")
-        uriToScan?.let {
-            MediaScannerConnection.scanFile(context,
-                arrayOf(uriToImage.toString()),
-                arrayOf("image/jpeg")){ path, uri ->
-                val shareIntent: Intent
 
-                if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
-                     shareIntent = Intent().apply {
-                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        type = "image/jpeg"
-                    }
-                }else {
-                    shareIntent = Intent().apply {
-                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_STREAM, uriToEdit)
-                        type = "image/jpeg"
-                    }
-                }
-
-                mainActivity?.let {
-                    startActivity(it,
-                        Intent.createChooser(shareIntent,
-                            context.resources.getText(R.string.share)),
-                        null)
-                }
-
-            }
-        }
-        isToShare = false
-    }
-    private fun editScreenShot() {
-
-        val intent = Intent(Intent.ACTION_EDIT).apply {
-            setDataAndType(uriToEdit, "image/*")
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-
-        mainActivity?.let {
-            startActivity(it,intent,null)
-        }
-        isToEdit = false
-    }
 
     /**
      * ends region of methods used to process the bitmap
@@ -275,6 +235,36 @@ class ScreenShotTaker(
 
     }
 
+    override fun onMinimizeCropView() {
+
+            // get the center for the clipping circle
+        cropView?.let {
+            val cx = cropView.width / 2
+            val cy = cropView.height / 2
+            // get the final radius for the clipping circle
+            val radius = hypot(cx.toDouble(), cy.toDouble()).toFloat()
+            val anim: Animator
+            if (!cropView.isVisible){
+                 anim =  ViewAnimationUtils.createCircularReveal(cropView, cx, cy, 0f, radius)
+                cropView.visibility = View.VISIBLE
+            } else {
+                 anim =   ViewAnimationUtils.createCircularReveal(cropView, cx, cy, radius, 0f)
+                anim.addListener(object : AnimatorListenerAdapter() {
+
+                    override fun onAnimationEnd(animation: Animator) {
+                        super.onAnimationEnd(animation)
+                        cropView.visibility = View.GONE
+                    }
+                })
+            }
+
+            anim.start()
+        }
+
+
+
+
+    }
 
 
     /**

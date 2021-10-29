@@ -6,27 +6,97 @@
     <data>
         <variable
             name="screenshotDetailViewModel"
-            type="com.example.android.partialscreenshot.details_fragment.ScreenshotDetailViewModel" />
+            type="com.example.android.partialscreenshot.details_fragment.DetailsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clickable="false"
+        android:animateLayoutChanges="true"
+        android:id="@+id/main_image_container"
+        android:background="@color/black"
         tools:context=".details_fragment.DetailsFragment">
 
-        <ImageView
-            android:id="@+id/imageView"
+        <com.github.chrisbanes.photoview.PhotoView
+            android:id="@+id/main_image_details"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/options_view_contraint"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
             app:screenshotUri="@{screenshotDetailViewModel.screenshot}"
             tools:src="@drawable/gradient_top" />
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/options_view_contraint"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+
+            <ImageView
+                android:id="@+id/delete_options"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:tint="@color/white"
+                android:onClick="@{() -> screenshotDetailViewModel.onAskAuthorization(deleteOptions)}"
+                app:layout_constraintBottom_toBottomOf="@+id/extract_options"
+                app:layout_constraintEnd_toStartOf="@+id/edit_options"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/extract_options"
+                app:layout_constraintTop_toTopOf="@+id/extract_options"
+                app:layout_constraintVertical_bias="0.0"
+                android:src="@drawable/ic_baseline_delete_forever_24" />
+
+            <ImageView
+                android:id="@+id/extract_options"
+                android:layout_width="0dp"
+                app:tint="@color/white"
+                android:layout_margin="8dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_extract"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/delete_options"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/share_options"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:tint="@color/white"
+                android:onClick="@{() -> screenshotDetailViewModel.onAskAuthorization(shareOptions)}"
+                app:layout_constraintBottom_toBottomOf="@+id/edit_options"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/edit_options"
+                app:layout_constraintTop_toTopOf="@+id/edit_options"
+                app:layout_constraintVertical_bias="0.0"
+                android:src="@drawable/ic_baseline_share_24" />
+
+            <ImageView
+                android:id="@+id/edit_options"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:onClick="@{() -> screenshotDetailViewModel.onAskAuthorization(editOptions)}"
+                app:tint="@color/white"
+                app:layout_constraintBottom_toBottomOf="@+id/delete_options"
+                app:layout_constraintEnd_toStartOf="@+id/share_options"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/delete_options"
+                app:layout_constraintTop_toTopOf="@+id/delete_options"
+                app:layout_constraintVertical_bias="0.0"
+                android:src="@drawable/ic_baseline_edit_24" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 

@@ -13,9 +13,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.android.partialscreenshot.database.ScreenshotItem
 
 import com.example.android.partialscreenshot.databinding.ListItemPictureBinding
+import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 
 
-class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListAdapter<ScreenshotItem,
+class ScreenshotsAdapter(
+    private val clickListener: ScreenshotListener,
+    private val mainFragmentViewModel: MainFragmentViewModel
+) : ListAdapter<ScreenshotItem,
         ScreenshotsAdapter.ViewHolder>(ScreenshotAdapterDiffCallback()) {
     var tracker: SelectionTracker<String>? = null
 
@@ -29,7 +33,7 @@ class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListA
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
     tracker?.let {
-        holder.bind(clickListener, item,it.isSelected(item.storeUri))
+        holder.bind(clickListener, item,it.isSelected(item.storeUri), mainFragmentViewModel)
     }
 
 
@@ -48,13 +52,19 @@ class ScreenshotsAdapter (private val clickListener: ScreenshotListener) : ListA
                  override fun getPosition(): Int = adapterPosition
                  override fun getSelectionKey(): String = adapter.getItem(adapterPosition).storeUri
              }
-        fun bind(clickListener: ScreenshotListener, item: ScreenshotItem, isActivated: Boolean = false) {
+        fun bind(
+            clickListener: ScreenshotListener,
+            item: ScreenshotItem,
+            isActivated: Boolean = false,
+            mainFragmentViewModel: MainFragmentViewModel
+        ) {
             binding.screenshot = item
             binding.clickListener = clickListener
             binding.executePendingBindings()
 
-            binding.selectedItem.isVisible = isActivated
-            itemView.isSelected = isActivated
+                binding.selectedItem.isVisible = isActivated
+                itemView.isSelected = isActivated
+
 
 
         }

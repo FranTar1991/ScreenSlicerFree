@@ -2,7 +2,7 @@
     <string name="app_name">PartialScreenshot</string>
     <string name="start">Start Crop Window</string>
     <string name="recording">Is ready to take screenshot</string>
-    <string name="share">Share partial screenshot</string>
+    <string name="share">Share now</string>
     <string name="crop_window">Crop</string>
     <string name="close">Close</string>
     <string name="home">Home</string>
@@ -438,5 +438,17 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="delete">%1$d items deleted</string>
     <string name="items_selected">%1$d items selected</string>
+    <string name="select_all">Select all</string>
+    <string name="dit">Edit</string>
+    <string name="delete_string">Delete</string>
+    <string name="extract">Extract Image</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="delete_this">Delete Item</string>
+    <string name="delete_this_message">Do you want to delete this?</string>
+    <string name="edit_this">Edit Item</string>
+    <string name="edit_this_message">The edited image will only be able in the gallery.</string>
+    <string name="share_this">Share this image</string>
+    <string name="share_this_message">Do you want to share this image? The quality might be reduced by the sharing app.</string>
 
 </resources>

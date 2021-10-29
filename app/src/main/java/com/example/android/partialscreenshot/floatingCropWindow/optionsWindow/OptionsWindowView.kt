@@ -148,7 +148,10 @@ class OptionsWindowView (private val context: Context,
             R.id.delete ->{onOptionsWindowSelectedListener?.onDeleteScreenshotSelected()}
             R.id.share ->{onOptionsWindowSelectedListener?.onShareScreenshotSelected()}
             R.id.edit ->{onOptionsWindowSelectedListener?.onEditScreenshotSelected()}
-            R.id.min_max  ->{setMinMax()}
+            R.id.min_max  ->{
+                setMinMax()
+                onOptionsWindowSelectedListener?.onMinimizeCropView()
+            }
         }
     }
 

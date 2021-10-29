@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Observer
@@ -155,6 +156,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
 
     }
+
 
 
     private fun getPermissionToRecord() {

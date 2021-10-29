@@ -15,6 +15,7 @@
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/gradient_top.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_broken_image_24.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_cancel_24.xml" value="0.1953125" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_check_circle_24.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_close_24.xml" value="0.1953125" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_crop_free_24.xml" value="0.19152196118488254" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/drawable/ic_baseline_save_24.xml" value="0.1953125" />
@@ -47,7 +48,7 @@
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_bottom_properties_dialog.xml" value="0.10235507246376811" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_bottom_shapes_dialog.xml" value="0.10235507246376811" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_bottom_sticker_emoji_dialog.xml" value="0.10235507246376811" />
-        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_details.xml" value="0.15833333333333333" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_details.xml" value="0.25" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/fragment_main.xml" value="0.15" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/list_item_picture.xml" value="0.22" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/options_view.xml" value="0.33" />
@@ -55,6 +56,7 @@
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/row_emoji.xml" value="0.1" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/row_filter_view.xml" value="0.22" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/layout/row_sticker.xml" value="0.1" />
+        <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/menu/menu_details.xml" value="0.25" />
         <entry key="..\:/Users/frank/Desktop/PartialScreenshot/app/src/main/res/menu/my_menu.xml" value="0.22" />
       </map>
     </option>

@@ -21,7 +21,9 @@
         tools:layout="@layout/fragment_details" >
         <action
             android:id="@+id/action_detailsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/mainFragment"
+            app:popUpTo="@id/mainFragment"
+            app:popUpToInclusive="true" />
         <argument
             android:name="screenshotId"
             app:argType="long" />

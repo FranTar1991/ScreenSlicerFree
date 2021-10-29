@@ -22,10 +22,17 @@ import android.view.*
 
 import androidx.recyclerview.selection.*
 import com.example.android.partialscreenshot.utils.deleteTheList
+import android.content.Intent
+import android.net.Uri
 
 
 class MainFragment : Fragment() {
 
+
+    private var allSelected: Boolean = false
+    private lateinit var shareList: MutableList<String>
+    private lateinit var storeList: MutableList<String>
+    private lateinit var adapter: ScreenshotsAdapter
     private lateinit var screenshotsSelected: Selection<String>
     private lateinit var tracker: SelectionTracker<String>
     private var actionMode: ActionMode? = null
@@ -34,11 +41,12 @@ class MainFragment : Fragment() {
     private val actionModeCallback: ActionMode.Callback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
             val inflater = mode.menuInflater
-            inflater.inflate(R.menu.my_menu, menu)
+            inflater.inflate(R.menu.menu_selection, menu)
             return true
         }
 
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+
             return false
         }
 
@@ -48,6 +56,44 @@ class MainFragment : Fragment() {
                     deleteTheList(screenshotsSelected.toList(),mainFragmentViewModel)
                     Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
                     mode.finish()
+                    true
+                }
+                R.id.share_on_menu -> {
+
+                    val files: ArrayList<Uri> = ArrayList<Uri>()
+                    shareList.forEach {
+                        files.add(Uri.parse(it))
+                    }
+
+                    val sendIntent = Intent().apply {
+                        type = "image/jpeg"
+                        action = Intent.ACTION_SEND_MULTIPLE
+                        putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
+                    }
+
+                    val shareIntent = Intent.createChooser(sendIntent, getText(R.string.share))
+
+                    startActivity(shareIntent)
+
+                    true
+                }
+                R.id.select_all_on_menu -> {
+
+                    allSelected = if (!allSelected){
+                        storeList.forEach {
+                            if (!tracker.isSelected(it)){
+                                tracker.select(it)
+                            }
+                        }
+                        true
+                    } else {
+                        storeList.forEach {
+                            tracker.deselect(it)
+                        }
+                        false
+                    }
+
+
                     true
                 }
                 else -> false
@@ -82,9 +128,9 @@ class MainFragment : Fragment() {
 
 
         binding.allScreenshotsViewModel = mainFragmentViewModel
-        binding.lifecycleOwner = this
+        binding.lifecycleOwner = activity
 
-        val adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener))
+        adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener), mainFragmentViewModel)
 
         binding.allPictures.adapter = adapter
 
@@ -93,8 +139,17 @@ class MainFragment : Fragment() {
 
 
         mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                adapter.submitList(it)
+            it?.let { newList ->
+                adapter.submitList(newList)
+                 storeList = mutableListOf()
+                 shareList  = mutableListOf()
+
+                newList.forEach { list->
+                    storeList.add(list.storeUri)
+                    shareList.add(list.shareUri)
+                }
+
+                mainFragmentViewModel.setScreenShotCount(newList.size)
             }
         })
 
@@ -102,7 +157,9 @@ class MainFragment : Fragment() {
 
         mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshot ->
             screenshot?.let {
-                this.findNavController().navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot))
+                actionMode?.finish()
+                this.findNavController()
+                    .navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot))
                 mainFragmentViewModel.onScreenshotNavigated()
             }
         })
@@ -145,9 +202,12 @@ class MainFragment : Fragment() {
             null -> {
                 // Start the CAB using the ActionMode.Callback defined above
                 actionMode = activity?.startActionMode(actionModeCallback)
+
             }
         }
         actionMode?.title = getString(R.string.items_selected, items)
+
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

@@ -1,12 +1,10 @@
 package com.example.android.partialscreenshot.utils
 
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
+import android.content.*
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -15,6 +13,12 @@ import android.os.Vibrator
 import android.provider.MediaStore
 import android.util.Log
 import android.view.WindowManager.LayoutParams.*
+import androidx.core.content.ContextCompat
+import com.example.android.partialscreenshot.MainActivity
+import com.example.android.partialscreenshot.R
+import com.example.android.partialscreenshot.database.ScreenshotItem
+import com.example.android.partialscreenshot.details_fragment.DetailsFragment
+import com.example.android.partialscreenshot.details_fragment.DetailsViewModel
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import java.io.*
 import java.text.SimpleDateFormat
@@ -180,6 +184,8 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
 
 }
 
+
+
  fun deleteFile(uriToDelete: Uri){
 
     val file = File(uriToDelete.path)
@@ -190,4 +196,56 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
             Log.i("MyFile","file not Deleted :" + uriToDelete.path)
         }
     }
+}
+
+ fun shareScreenShot(uriToScan: Uri?,
+                     context: Context?,
+                     uriToEdit: Uri?,
+                     mainActivity: MainActivity?) {
+    Log.i("Myuri","$uriToScan")
+    uriToScan?.let {
+        MediaScannerConnection.scanFile(context,
+            arrayOf(uriToScan.toString()),
+            arrayOf("image/jpeg")){ path, uri ->
+            val shareIntent: Intent
+
+            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
+                shareIntent = Intent().apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    type = "image/jpeg"
+                }
+            }else {
+                shareIntent = Intent().apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, uriToEdit)
+                    type = "image/jpeg"
+                }
+            }
+
+            mainActivity?.let {
+                ContextCompat.startActivity(
+                    it,
+                    Intent.createChooser(shareIntent, context?.resources?.getText(R.string.share)),
+                    null
+                )
+            }
+
+        }
+    }
+
+}
+ fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
+
+    val intent = Intent(Intent.ACTION_EDIT).apply {
+        setDataAndType(uriToEdit, "image/*")
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    }
+
+    mainActivity?.let {
+        ContextCompat.startActivity(it, intent, null)
+    }
+
 }

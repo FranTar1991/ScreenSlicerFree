@@ -27,4 +27,5 @@ interface OnOptionsWindowSelectedListener{
     fun onShareScreenshotSelected()
     fun onAddNoteToScreenshotSelected()
     fun onEditScreenshotSelected()
+    fun onMinimizeCropView()
 }
