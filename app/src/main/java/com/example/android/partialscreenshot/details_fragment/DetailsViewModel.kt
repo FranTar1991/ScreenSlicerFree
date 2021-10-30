@@ -1,15 +1,19 @@
 package com.example.android.partialscreenshot.details_fragment
 
+import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.database.ScreenshotsDAO
-import com.example.android.partialscreenshot.utils.deleteFile
+import com.example.android.partialscreenshot.utils.deleteItemFromGallery
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 
 class DetailsViewModel  (private val screenshotId: Long = 0L,
                          private val dataSource: ScreenshotsDAO) : ViewModel() {
@@ -40,11 +44,11 @@ class DetailsViewModel  (private val screenshotId: Long = 0L,
     }
 
 
-    fun onConfirmToMakeAction(authorization: Boolean, id: Int){
+    fun onConfirmToMakeAction(authorization: Boolean, id: Int, resolver: ContentResolver){
 
         when(id){
             R.id.edit_options -> if (authorization) onEdiThisItem()
-            R.id.delete_options -> if (authorization) onDeleteThisItem()
+            R.id.delete_options -> if (authorization) onDeleteThisItem(resolver)
             R.id.share_options -> if (authorization) onShareThisItem()
         }
 
@@ -62,17 +66,24 @@ class DetailsViewModel  (private val screenshotId: Long = 0L,
         authorizationToMakeChanges.value = view?.id
     }
 
-    fun onDeleteThisItem(){
+    fun onDeleteThisItem(resolver: ContentResolver){
         viewModelScope.launch {
-            deleteItem()
+            deleteItem(resolver)
         }
     }
 
-    private suspend fun deleteItem(){
+    private suspend fun deleteItem(resolver: ContentResolver){
         withContext(Dispatchers.IO){
-            dataSource.clearById(screenshotId).also {
-                    deleteFile(Uri.parse(_screenshot.value?.storeUri))
-                }
+            dataSource.clearById(screenshotId)
+            val list = listOf(screenshot.value?.uri)
+            deleteItemFromGallery(list,resolver)
+
+            try {
+                resolver.delete(Uri.parse(screenshot.value?.uri),null, null)
+            } catch (e: Exception) {
+                Log.e("MyDeleteRequest", "Exception $e")
+            }
+
         }
     }
 

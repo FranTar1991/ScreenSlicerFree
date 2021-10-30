@@ -22,7 +22,7 @@ interface ScreenshotsDAO {
     @Query("DELETE FROM all_screenshots_database_table WHERE screenshotID = :key")
     suspend fun clearById(key: Long)
 
-    @Query("DELETE FROM all_screenshots_database_table WHERE storeUri in (:storeUriList)")
-    suspend fun deleteByStoreUri(storeUriList: List<String>)
+    @Query("DELETE FROM all_screenshots_database_table WHERE uri in (:uriList)")
+    suspend fun clearByUri(uriList: List<String>)
 
 }

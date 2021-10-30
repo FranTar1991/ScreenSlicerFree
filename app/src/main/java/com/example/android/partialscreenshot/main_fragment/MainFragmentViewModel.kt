@@ -1,7 +1,6 @@
 package com.example.android.partialscreenshot.main_fragment
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -52,7 +51,7 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
 
     private suspend fun deleteList(uriToDeleteList: List<String>){
         withContext(Dispatchers.IO){
-            database.deleteByStoreUri(uriToDeleteList)
+            database.clearByUri(uriToDeleteList)
         }
     }
 

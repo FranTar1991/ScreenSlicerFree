@@ -77,7 +77,7 @@ class DetailsFragment : Fragment() {
     private fun setupShareListeners() {
         screenshotDetailViewModel.shareScreenshot.observe(viewLifecycleOwner, Observer {
             it?.let {
-                shareScreenShot(Uri.parse(it.storeUri), context,Uri.parse(it.shareUri),activity as MainActivity)
+                shareScreenShot(context,Uri.parse(it.uri),activity as MainActivity)
                 screenshotDetailViewModel.onActionFlagReceived()
             }
         })
@@ -86,7 +86,7 @@ class DetailsFragment : Fragment() {
     private fun setUpEditListeners() {
         screenshotDetailViewModel.editScreenshot.observe(viewLifecycleOwner, Observer {
             it?.let {
-                editScreenShot(Uri.parse(it.shareUri), activity as MainActivity)
+                editScreenShot(Uri.parse(it.uri), activity as MainActivity)
                 screenshotDetailViewModel.onActionFlagReceived()
             }
         })
@@ -132,11 +132,11 @@ class DetailsFragment : Fragment() {
             builder.apply {
                 setNegativeButton(R.string.cancel,
                     DialogInterface.OnClickListener { dialog, _ ->
-                        screenshotDetailViewModel.onConfirmToMakeAction(false, id)
+                        screenshotDetailViewModel.onConfirmToMakeAction(false, id, context.contentResolver)
                         dialog.dismiss()
                     })
                 setPositiveButton(R.string.ok, DialogInterface.OnClickListener { dialog, _ ->
-                    screenshotDetailViewModel.onConfirmToMakeAction(true, id)
+                    screenshotDetailViewModel.onConfirmToMakeAction(true, id, context.contentResolver)
                     dialog.dismiss()
                 })
 

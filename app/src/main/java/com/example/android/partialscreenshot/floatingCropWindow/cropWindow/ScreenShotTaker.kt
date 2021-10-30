@@ -26,12 +26,9 @@ import java.io.*
 import android.os.Build
 
 import android.graphics.Bitmap
-import android.media.MediaScannerConnection
 import android.view.*
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.isVisible
 import com.example.android.partialscreenshot.MainActivity
-import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.utils.*
 import kotlin.math.hypot
 
@@ -45,14 +42,12 @@ class ScreenShotTaker(
 
     private var isToEdit: Boolean = false
     private var mainActivity: MainActivity? = null
-    private var uriToEdit: Uri? = null
-    private lateinit var path: String
-    private lateinit var name: String
-    private var uriToImage: Uri? = null
+    private var mySavedScreenshotUri: Uri? = null
+
 
     //This is the cropped bitmap that´s going to be saved when the user saves
     private lateinit var croppedBitmap: Bitmap
-    lateinit var optionsWindowView: OptionsWindowView
+    var optionsWindowView: OptionsWindowView? = null
     private lateinit var fileOutputStream: FileOutputStream
 
     /**
@@ -69,7 +64,6 @@ class ScreenShotTaker(
     private val SCREENCAP_NAME = "screencap"
     private var IMAGES_PRODUCED = 0
     private var mMediaProjection: MediaProjection? = null
-    private var mStoreDir: String = ""
     private var mImageReader: ImageReader? = null
     private var mHandler: Handler? = null
     private var mDisplay: Display? = null
@@ -84,7 +78,6 @@ class ScreenShotTaker(
     init {
 
         mainActivity = (mainActivityReference as MainActivity)
-        createDirectory()
 
         // start capture handling thread
         object : Thread() {
@@ -107,7 +100,7 @@ class ScreenShotTaker(
         optionsWindowView = OptionsWindowView(context, cropView).apply {
             this.setOnOnOptionsWindowSelected(this@ScreenShotTaker)
         }
-        optionsWindowView.createView()
+        optionsWindowView?.createView()
     }
 
     /**
@@ -131,7 +124,7 @@ class ScreenShotTaker(
 
                         baseBitmap?.apply {
                             baseBitmap.copyPixelsFromBuffer(buffer)
-                            croppedBitmap = cropBaseBitmap(baseBitmap).copy(baseBitmap.config,true)
+                            croppedBitmap = cropBaseBitmap(baseBitmap)
                             cropViewFloatingWindowService.setCroppedImage(croppedBitmap)
                             callOptionsFloatingWindowService()
                             baseBitmap.recycle()
@@ -157,33 +150,21 @@ class ScreenShotTaker(
         )
 
     }
-    private fun saveCroppedBitmap(bitmapToSave: Bitmap?){
 
-        name = "${getCurrentTimeStamp()}"
-        path = "$mStoreDir/$name"
-        fileOutputStream = FileOutputStream(path)
-        uriToImage = Uri.parse(path)
-
-        fileOutputStream.use {
-           bitmapToSave?.compress(Bitmap.CompressFormat.JPEG, 100, it)
-       }
-
-
-    }
     fun saveScreenshot(){
-       saveCroppedBitmap(croppedBitmap)
+
         cropView?.showDrawable = true
         cropView?.resetView()
-        uriToEdit = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, name)
-        optionsWindowView.destroyView()
+        mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, getCurrentTimeStamp())
+        optionsWindowView?.destroyView()
 
-        mainActivity?.saveScreenshotWIthPermission(uriToImage.toString(), uriToEdit.toString())
+        mainActivity?.saveScreenshotWIthPermission(mySavedScreenshotUri.toString())
 
         if (isToShare){
-            shareScreenShot(uriToImage,context,uriToEdit,mainActivity)
+            shareScreenShot(context,mySavedScreenshotUri,mainActivity)
             isToShare = false
         } else if(isToEdit){
-            editScreenShot(uriToEdit, mainActivity)
+            editScreenShot(mySavedScreenshotUri, mainActivity)
             isToEdit = false
         }
 
@@ -206,7 +187,7 @@ class ScreenShotTaker(
 
     override fun onDeleteScreenshotSelected() {
         cropView?.showDrawable = true
-        optionsWindowView.destroyView()
+        optionsWindowView?.destroyView()
         Toast.makeText(context,"Screenshot Deleted",Toast.LENGTH_SHORT).show()
     }
 
@@ -332,30 +313,6 @@ class ScreenShotTaker(
         }
     }
 
-    /**
-     * Create the directory where the cropped image will be saved when the user says so
-     */
-    private fun createDirectory() {
-        // create store dir
-        val externalFilesDir = context.getExternalFilesDir(null)
-        if (externalFilesDir != null) {
-            mStoreDir = externalFilesDir.absolutePath + "/screenshots/"
-            val storeDirectory = File(mStoreDir)
-            if (!storeDirectory.exists()) {
-                val success = storeDirectory.mkdirs()
-                if (!success) {
-                    Log.e(TAG, "failed to create file storage directory.")
-                    cropViewFloatingWindowService.stopSelf()
-                }
-            }
-        } else {
-            Log.e(
-                TAG,
-                "failed to create file storage directory, getExternalFilesDir is null."
-            )
-            cropViewFloatingWindowService.stopSelf()
-        }
-    }
 
     /**
      * The screen dimensions to be used to take the screenshot

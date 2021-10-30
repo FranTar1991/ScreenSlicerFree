@@ -33,7 +33,7 @@ class ScreenshotsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
     tracker?.let {
-        holder.bind(clickListener, item,it.isSelected(item.storeUri), mainFragmentViewModel)
+        holder.bind(clickListener, item,it.isSelected(item.uri), mainFragmentViewModel)
     }
 
 
@@ -50,7 +50,7 @@ class ScreenshotsAdapter(
          fun getItemDetails(): ItemDetailsLookup.ItemDetails<String> =
              object : ItemDetailsLookup.ItemDetails<String>() {
                  override fun getPosition(): Int = adapterPosition
-                 override fun getSelectionKey(): String = adapter.getItem(adapterPosition).storeUri
+                 override fun getSelectionKey(): String = adapter.getItem(adapterPosition).uri
              }
         fun bind(
             clickListener: ScreenshotListener,
@@ -88,7 +88,7 @@ class ScreenshotsAdapter(
  */
 class ScreenshotAdapterDiffCallback : DiffUtil.ItemCallback<ScreenshotItem>() {
     override fun areItemsTheSame(oldItem: ScreenshotItem, newItem: ScreenshotItem): Boolean {
-        return oldItem.storeUri == newItem.storeUri
+        return oldItem.uri == newItem.uri
     }
 
     override fun areContentsTheSame(oldItem: ScreenshotItem, newItem: ScreenshotItem): Boolean {
@@ -114,9 +114,9 @@ class MyItemDetailsLookup(private val recyclerView: RecyclerView) :
 class MyItemKeyProvider(private val adapter: ScreenshotsAdapter) : ItemKeyProvider<String>(SCOPE_CACHED)
 {
     override fun getKey(position: Int): String? =
-        adapter.currentList[position].storeUri
+        adapter.currentList[position].uri
     override fun getPosition(key: String): Int =
-        adapter.currentList.indexOfFirst {it.storeUri == key}
+        adapter.currentList.indexOfFirst {it.uri == key}
 }
 
 

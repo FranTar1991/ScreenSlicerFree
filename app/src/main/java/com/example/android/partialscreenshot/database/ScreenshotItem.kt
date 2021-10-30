@@ -8,8 +8,5 @@ import androidx.room.PrimaryKey
 data class ScreenshotItem(
     @PrimaryKey(autoGenerate = true)
     var screenshotID: Long = 0L,
-
-    val storeUri: String,
-
-    val shareUri: String
+    val uri: String
 )

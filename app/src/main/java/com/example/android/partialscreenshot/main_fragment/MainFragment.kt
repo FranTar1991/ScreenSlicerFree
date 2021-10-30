@@ -1,5 +1,6 @@
 package com.example.android.partialscreenshot.main_fragment
 
+import android.content.DialogInterface
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -21,17 +22,18 @@ import android.widget.Toast
 import android.view.*
 
 import androidx.recyclerview.selection.*
-import com.example.android.partialscreenshot.utils.deleteTheList
 import android.content.Intent
 import android.net.Uri
+import androidx.appcompat.app.AlertDialog
+import com.example.android.partialscreenshot.utils.deleteItemFromGallery
 
 
 class MainFragment : Fragment() {
 
 
     private var allSelected: Boolean = false
-    private lateinit var shareList: MutableList<String>
-    private lateinit var storeList: MutableList<String>
+
+    private var uriList: MutableList<String> = mutableListOf()
     private lateinit var adapter: ScreenshotsAdapter
     private lateinit var screenshotsSelected: Selection<String>
     private lateinit var tracker: SelectionTracker<String>
@@ -53,41 +55,24 @@ class MainFragment : Fragment() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.delete_on_menu -> {
-                    deleteTheList(screenshotsSelected.toList(),mainFragmentViewModel)
-                    Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
-                    mode.finish()
-                    true
+                    getUserAuthorizationToTakeAction(item.itemId, ::deleteThisItems)
+
                 }
                 R.id.share_on_menu -> {
+                    getUserAuthorizationToTakeAction(item.itemId, ::shareThisItem)
 
-                    val files: ArrayList<Uri> = ArrayList<Uri>()
-                    shareList.forEach {
-                        files.add(Uri.parse(it))
-                    }
-
-                    val sendIntent = Intent().apply {
-                        type = "image/jpeg"
-                        action = Intent.ACTION_SEND_MULTIPLE
-                        putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
-                    }
-
-                    val shareIntent = Intent.createChooser(sendIntent, getText(R.string.share))
-
-                    startActivity(shareIntent)
-
-                    true
                 }
                 R.id.select_all_on_menu -> {
 
                     allSelected = if (!allSelected){
-                        storeList.forEach {
+                        uriList.forEach {
                             if (!tracker.isSelected(it)){
                                 tracker.select(it)
                             }
                         }
                         true
                     } else {
-                        storeList.forEach {
+                        uriList.forEach {
                             tracker.deselect(it)
                         }
                         false
@@ -107,7 +92,62 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun getUserAuthorizationToTakeAction(id: Int, operation: () -> Unit):Boolean {
 
+        val (title, message) = when (id){
+            R.id.delete_on_menu-> Pair(getString(R.string.delete_this),getString(R.string.delete_this_message))
+            R.id.share_on_menu -> Pair(getString(R.string.share_this), getString(R.string.share_this_message))
+            else -> Pair("","")
+        }
+
+        val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
+            val builder = AlertDialog.Builder(it)
+
+            builder.apply {
+                setNegativeButton(R.string.cancel,
+                    DialogInterface.OnClickListener { dialog, _ ->
+                        actionMode?.finish()
+                        dialog.dismiss()
+                    })
+                setPositiveButton(R.string.ok, DialogInterface.OnClickListener { dialog, _ ->
+                    operation().also {
+                        actionMode?.finish()
+                    }
+                    dialog.dismiss()
+                })
+
+                setTitle(title)
+                setMessage(message)
+            }
+        }
+
+        alertDialogBuilder?.create()?.show()
+       return true
+    }
+
+    private fun deleteThisItems(){
+        mainFragmentViewModel.onDeleteListWithUri(screenshotsSelected.toList())
+        deleteItemFromGallery(screenshotsSelected.toList(), context?.contentResolver)
+
+        Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun shareThisItem(){
+        val files: ArrayList<Uri> = ArrayList<Uri>()
+        uriList.forEach {
+            files.add(Uri.parse(it))
+        }
+
+        val sendIntent = Intent().apply {
+            type = "image/jpeg"
+            action = Intent.ACTION_SEND_MULTIPLE
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
+        }
+
+        val shareIntent = Intent.createChooser(sendIntent, getText(R.string.share))
+
+        startActivity(shareIntent)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Get a reference to the binding object and inflate the fragment views.
@@ -140,16 +180,13 @@ class MainFragment : Fragment() {
 
         mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
             it?.let { newList ->
-                adapter.submitList(newList)
-                 storeList = mutableListOf()
-                 shareList  = mutableListOf()
 
                 newList.forEach { list->
-                    storeList.add(list.storeUri)
-                    shareList.add(list.shareUri)
+                    uriList.add(list.uri)
                 }
-
+                adapter.submitList(newList)
                 mainFragmentViewModel.setScreenShotCount(newList.size)
+
             }
         })
 
@@ -193,6 +230,7 @@ class MainFragment : Fragment() {
 
         return binding.root
     }
+
 
     private fun setActionMode() {
         screenshotsSelected = tracker.selection

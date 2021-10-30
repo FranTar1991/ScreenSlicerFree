@@ -2,6 +2,7 @@ package com.example.android.partialscreenshot.utils
 
 import android.content.*
 import android.content.res.Resources
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.media.MediaScannerConnection
@@ -16,11 +17,10 @@ import android.view.WindowManager.LayoutParams.*
 import androidx.core.content.ContextCompat
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
-import com.example.android.partialscreenshot.database.ScreenshotItem
-import com.example.android.partialscreenshot.details_fragment.DetailsFragment
-import com.example.android.partialscreenshot.details_fragment.DetailsViewModel
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
+import org.chromium.base.CollectionUtil.forEach
 import java.io.*
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -174,41 +174,24 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
     }
 }
 
- fun deleteTheList(listToDelete: List<String>, mainFragmentViewModel: MainFragmentViewModel) {
-
-    mainFragmentViewModel.onDeleteListWithUri(listToDelete).also {
-        for(fileUri in listToDelete){
-            deleteFile(Uri.parse(fileUri))
-        }
-    }
-
-}
 
 
+fun deleteItemFromGallery(listToDelete: List<String?>, resolver: ContentResolver?){
 
- fun deleteFile(uriToDelete: Uri){
-
-    val file = File(uriToDelete.path)
-    if (file.exists()) {
-        if (file.delete()) {
-            Log.i("MyFile","file Deleted :" + uriToDelete.path)
-        } else {
-            Log.i("MyFile","file not Deleted :" + uriToDelete.path)
+    forEach(listToDelete){
+        try {
+            resolver?.delete(Uri.parse(it),null,null)
+        } catch (e: Exception) {
+            Log.e("MyDeleteRequest", "Exception $e")
         }
     }
 }
 
- fun shareScreenShot(uriToScan: Uri?,
-                     context: Context?,
-                     uriToEdit: Uri?,
-                     mainActivity: MainActivity?) {
-    Log.i("Myuri","$uriToScan")
-    uriToScan?.let {
-        MediaScannerConnection.scanFile(context,
-            arrayOf(uriToScan.toString()),
-            arrayOf("image/jpeg")){ path, uri ->
+ fun shareScreenShot(context: Context?, uri: Uri?, mainActivity: MainActivity?) {
+
+     uri?.let {
+
             val shareIntent: Intent
-
             if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q){
                 shareIntent = Intent().apply {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -220,7 +203,7 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
                 shareIntent = Intent().apply {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_STREAM, uriToEdit)
+                    putExtra(Intent.EXTRA_STREAM, uri)
                     type = "image/jpeg"
                 }
             }
@@ -233,10 +216,10 @@ private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width:
                 )
             }
 
-        }
     }
 
 }
+
  fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
 
     val intent = Intent(Intent.ACTION_EDIT).apply {

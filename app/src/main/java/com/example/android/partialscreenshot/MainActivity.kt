@@ -18,7 +18,6 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Observer
@@ -260,8 +259,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
-    fun saveScreenshotWIthPermission(storeUri: String, shareUri: String){
-     screenshotViewModel.onSaveScreenshot(ScreenshotItem(storeUri= storeUri, shareUri = shareUri))
+    fun saveScreenshotWIthPermission(uri: String){
+     screenshotViewModel.onSaveScreenshot(ScreenshotItem(uri = uri))
 
     }
 
