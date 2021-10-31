@@ -84,6 +84,14 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             }
         })
 
+        viewModel.showImageInFloatingWindow.observe(this, Observer {
+            it?.let {
+                callFloatingWindow()
+                viewModel.callFloatingWindowWithImageCallbackDone()
+            }
+
+        })
+
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
         val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
@@ -156,8 +164,6 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
-
-
     private fun getPermissionToRecord() {
 
         val mProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE)
@@ -179,7 +185,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             callPermissionToOverlayDialog()
 
         } else{
-            getPermissionToRecord()
+            if (mData==null){
+                getPermissionToRecord()
+            } else {
+                callFloatingWindow()
+            }
+
         }
 
 
@@ -234,10 +245,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
 
     private fun callFloatingWindow() {
-
             val intent = Intent(this, CropViewFloatingWindowService::class.java)
             startService(intent)
-
     }
 
     override fun onOverlayPositiveClick() {

@@ -34,10 +34,6 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
          }
 
 
-
-
-
-
     myFloatingView?.setWindowManagerCallback(object : OnMoveCropWindowListener {
         private var initialX = 0
         private var initialY = 0

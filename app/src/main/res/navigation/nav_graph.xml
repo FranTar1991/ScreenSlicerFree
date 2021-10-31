@@ -25,7 +25,7 @@
             app:popUpTo="@id/mainFragment"
             app:popUpToInclusive="true" />
         <argument
-            android:name="screenshotId"
-            app:argType="long" />
+            android:name="uri"
+            app:argType="string" />
     </fragment>
 </navigation>

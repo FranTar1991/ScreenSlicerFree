@@ -13,7 +13,9 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
 import android.util.Log
+import android.view.ActionMode
 import android.view.WindowManager.LayoutParams.*
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
@@ -41,43 +43,9 @@ const val PERMISSION_TO_SAVE ="save"
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
 var INITIAL_POINT = 120
 
-val Float.dp: Int
-    get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()
-
 val Int.dp: Int
     get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()
 
-//the function I already explained, it is used to save the Bitmap to external storage
- fun saveMediaToStorage(contentResolver: ContentResolver, source: Bitmap?,
-                        title: String, context: Context): Uri? {
-
-    var fos: OutputStream? = null
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        contentResolver.also { resolver ->
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.TITLE, title)
-                put(MediaStore.Images.Media.DISPLAY_NAME, title)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                // Add the date meta data to ensure the image is added at the front of the gallery
-                put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
-                put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
-            }
-            val imageUri: Uri? =
-                resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            fos = imageUri?.let { resolver.openOutputStream(it) }
-        }
-    } else {
-        val imagesDir =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        val image = File(imagesDir, title)
-        fos = FileOutputStream(image)
-    }
-    fos?.use {
-        source?.compress(Bitmap.CompressFormat.JPEG, 100, it)
-    }
-
-    return Uri.fromFile(context.getFileStreamPath(title))
-}
  fun saveImageToPhotoGallery(cr: ContentResolver, source: Bitmap,
                              title: String?): Uri? {
     val values = ContentValues().apply {
@@ -187,7 +155,7 @@ fun deleteItemFromGallery(listToDelete: List<String?>, resolver: ContentResolver
     }
 }
 
- fun shareScreenShot(context: Context?, uri: Uri?, mainActivity: MainActivity?) {
+fun shareScreenShot(context: Context?, uri: Uri?, mainActivity: MainActivity?) {
 
      uri?.let {
 
@@ -220,7 +188,7 @@ fun deleteItemFromGallery(listToDelete: List<String?>, resolver: ContentResolver
 
 }
 
- fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
+fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
 
     val intent = Intent(Intent.ACTION_EDIT).apply {
         setDataAndType(uriToEdit, "image/*")
@@ -231,4 +199,28 @@ fun deleteItemFromGallery(listToDelete: List<String?>, resolver: ContentResolver
         ContextCompat.startActivity(it, intent, null)
     }
 
+}
+
+fun createActionDialog(actionToTake: ()-> Unit, activity: MainActivity, title: String,
+                       message: String, actionMode: ActionMode?){
+    val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
+        val builder = AlertDialog.Builder(it)
+
+        builder.apply {
+            setNegativeButton(R.string.cancel,
+                DialogInterface.OnClickListener { dialog, _ ->
+                    actionMode?.finish()
+                    dialog.dismiss()
+                })
+            setPositiveButton(R.string.ok, DialogInterface.OnClickListener { dialog, _ ->
+                actionToTake()
+                dialog.dismiss()
+                actionMode?.finish()
+            })
+
+            setTitle(title)
+            setMessage(message)
+        }
+    }
+    alertDialogBuilder?.create()?.show()
 }

@@ -21,7 +21,7 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
     val screenshotCount
         get() = _screenshotCount
 
-    private val _navigateToScreenshot = MutableLiveData<Long>()
+    private val _navigateToScreenshot = MutableLiveData<String>()
     val navigateToScreenshot
         get() = _navigateToScreenshot
 
@@ -51,12 +51,12 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
 
     private suspend fun deleteList(uriToDeleteList: List<String>){
         withContext(Dispatchers.IO){
-            database.clearByUri(uriToDeleteList)
+            database.clearAllByUri(uriToDeleteList)
         }
     }
 
-    fun onScreenshotClicked(id: Long) {
-        _navigateToScreenshot.value = id
+    fun onScreenshotClicked(uri: String) {
+        _navigateToScreenshot.value = uri
     }
 
     fun onScreenshotNavigated() {

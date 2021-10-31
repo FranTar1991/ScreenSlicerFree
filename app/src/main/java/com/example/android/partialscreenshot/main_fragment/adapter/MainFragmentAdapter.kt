@@ -96,8 +96,8 @@ class ScreenshotAdapterDiffCallback : DiffUtil.ItemCallback<ScreenshotItem>() {
     }
 }
 
-class ScreenshotListener(val clickListener: (sleepId: Long) -> Unit){
-    fun onClick(screenshot: ScreenshotItem) = clickListener(screenshot.screenshotID)
+class ScreenshotListener(val clickListener: (uri: String) -> Unit){
+    fun onClick(screenshot: ScreenshotItem) = clickListener(screenshot.uri)
 }
 
 class MyItemDetailsLookup(private val recyclerView: RecyclerView) :

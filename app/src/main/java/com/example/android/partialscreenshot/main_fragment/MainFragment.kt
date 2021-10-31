@@ -25,6 +25,8 @@ import androidx.recyclerview.selection.*
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AlertDialog
+import com.example.android.partialscreenshot.MainActivity
+import com.example.android.partialscreenshot.utils.createActionDialog
 import com.example.android.partialscreenshot.utils.deleteItemFromGallery
 
 
@@ -56,11 +58,11 @@ class MainFragment : Fragment() {
             return when (item.itemId) {
                 R.id.delete_on_menu -> {
                     getUserAuthorizationToTakeAction(item.itemId, ::deleteThisItems)
-
+                    true
                 }
                 R.id.share_on_menu -> {
                     getUserAuthorizationToTakeAction(item.itemId, ::shareThisItem)
-
+                    true
                 }
                 R.id.select_all_on_menu -> {
 
@@ -92,7 +94,7 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun getUserAuthorizationToTakeAction(id: Int, operation: () -> Unit):Boolean {
+    private fun getUserAuthorizationToTakeAction(id: Int, actionToTake: () -> Unit) {
 
         val (title, message) = when (id){
             R.id.delete_on_menu-> Pair(getString(R.string.delete_this),getString(R.string.delete_this_message))
@@ -100,35 +102,13 @@ class MainFragment : Fragment() {
             else -> Pair("","")
         }
 
-        val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
-            val builder = AlertDialog.Builder(it)
-
-            builder.apply {
-                setNegativeButton(R.string.cancel,
-                    DialogInterface.OnClickListener { dialog, _ ->
-                        actionMode?.finish()
-                        dialog.dismiss()
-                    })
-                setPositiveButton(R.string.ok, DialogInterface.OnClickListener { dialog, _ ->
-                    operation().also {
-                        actionMode?.finish()
-                    }
-                    dialog.dismiss()
-                })
-
-                setTitle(title)
-                setMessage(message)
-            }
-        }
-
-        alertDialogBuilder?.create()?.show()
-       return true
+        createActionDialog(actionToTake, activity as MainActivity,title, message, actionMode)
     }
 
     private fun deleteThisItems(){
-        mainFragmentViewModel.onDeleteListWithUri(screenshotsSelected.toList())
+        val list = screenshotsSelected.toList()
+        mainFragmentViewModel.onDeleteListWithUri(list)
         deleteItemFromGallery(screenshotsSelected.toList(), context?.contentResolver)
-
         Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
     }
 
@@ -258,8 +238,8 @@ class MainFragment : Fragment() {
         tracker.onRestoreInstanceState(savedInstanceState)
     }
 
-    private fun clickListener(screenshotId: Long){
-        mainFragmentViewModel.onScreenshotClicked(screenshotId)
+    private fun clickListener(uri: String){
+        mainFragmentViewModel.onScreenshotClicked(uri)
     }
 
 

@@ -123,7 +123,7 @@ class CropViewFloatingWindowService: Service() {
         }
         )
 
-            manager.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0, INITIAL_POINT)
+        manager.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0, INITIAL_POINT)
 
 
     }

@@ -1,6 +1,5 @@
 package com.example.android.partialscreenshot.details_fragment
 
-import android.content.DialogInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -8,7 +7,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.partialscreenshot.R
@@ -17,12 +15,12 @@ import com.example.android.partialscreenshot.databinding.FragmentDetailsBinding
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.database.ScreenshotsDAO
-import com.example.android.partialscreenshot.utils.editScreenShot
-import com.example.android.partialscreenshot.utils.shareScreenShot
+import com.example.android.partialscreenshot.utils.*
 
 
 class DetailsFragment : Fragment() {
@@ -31,7 +29,7 @@ class DetailsFragment : Fragment() {
     private lateinit var dataSource: ScreenshotsDAO
     private lateinit var optionsView: ConstraintLayout
     private lateinit var screenshotDetailViewModel: DetailsViewModel
-
+    private val mainActivityViewModel: MainActivityViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,7 +45,7 @@ class DetailsFragment : Fragment() {
 
         // Create an instance of the ViewModel Factory.
         dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
-        val viewModelFactory = SleepDetailViewModelFactory(myItemPassed.screenshotId, dataSource)
+        val viewModelFactory = SleepDetailViewModelFactory(myItemPassed.uri, dataSource)
 
         optionsView = binding.optionsViewContraint
 
@@ -65,42 +63,48 @@ class DetailsFragment : Fragment() {
             setUpVisibility()
         })
 
-        setUpDeleteListeners()
-        setUpEditListeners()
-        setupShareListeners()
+        setUpDeleteListeners(binding)
+        setUpEditListeners(binding)
+        setupShareListeners(binding)
+        setUpExtractImageListeners(binding)
 
         binding.lifecycleOwner = activity
 
         return binding.root
     }
 
-    private fun setupShareListeners() {
-        screenshotDetailViewModel.shareScreenshot.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                shareScreenShot(context,Uri.parse(it.uri),activity as MainActivity)
-                screenshotDetailViewModel.onActionFlagReceived()
+    private fun setUpExtractImageListeners(binding: FragmentDetailsBinding){
+        binding.extractOptions.setOnClickListener(View.OnClickListener {
+            getUserAuthorizationToTakeAction(it.id){
+                mainActivityViewModel.callFloatingWindowWithImageCallback(true)
+            }
+        })
+    }
+    private fun setupShareListeners(binding: FragmentDetailsBinding) {
+        binding.shareOptions.setOnClickListener(View.OnClickListener {
+            getUserAuthorizationToTakeAction(it.id){
+                shareScreenShot(context,Uri.parse(myItemPassed.uri),activity as MainActivity)
             }
         })
     }
 
-    private fun setUpEditListeners() {
-        screenshotDetailViewModel.editScreenshot.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                editScreenShot(Uri.parse(it.uri), activity as MainActivity)
-                screenshotDetailViewModel.onActionFlagReceived()
+    private fun setUpEditListeners(binding: FragmentDetailsBinding) {
+
+        binding.editOptions.setOnClickListener(View.OnClickListener {
+            getUserAuthorizationToTakeAction(it.id){
+                editScreenShot(Uri.parse(myItemPassed.uri), activity as MainActivity)
             }
         })
     }
 
-    private fun setUpDeleteListeners() {
+    private fun setUpDeleteListeners(binding: FragmentDetailsBinding) {
 
-        screenshotDetailViewModel.authorizationToMakeChanges.observe(viewLifecycleOwner, Observer {
-            it?.let {
-                getUserAuthorizationToDelete(it)
-                screenshotDetailViewModel.onAskAuthorization(null)
+        binding.deleteOptions.setOnClickListener(View.OnClickListener {
+            getUserAuthorizationToTakeAction(it.id){
+                val list = listOf(myItemPassed.uri)
+                screenshotDetailViewModel.onDeleteListWithUri(list)
+                deleteItemFromGallery(list,context?.contentResolver)
             }
-
-
         })
 
         screenshotDetailViewModel.screenshot.observe(viewLifecycleOwner, Observer {
@@ -117,35 +121,17 @@ class DetailsFragment : Fragment() {
         })
     }
 
-    private fun getUserAuthorizationToDelete(id: Int) {
+    private fun getUserAuthorizationToTakeAction(id: Int, actionToTake: ()->Unit) {
 
         val (title, message) = when (id){
             R.id.edit_options -> Pair(getString(R.string.edit_this),getString(R.string.edit_this_message))
             R.id.delete_options -> Pair(getString(R.string.delete_this), getString(R.string.delete_this_message))
             R.id.share_options -> Pair(getString(R.string.share_this), getString(R.string.share_this_message))
+            R.id.extract_options -> Pair(getString(R.string.extract_this), getString(R.string.extract_this_message))
             else -> Pair("","")
         }
 
-        val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
-            val builder = AlertDialog.Builder(it)
-
-            builder.apply {
-                setNegativeButton(R.string.cancel,
-                    DialogInterface.OnClickListener { dialog, _ ->
-                        screenshotDetailViewModel.onConfirmToMakeAction(false, id, context.contentResolver)
-                        dialog.dismiss()
-                    })
-                setPositiveButton(R.string.ok, DialogInterface.OnClickListener { dialog, _ ->
-                    screenshotDetailViewModel.onConfirmToMakeAction(true, id, context.contentResolver)
-                    dialog.dismiss()
-                })
-
-                setTitle(title)
-                setMessage(message)
-            }
-        }
-
-        alertDialogBuilder?.create()?.show()
+        createActionDialog(actionToTake, activity as MainActivity,title, message, null)
     }
 
     override fun onResume() {
@@ -156,11 +142,6 @@ class DetailsFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         (activity as AppCompatActivity?)?.supportActionBar?.show()
-    }
-
-
-    private fun extractImage() {
-
     }
 
     private fun setUpVisibility() {

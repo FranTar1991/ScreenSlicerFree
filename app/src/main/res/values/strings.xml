@@ -31,4 +31,6 @@
     <string name="share_this_message">Do you want to share this image(s)? The quality might be reduced by the sharing app.</string>
     <string name="msg_share_image">Share Image</string>
     <string name="share">Share now</string>
+    <string name="extract_this">Extract Image Action</string>
+    <string name="extract_this_message">Please grant the following permission to be able to see the image in the floating window.</string>
 </resources>

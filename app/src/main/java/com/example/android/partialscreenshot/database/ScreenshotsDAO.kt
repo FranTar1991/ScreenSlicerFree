@@ -13,8 +13,9 @@ interface ScreenshotsDAO {
     @Query("SELECT * FROM all_screenshots_database_table ORDER BY screenshotID DESC")
     fun getAllScreenshots(): LiveData<List<ScreenshotItem>>
 
-    @Query("SELECT * from all_screenshots_database_table WHERE screenshotID = :key")
-    fun getById(key: Long): LiveData<ScreenshotItem>
+    @Query("SELECT * from all_screenshots_database_table WHERE uri in (:key)")
+    fun getByUri(key: String): LiveData<ScreenshotItem>
+
 
     @Query("DELETE FROM all_screenshots_database_table")
     suspend fun clearAll()
@@ -23,6 +24,6 @@ interface ScreenshotsDAO {
     suspend fun clearById(key: Long)
 
     @Query("DELETE FROM all_screenshots_database_table WHERE uri in (:uriList)")
-    suspend fun clearByUri(uriList: List<String>)
+    suspend fun clearAllByUri(uriList: List<String>)
 
 }
