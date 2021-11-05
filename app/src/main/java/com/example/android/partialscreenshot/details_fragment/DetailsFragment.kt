@@ -76,7 +76,7 @@ class DetailsFragment : Fragment() {
     private fun setUpExtractImageListeners(binding: FragmentDetailsBinding){
         binding.extractOptions.setOnClickListener(View.OnClickListener {
             getUserAuthorizationToTakeAction(it.id){
-                mainActivityViewModel.callFloatingWindowWithImageCallback(true)
+                mainActivityViewModel.setFloatingImageViewUri(myItemPassed.uri)
             }
         })
     }

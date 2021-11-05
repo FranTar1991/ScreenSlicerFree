@@ -12,6 +12,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.widget.ContentFrameLayout
 import androidx.appcompat.widget.ContentFrameLayout.OnAttachListener
+import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.ScreenShotTaker
@@ -45,7 +46,9 @@ class CropViewFloatingWindowService: Service() {
         return binder;
     }
 
-    fun setServiceCallBacks(floatingAndTakeScreenShotServiceCallback: FloatingWindowListener?){
+    fun setServiceCallBacks(floatingAndTakeScreenShotServiceCallback: FloatingWindowListener?, from: String){
+        Log.i("myService","is this activity null when destroyed: $from")
+
         takeScreenShotServiceCallback = floatingAndTakeScreenShotServiceCallback
     }
 
@@ -55,7 +58,10 @@ class CropViewFloatingWindowService: Service() {
         if (!isCropWindowOn){
             setUpNotification()
             setUpFloatingWidget()
-            screenShotTaker = ScreenShotTaker(applicationContext, this, floatingView, takeScreenShotServiceCallback)
+
+           screenShotTaker = ScreenShotTaker(applicationContext, this, floatingView, takeScreenShotServiceCallback as MainActivity)
+
+
 
             mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
 

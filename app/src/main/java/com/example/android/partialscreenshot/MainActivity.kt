@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -25,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
+import com.example.android.partialscreenshot.floatingView.FloatingImageViewService
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewmodelFactory
 import com.example.android.partialscreenshot.utils.*
@@ -49,6 +51,7 @@ private var mData: Intent? = null
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener{
 
+    private var showFloatingImage: String? = null
     private lateinit var screenshotViewModel: MainFragmentViewModel
     private val viewModel: MainActivityViewModel by viewModels()
     private lateinit var permissionsDialog: PermissionsDialog
@@ -60,7 +63,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             val binder = service as CropViewFloatingWindowService.LocalBinder
             cropServiceViewFloatingWindowService = binder.getService()
             bound = true
-            cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity) // register
+
+            cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity, "connected") // register
             permissionsDialog = PermissionsDialog()
         }
 
@@ -70,6 +74,22 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
+
+    private lateinit var floatingImageViewService: FloatingImageViewService
+    private var floatingImageViewServiceBound: Boolean = false
+    private val floatingImageViewServiceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            val binder = service as FloatingImageViewService.LocalBinder
+            floatingImageViewService = binder.getService()
+            floatingImageViewServiceBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            floatingImageViewServiceBound = false
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -78,19 +98,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        viewModel.overlayCall.observe(this, Observer { call ->
-            if (call){
-                checkIfPermissionToShowOverlay()
-            }
-        })
 
-        viewModel.showImageInFloatingWindow.observe(this, Observer {
-            it?.let {
-                callFloatingWindow()
-                viewModel.callFloatingWindowWithImageCallbackDone()
-            }
-
-        })
 
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
@@ -106,7 +114,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
                     val data: Intent? = result.data
                     mData = data
 
-                    callFloatingWindow()
+                    callCropWindow()
 
                 } else {
                     //show toast explaining that without this permission the app can´t work
@@ -137,13 +145,40 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         val intent = Intent(this, CropViewFloatingWindowService::class.java)
         bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
 
+        //Used to connect this activity with the FloatingImageViewService
+        val floatingImageViewIntent = Intent(this, FloatingImageViewService::class.java)
+        bindService(floatingImageViewIntent, floatingImageViewServiceConnection, BIND_AUTO_CREATE)
+
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             PermissionsDialog()
                 .show(supportFragmentManager, PERMISSION_TO_SAVE)
         }
 
+        viewModel.overlayCall.observe(this, Observer { call ->
+            if (call){
+                checkIfPermissionToShowOverlay()
+                viewModel.checkIfOverlayPermissionDOne()
+            }
+        })
 
+        viewModel.imageInFloatingWindow.observe(this, Observer {
+            showFloatingImage = it
+            it?.let{
+                callFloatingImageView()
+                floatingImageViewService.setImageUri(Uri.parse(it))
+                viewModel.setFloatingImageViewUriDone()
+
+            }
+
+
+
+        })
+    }
+    private fun callFloatingImageView() {
+        Intent(this, FloatingImageViewService::class.java).also { intent ->
+            startService(intent)
+        }
     }
 
     /**
@@ -188,7 +223,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             if (mData==null){
                 getPermissionToRecord()
             } else {
-                callFloatingWindow()
+                if (showFloatingImage == null){
+                    callCropWindow()
+                }else{
+                    callFloatingImageView()
+                }
+
             }
 
         }
@@ -208,9 +248,15 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             super.onDestroy()
             if (bound) {
                 cropServiceViewFloatingWindowService.stopForeground(true)
-                cropServiceViewFloatingWindowService.setServiceCallBacks(null) // unregister
+                cropServiceViewFloatingWindowService.setServiceCallBacks(null, "destroy") // unregister
+
                 unbindService(cropViewFloatingWindowServiceConnection)
                 bound = false
+            }
+
+            if (floatingImageViewServiceBound){
+                unbindService(floatingImageViewServiceConnection)
+                floatingImageViewServiceBound = false
             }
 
             stopService(Intent(this, CropViewFloatingWindowService::class.java))
@@ -244,7 +290,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
     }
 
 
-    private fun callFloatingWindow() {
+    private fun callCropWindow() {
             val intent = Intent(this, CropViewFloatingWindowService::class.java)
             startService(intent)
     }

@@ -24,7 +24,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -32,6 +31,9 @@
         <service
             android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
+
+        <service
+            android:name=".floatingView.FloatingImageViewService" />
 
         <receiver android:name=".notification_utils.NotificationBroadcastReceiver" />
 

@@ -8,21 +8,25 @@ class MainActivityViewModel : ViewModel() {
     private val mutableOverlayCall = MutableLiveData<Boolean>()
     val overlayCall: LiveData<Boolean> get() = mutableOverlayCall
 
-    private val _showImageInFloatingWindow = MutableLiveData<Boolean>()
-    val showImageInFloatingWindow
-            get() = _showImageInFloatingWindow
+    private val _imageInFloatingWindowUri = MutableLiveData<String>()
+    val imageInFloatingWindow
+            get() = _imageInFloatingWindowUri
 
 
-    fun callFloatingWindowWithImageCallback(call: Boolean){
-        _showImageInFloatingWindow.value = call
+    fun setFloatingImageViewUri(uri: String){
+        _imageInFloatingWindowUri.value = uri
     }
 
-    fun callFloatingWindowWithImageCallbackDone(){
-        _showImageInFloatingWindow.value = null
+    fun setFloatingImageViewUriDone(){
+        _imageInFloatingWindowUri.value = null
     }
 
     fun checkIfHasOverlayPermission(call: Boolean) {
         mutableOverlayCall.value = call
+    }
+
+    fun checkIfOverlayPermissionDOne(){
+        mutableOverlayCall.value = false
     }
 
 }

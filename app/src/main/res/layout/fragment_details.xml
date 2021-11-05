@@ -18,6 +18,14 @@
         android:background="@color/black"
         tools:context=".details_fragment.DetailsFragment">
 
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/myToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <com.github.chrisbanes.photoview.PhotoView
             android:id="@+id/main_image_details"
             android:layout_width="0dp"
@@ -26,7 +34,7 @@
             app:layout_constraintBottom_toTopOf="@+id/options_view_contraint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/myToolbar"
             app:screenshotUri="@{screenshotDetailViewModel.screenshot}"
             tools:src="@drawable/gradient_top" />
 

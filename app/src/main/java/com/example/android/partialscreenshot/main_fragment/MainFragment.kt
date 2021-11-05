@@ -230,7 +230,10 @@ class MainFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        tracker.onSaveInstanceState(outState)
+        if (this::tracker.isInitialized){
+            tracker.onSaveInstanceState(outState)
+        }
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

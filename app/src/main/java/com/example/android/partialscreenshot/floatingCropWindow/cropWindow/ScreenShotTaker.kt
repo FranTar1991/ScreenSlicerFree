@@ -37,11 +37,10 @@ class ScreenShotTaker(
     private val context: Context,
     private val cropViewFloatingWindowService: CropViewFloatingWindowService,
     private val cropView: CropView?,
-    private val mainActivityReference: FloatingWindowListener?
+    private val mainActivityReference: MainActivity
 ): OnOptionsWindowSelectedListener {
 
     private var isToEdit: Boolean = false
-    private var mainActivity: MainActivity? = null
     private var mySavedScreenshotUri: Uri? = null
 
 
@@ -77,7 +76,7 @@ class ScreenShotTaker(
 
     init {
 
-        mainActivity = (mainActivityReference as MainActivity)
+
 
         // start capture handling thread
         object : Thread() {
@@ -158,13 +157,13 @@ class ScreenShotTaker(
         mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, getCurrentTimeStamp())
         optionsWindowView?.destroyView()
 
-        mainActivity?.saveScreenshotWIthPermission(mySavedScreenshotUri.toString())
+        mainActivityReference.saveScreenshotWIthPermission(mySavedScreenshotUri.toString())
 
         if (isToShare){
-            shareScreenShot(context,mySavedScreenshotUri,mainActivity)
+            shareScreenShot(context,mySavedScreenshotUri,mainActivityReference)
             isToShare = false
         } else if(isToEdit){
-            editScreenShot(mySavedScreenshotUri, mainActivity)
+            editScreenShot(mySavedScreenshotUri, mainActivityReference)
             isToEdit = false
         }
 
@@ -193,10 +192,10 @@ class ScreenShotTaker(
 
     override fun onShareScreenshotSelected() {
         isToShare = true
-        if (mainActivity?.checkIfPermissionToSave() == true){
+        if (mainActivityReference.checkIfPermissionToSave()){
             saveScreenshot()
         } else {
-            mainActivity?. callPermissionToSaveDialog()
+            mainActivityReference. callPermissionToSaveDialog()
         }
 
     }
@@ -207,10 +206,10 @@ class ScreenShotTaker(
 
     override fun onEditScreenshotSelected() {
         isToEdit = true
-        if (mainActivity?.checkIfPermissionToSave() == true){
+        if (mainActivityReference.checkIfPermissionToSave()){
             saveScreenshot()
         } else {
-            mainActivity?.callPermissionToSaveDialog()
+            mainActivityReference.callPermissionToSaveDialog()
         }
 
 
