@@ -25,6 +25,7 @@ import androidx.recyclerview.selection.*
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.Toolbar
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.utils.createActionDialog
 import com.example.android.partialscreenshot.utils.deleteItemFromGallery
@@ -46,6 +47,7 @@ class MainFragment : Fragment() {
         override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
             val inflater = mode.menuInflater
             inflater.inflate(R.menu.menu_selection, menu)
+            toolBar.visibility = View.GONE
             return true
         }
 
@@ -91,8 +93,10 @@ class MainFragment : Fragment() {
 
             tracker.clearSelection()
             actionMode = null
+            toolBar.visibility = View.VISIBLE
         }
     }
+    private lateinit var toolBar: Toolbar
 
     private fun getUserAuthorizationToTakeAction(id: Int, actionToTake: () -> Unit) {
 
@@ -149,6 +153,7 @@ class MainFragment : Fragment() {
 
         binding.allScreenshotsViewModel = mainFragmentViewModel
         binding.lifecycleOwner = activity
+        toolBar = binding.myToolbar
 
         adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener), mainFragmentViewModel)
 
@@ -220,6 +225,7 @@ class MainFragment : Fragment() {
             null -> {
                 // Start the CAB using the ActionMode.Callback defined above
                 actionMode = activity?.startActionMode(actionModeCallback)
+
 
             }
         }

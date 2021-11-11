@@ -5,9 +5,8 @@
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -18,12 +17,13 @@
         android:theme="@style/Theme.PartialScreenshot">
 
         <activity
-
             android:name=".MainActivity"
-            android:launchMode="singleTop"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -31,12 +31,9 @@
         <service
             android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
-
-        <service
-            android:name=".floatingView.FloatingImageViewService" />
+        <service android:name=".floatingView.FloatingImageViewService" />
 
         <receiver android:name=".notification_utils.NotificationBroadcastReceiver" />
-
     </application>
 
 </manifest>

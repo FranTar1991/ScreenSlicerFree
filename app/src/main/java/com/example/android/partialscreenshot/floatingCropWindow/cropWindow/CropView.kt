@@ -6,6 +6,8 @@ import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.util.Log
@@ -15,7 +17,6 @@ import android.view.MotionEvent.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
@@ -28,23 +29,6 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import androidx.appcompat.content.res.AppCompatResources
-import android.content.Context.VIBRATOR_SERVICE
-
-import androidx.core.content.ContextCompat.getSystemService
-
-import android.os.Vibrator
-
-import android.os.VibrationEffect
-import androidx.core.content.ContextCompat.getSystemService
-
-
-
-
-
-
-
-
-
 
 
 
@@ -264,6 +248,7 @@ class CropView @JvmOverloads constructor(context: Context,
                    setImageBitmap(null)
                    drawMyBackground(this)
                    drawMyRect(this, secondRectPoints)
+
                    setCloseDrawable(canvas)
 
                } else{
@@ -274,6 +259,13 @@ class CropView @JvmOverloads constructor(context: Context,
                    gradientBottom?.draw(canvas)
                    drawMyRect(this, mainRectPoints)
                    setNewCropWindow(this)
+
+                   if (showDrawable){
+                       drawMyText(canvas,width.toFloat()/8,
+                           height.toFloat()* 1/4,
+                           resources.getString(R.string.double_tap),30f)
+                   }
+
 
                }
 
@@ -545,6 +537,10 @@ class CropView @JvmOverloads constructor(context: Context,
             paintForBack.color = outsideColor
         }
 
+        drawMyText(canvas,canvas.width.toFloat()/8,
+            canvas.height.toFloat()* 3/4,
+            resources.getString(R.string.how_to_move_crop_window), 40f)
+
         //top rectangle
         canvas.drawRect(0f, 0f, canvas.width.toFloat(),
             (secondRectPoints[0].y + halfDrawableSize).toFloat(), paintForBack)
@@ -566,6 +562,27 @@ class CropView @JvmOverloads constructor(context: Context,
             canvas.width.toFloat(),
             canvas.height.toFloat(),
             paintForBack)
+
+
+
+    }
+
+    private fun drawMyText(canvas: Canvas,x: Float, y: Float, text: String, tSize: Float){
+        var newY = y
+
+        val mTextPaint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+           typeface = Typeface.DEFAULT_BOLD
+           isAntiAlias = true
+            textSize = tSize
+        }
+
+        for (line in text.split("\n")) {
+            canvas.drawText(line, x, newY, mTextPaint)
+            newY += mTextPaint.descent() - mTextPaint.ascent()
+        }
+
     }
 
     //region: Set callbacks
@@ -945,6 +962,7 @@ class CropView @JvmOverloads constructor(context: Context,
         )
 
         closeDrawable?.draw(canvas)
+
     }
 
     private fun getOnMeasureSpec( isMeasuringWidth: Boolean, measureSpecMode: Int, measureSpecSize: Int, desiredSize: Int): Int {

@@ -10,8 +10,8 @@
 
     <string name="gotIt">OK</string>
     <string name="title_dialog">Hint</string>
-    <string name="permission_overlay">To activate screen capture you need to grant the Draw over other apps permission</string>
-    <string name="permission_save">To save or share your screenshot, please grant the following permission.</string>
+    <string name="permission_overlay">To use this function you need to grant the \"Draw over other apps\" permission</string>
+    <string name="permission_save">To save or share your screenshots, please grant the following permission.</string>
     <string name="view_created">Crop view has been created</string>
     <string name="cant_save">"Sorry, you won´t be able to save or share screenshots any screenshots then"</string>
 
@@ -32,5 +32,7 @@
     <string name="msg_share_image">Share Image</string>
     <string name="share">Share now</string>
     <string name="extract_this">Extract Image Action</string>
-    <string name="extract_this_message">Please grant the following permission to be able to see the image in the floating window.</string>
+    <string name="extract_this_message">Double tap the image to close it.</string>
+    <string name="how_to_move_crop_window">Put another finger on the screen,\nand you will be able to move\nthe crop window.</string>
+    <string name="double_tap">Double tap\nto close\nthis\nwindow.</string>
 </resources>

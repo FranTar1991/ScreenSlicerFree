@@ -13,6 +13,7 @@ import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.databinding.FragmentDetailsBinding
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -25,6 +26,7 @@ import com.example.android.partialscreenshot.utils.*
 
 class DetailsFragment : Fragment() {
 
+    private lateinit var toolbar: Toolbar
     private lateinit var myItemPassed: DetailsFragmentArgs
     private lateinit var dataSource: ScreenshotsDAO
     private lateinit var optionsView: ConstraintLayout
@@ -37,7 +39,8 @@ class DetailsFragment : Fragment() {
     ): View? {
         // Get a reference to the binding object and inflate the fragment views.
         val binding: FragmentDetailsBinding = DataBindingUtil.inflate(
-            inflater, R.layout.fragment_details, container, false)
+            inflater, R.layout.fragment_details, container, false
+        )
 
         val application = requireNotNull(this.activity).application
 
@@ -52,7 +55,8 @@ class DetailsFragment : Fragment() {
         // Get a reference to the ViewModel associated with this fragment.
         screenshotDetailViewModel =
             ViewModelProvider(
-                this, viewModelFactory).get(DetailsViewModel::class.java)
+                this, viewModelFactory
+            ).get(DetailsViewModel::class.java)
 
         // To use the View Model with data binding, you have to explicitly
         // give the binding object a reference to it.
@@ -63,6 +67,7 @@ class DetailsFragment : Fragment() {
             setUpVisibility()
         })
 
+
         setUpDeleteListeners(binding)
         setUpEditListeners(binding)
         setupShareListeners(binding)
@@ -70,8 +75,16 @@ class DetailsFragment : Fragment() {
 
         binding.lifecycleOwner = activity
 
+        toolbar = binding.myToolbar
+
+        toolbar.apply {
+            setNavigationOnClickListener(View.OnClickListener { activity?.onBackPressed() })
+        }
+
+        Log.i("MyUri","here: ${myItemPassed.uri}")
         return binding.root
     }
+
 
     private fun setUpExtractImageListeners(binding: FragmentDetailsBinding){
         binding.extractOptions.setOnClickListener(View.OnClickListener {
@@ -134,22 +147,14 @@ class DetailsFragment : Fragment() {
         createActionDialog(actionToTake, activity as MainActivity,title, message, null)
     }
 
-    override fun onResume() {
-        super.onResume()
-        (activity as AppCompatActivity?)?.supportActionBar?.hide()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        (activity as AppCompatActivity?)?.supportActionBar?.show()
-    }
-
     private fun setUpVisibility() {
         if (optionsView.isVisible){
             optionsView.visibility = View.GONE
+            toolbar.visibility = View.GONE
 
         } else {
             optionsView.visibility = View.VISIBLE
+            toolbar.visibility = View.VISIBLE
         }
         Log.i("MyOptionsView","setting view to: ${optionsView.visibility}")
     }

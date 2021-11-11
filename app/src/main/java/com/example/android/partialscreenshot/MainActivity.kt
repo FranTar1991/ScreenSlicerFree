@@ -14,13 +14,14 @@ import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
+import androidx.core.view.GestureDetectorCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.partialscreenshot.database.ScreenshotItem
@@ -41,9 +42,7 @@ private lateinit var permissionToRecordLauncher: ActivityResultLauncher<Intent>
 private lateinit var requestPermissionToSaveLauncher: ActivityResultLauncher<String>
 
 
-//These are used to connect the FloatingWindowService with it´s calling activity
-private var bound by Delegates.notNull<Boolean>()
-private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindowService
+
 
 //Variable that holds all to take the screenshots
 private var mData: Intent? = null
@@ -51,11 +50,16 @@ private var mData: Intent? = null
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener{
 
-    private var showFloatingImage: String? = null
+
     private lateinit var screenshotViewModel: MainFragmentViewModel
     private val viewModel: MainActivityViewModel by viewModels()
+
     private lateinit var permissionsDialog: PermissionsDialog
-    private var receiver: BroadcastReceiver? = null
+    private var myBroadcastReceiverToClose: BroadcastReceiver? = null
+
+    //These are used to connect the Crop window service with it´s calling activity
+    private var bound by Delegates.notNull<Boolean>()
+    private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindowService
     private val cropViewFloatingWindowServiceConnection: ServiceConnection = object :
         ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -74,9 +78,9 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
-
+    //These are used to connect the Floating image window service with it´s calling activity
     private lateinit var floatingImageViewService: FloatingImageViewService
-    private var floatingImageViewServiceBound: Boolean = false
+    private var floatingImageViewServiceBound by Delegates.notNull<Boolean>()
     private val floatingImageViewServiceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -90,15 +94,11 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             floatingImageViewServiceBound = false
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        cancelOnCloseBtn()
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-
+        closeAppFromNotification()
 
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
@@ -107,6 +107,59 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         screenshotViewModel =
             ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
+
+        setLaunchers()
+
+       bindTheServices()
+
+        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
+                this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            PermissionsDialog()
+                .show(supportFragmentManager, PERMISSION_TO_SAVE)
+        }
+
+        viewModel.overlayCall.observe(this, Observer { call ->
+            if (call){
+                decideWhatToShow()
+                viewModel.checkIfOverlayPermissionDone()
+            }
+        })
+        viewModel.imageInFloatingWindow.observe(this, Observer {
+
+            it?.let{
+                floatingImageViewService.setImageUri(Uri.parse(it))
+                viewModel.checkIfHasOverlayPermission(true)
+            }
+
+
+
+        })
+
+    }
+
+    /**
+     * bind the crop window service and the floating image window service so we can
+     * show the floating image or take the partial screenshots
+     */
+    private fun bindTheServices() {
+
+        //Used to connect this activity with the FloatingWindowService
+        val intent = Intent(this, CropViewFloatingWindowService::class.java)
+        bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
+
+        //Used to connect this activity with the FloatingImageViewService
+        val floatingImageViewIntent = Intent(this, FloatingImageViewService::class.java)
+        bindService(floatingImageViewIntent, floatingImageViewServiceConnection, BIND_AUTO_CREATE)
+    }
+
+    /**
+     * These are the methods to be called when the permissions are accepted or denied
+     */
+    private fun setLaunchers() {
+
+        //Checks weather we got the permission to take screenshots or not
+        //if we did  get the permission we set the variable mData and then call crop window
+        //if we don´t get the permission we just show a test
         permissionToRecordLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                     result ->
@@ -123,16 +176,21 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
                 }
             }
 
+
+        //If we got the permission to show the floating widget we go to the next method which will decide
+        // if the user wants to show a floating image or if we should continue to get the authorization to take the scrrenshot
         permissionToShowFloatingWidgetLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
-                checkIfPermissionToShowOverlay()
+                decideWhatToShow()
             }
 
+        //This is what gets called when we can the response back from the user´s choice, if the permission to save
+        // is granted we continue if not a toast is shown to tell the user that they won´t be able to save any screenshot
         requestPermissionToSaveLauncher =
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {
                     isGranted: Boolean ->
                 if (isGranted){
-                   cropServiceViewFloatingWindowService.screenShotTaker?.saveScreenshot()
+                    cropServiceViewFloatingWindowService.screenShotTaker?.saveScreenshot()
 
                 } else {
 
@@ -140,41 +198,39 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
                 }
                 cropServiceViewFloatingWindowService.hideCropView(View.VISIBLE)
             }
+    }
 
-        //Used to connect this activity with the FloatingWindowService
-        val intent = Intent(this, CropViewFloatingWindowService::class.java)
-        bindService(intent, cropViewFloatingWindowServiceConnection, BIND_AUTO_CREATE)
+    /**
+     * if the imageUri is null then the user wants to show the crop window so we need to check if we have the proper
+     * permissions for that, then if it is not null it means that the user wants to show an image in a floating window
+     *
+     */
+    private fun decideWhatToShow() {
 
-        //Used to connect this activity with the FloatingImageViewService
-        val floatingImageViewIntent = Intent(this, FloatingImageViewService::class.java)
-        bindService(floatingImageViewIntent, floatingImageViewServiceConnection, BIND_AUTO_CREATE)
+        val imageUri= viewModel.imageInFloatingWindow.value
+        val permission = checkIfPermissionToShowOverlay()
 
-        if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
-                this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            PermissionsDialog()
-                .show(supportFragmentManager, PERMISSION_TO_SAVE)
+        if(permission && imageUri == null){
+            hasPermissionToTakeScreenshot()
+        } else if(permission && imageUri != null){
+            callFloatingImageView()
+            viewModel.setFloatingImageViewUriDone()
+        }
+    }
+
+    /**
+     * checks whether we have the permission to take the screenshot to continue, or if not we ask for it.
+     */
+    private fun hasPermissionToTakeScreenshot() {
+
+        if (mData==null){
+            getPermissionToRecord()
+        } else {
+            callCropWindow()
         }
 
-        viewModel.overlayCall.observe(this, Observer { call ->
-            if (call){
-                checkIfPermissionToShowOverlay()
-                viewModel.checkIfOverlayPermissionDOne()
-            }
-        })
-
-        viewModel.imageInFloatingWindow.observe(this, Observer {
-            showFloatingImage = it
-            it?.let{
-                callFloatingImageView()
-                floatingImageViewService.setImageUri(Uri.parse(it))
-                viewModel.setFloatingImageViewUriDone()
-
-            }
-
-
-
-        })
     }
+
     private fun callFloatingImageView() {
         Intent(this, FloatingImageViewService::class.java).also { intent ->
             startService(intent)
@@ -182,19 +238,19 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
     }
 
     /**
-     * Method used to set up the broadcast receiver that will stop the activity when the "close btn" is
+     * Method used to set up the broadcast receiver that will stop the activity when the "X btn" is
      * called from the notification panel
      */
-    private fun cancelOnCloseBtn() {
+    private fun closeAppFromNotification() {
 
-            receiver = object : BroadcastReceiver() {
+            myBroadcastReceiverToClose = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     finishAndRemoveTask()
                 }
             }
             val filter = IntentFilter()
             filter.addAction(STOP_INTENT)
-            registerReceiver(receiver, filter)
+            registerReceiver(myBroadcastReceiverToClose, filter)
 
 
     }
@@ -212,25 +268,15 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      * If Marshmallow or greater call the floating window service
      * else ask for overlay permission
      */
-    private fun checkIfPermissionToShowOverlay(){
+    private fun checkIfPermissionToShowOverlay(): Boolean{
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            !Settings.canDrawOverlays(this)) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
 
             callPermissionToOverlayDialog()
+            false
 
         } else{
-            if (mData==null){
-                getPermissionToRecord()
-            } else {
-                if (showFloatingImage == null){
-                    callCropWindow()
-                }else{
-                    callFloatingImageView()
-                }
-
-            }
-
+            true
         }
 
 
@@ -244,7 +290,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     override fun onDestroy() {
 
-            unregisterReceiver(receiver)
+            unregisterReceiver(myBroadcastReceiverToClose)
             super.onDestroy()
             if (bound) {
                 cropServiceViewFloatingWindowService.stopForeground(true)
@@ -279,17 +325,28 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         return mData
     }
 
+    /**
+     * Call the custom dialog to first explain why we need
+     * the permission to draw over other apps and then  ask for the permission.
+     */
+
     private fun callPermissionToOverlayDialog() {
             permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
 
     }
 
+    /**
+     * Call the system dialog to ask for the permission to save
+     */
     fun callPermissionToSaveDialog(){
         requestPermissionToSaveLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
     }
 
 
+    /**
+     * Call the crop window, this is the final step and before calling this we have to make sure that all the permissions
+     * have been granted.
+     */
     private fun callCropWindow() {
             val intent = Intent(this, CropViewFloatingWindowService::class.java)
             startService(intent)
@@ -314,8 +371,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
-    fun saveScreenshotWIthPermission(uri: String){
-     screenshotViewModel.onSaveScreenshot(ScreenshotItem(uri = uri))
+    fun saveScreenshotWIthPermission(uri: String, name: String?){
+     screenshotViewModel.onSaveScreenshot(ScreenshotItem(uri = uri, name = name ?: "no name"))
 
     }
 

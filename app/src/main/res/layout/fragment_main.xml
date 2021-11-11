@@ -12,33 +12,50 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
+        android:animateLayoutChanges="true"
         android:layout_height="match_parent"
         tools:context=".MainFragment">
 
 
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/all_pictures"
-            android:scrollbars="vertical"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:clipToPadding="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/list_item_picture" />
-        <ImageView
-            android:id="@+id/empty_view"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/myToolbar"
             android:layout_width="match_parent"
-            android:visibility="@{allScreenshotsViewModel.getScreenshotCount > 0 ? View.GONE : View.VISIBLE}"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_baseline_delete_forever_24"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            app:titleTextColor="@color/white"
+            tools:title="@string/app_name"
+            app:title="@string/app_name"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/all_pictures"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/myToolbar"
+            tools:listitem="@layout/list_item_picture" />
+
+        <ImageView
+            android:id="@+id/empty_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_baseline_delete_forever_24"
+            android:visibility="@{allScreenshotsViewModel.getScreenshotCount > 0 ? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/myToolbar" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/call_floating_window"
             android:layout_width="wrap_content"

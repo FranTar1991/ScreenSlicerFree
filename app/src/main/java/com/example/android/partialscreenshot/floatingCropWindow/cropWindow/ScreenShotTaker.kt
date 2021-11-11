@@ -151,13 +151,13 @@ class ScreenShotTaker(
     }
 
     fun saveScreenshot(){
-
+        val screenShotName = getCurrentTimeStamp()
         cropView?.showDrawable = true
         cropView?.resetView()
-        mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, getCurrentTimeStamp())
+        mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, screenShotName)
         optionsWindowView?.destroyView()
 
-        mainActivityReference.saveScreenshotWIthPermission(mySavedScreenshotUri.toString())
+        mainActivityReference.saveScreenshotWIthPermission(mySavedScreenshotUri.toString(), screenShotName)
 
         if (isToShare){
             shareScreenShot(context,mySavedScreenshotUri,mainActivityReference)
@@ -176,12 +176,12 @@ class ScreenShotTaker(
 
 
     override fun onSaveScreenshotSelected() {
-        saveScreenshot()
-//        if (mainActivity?.checkIfPermissionToSave() == true){
-//            saveScreenshot()
-//        } else {
-//           mainActivity?. callPermissionToSaveDialog()
-//        }
+
+        if (mainActivityReference.checkIfPermissionToSave()){
+            saveScreenshot()
+        } else {
+            mainActivityReference.callPermissionToSaveDialog()
+        }
     }
 
     override fun onDeleteScreenshotSelected() {

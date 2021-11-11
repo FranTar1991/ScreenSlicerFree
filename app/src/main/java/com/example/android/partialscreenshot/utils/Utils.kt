@@ -28,7 +28,7 @@ import java.util.*
 
     fun getCurrentTimeStamp(): String? {
         // write bitmap to a file
-        val dateFormat = SimpleDateFormat("yyyyMMdd_HH_mm_ss")
+        val dateFormat = SimpleDateFormat("MM/dd/yyyy_HH:mm:ss")
         return dateFormat.format(Date())
     }
 val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

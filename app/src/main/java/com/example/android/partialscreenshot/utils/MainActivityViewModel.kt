@@ -25,7 +25,7 @@ class MainActivityViewModel : ViewModel() {
         mutableOverlayCall.value = call
     }
 
-    fun checkIfOverlayPermissionDOne(){
+    fun checkIfOverlayPermissionDone(){
         mutableOverlayCall.value = false
     }
 
