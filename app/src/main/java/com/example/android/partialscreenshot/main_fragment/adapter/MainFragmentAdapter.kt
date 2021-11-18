@@ -2,6 +2,7 @@ package com.example.android.partialscreenshot.main_fragment.adapter
 
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.selection.ItemDetailsLookup
@@ -52,6 +53,7 @@ class ScreenshotsAdapter(
                  override fun getPosition(): Int = adapterPosition
                  override fun getSelectionKey(): String = adapter.getItem(adapterPosition).uri
              }
+
         fun bind(
             clickListener: ScreenshotListener,
             item: ScreenshotItem,
@@ -96,8 +98,8 @@ class ScreenshotAdapterDiffCallback : DiffUtil.ItemCallback<ScreenshotItem>() {
     }
 }
 
-class ScreenshotListener(val clickListener: (uri: String) -> Unit){
-    fun onClick(screenshot: ScreenshotItem) = clickListener(screenshot.uri)
+class ScreenshotListener(val clickListener: (view: View, uri: String) -> Unit){
+    fun onClick(view: View, screenshot: ScreenshotItem) = clickListener(view,screenshot.uri)
 }
 
 class MyItemDetailsLookup(private val recyclerView: RecyclerView) :

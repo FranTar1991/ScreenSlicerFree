@@ -14,6 +14,11 @@ import kotlinx.coroutines.withContext
 class DetailsViewModel  (private val screenshotUri: String,
                          private val dataSource: ScreenshotsDAO) : ViewModel() {
 
+
+    private val _screenshots = dataSource.getAllScreenshots()
+    val screenshots
+        get() = _screenshots
+
     private val _navigateToMainFragment = MediatorLiveData<Boolean>()
     val navigateToMainFragment
         get() = _navigateToMainFragment
@@ -21,6 +26,12 @@ class DetailsViewModel  (private val screenshotUri: String,
     private val _screenshot = MediatorLiveData<ScreenshotItem>()
     val screenshot
             get() = _screenshot
+
+    private val _navigateToSelf = MutableLiveData<String>()
+    val navigateToSelf
+        get() = _navigateToSelf
+
+
 
     init {
         _screenshot.addSource(dataSource.getByUri(screenshotUri)) { _screenshot.setValue(it) }
@@ -46,5 +57,14 @@ class DetailsViewModel  (private val screenshotUri: String,
     fun onNavigateToMainFragmentDone(){
         _navigateToMainFragment.value = null
     }
+
+    fun onScreenshotNavigatedToSelfDone() {
+        _navigateToSelf.value = null
+    }
+
+    fun onNavigateToSelf(uri: String?) {
+        _navigateToSelf.value = uri
+    }
+
 
 }

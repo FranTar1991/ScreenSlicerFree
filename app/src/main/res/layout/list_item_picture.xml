@@ -16,13 +16,14 @@
         android:id="@+id/main_contraint_layout"
         android:layout_width="match_parent"
         android:layout_margin ="2dp"
-        android:onClick="@{()->clickListener.onClick(screenshot)}"
         android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/imageView2"
             android:layout_width="match_parent"
+            android:onClick="@{(view)->clickListener.onClick(view,screenshot)}"
             android:scaleType="centerCrop"
+            android:transitionName="@{`item_image_` + screenshot.name}"
             android:layout_height="96dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

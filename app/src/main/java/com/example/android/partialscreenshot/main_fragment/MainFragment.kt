@@ -1,6 +1,5 @@
 package com.example.android.partialscreenshot.main_fragment
 
-import android.content.DialogInterface
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -24,16 +23,26 @@ import android.view.*
 import androidx.recyclerview.selection.*
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AlertDialog
+import android.util.Log
+import android.widget.ImageView
 import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.SharedElementCallback
+import androidx.core.view.doOnPreDraw
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.utils.createActionDialog
 import com.example.android.partialscreenshot.utils.deleteItemFromGallery
 
 
+import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.TransitionInflater
+
+
 class MainFragment : Fragment() {
 
 
+    private lateinit var viewClicked: ImageView
     private var allSelected: Boolean = false
 
     private var uriList: MutableList<String> = mutableListOf()
@@ -133,7 +142,8 @@ class MainFragment : Fragment() {
         startActivity(shareIntent)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         // Get a reference to the binding object and inflate the fragment views.
         val binding: FragmentMainBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_main, container, false)
@@ -159,6 +169,7 @@ class MainFragment : Fragment() {
 
         binding.allPictures.adapter = adapter
 
+
         val manager = GridLayoutManager(activity,3)
         binding.allPictures.layoutManager = manager
 
@@ -177,11 +188,14 @@ class MainFragment : Fragment() {
 
 
 
+
         mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshot ->
             screenshot?.let {
                 actionMode?.finish()
+                val extras = FragmentNavigatorExtras(viewClicked to "large_image")
                 this.findNavController()
-                    .navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot))
+                    .navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot),
+                        extras)
                 mainFragmentViewModel.onScreenshotNavigated()
             }
         })
@@ -212,6 +226,20 @@ class MainFragment : Fragment() {
 
             })
 
+
+
+        setExitSharedElementCallback(
+            object : SharedElementCallback() {
+                override fun onMapSharedElements(names: List<String?>, sharedElements: MutableMap<String?, View?>) {
+                    // Locate the ViewHolder for the clicked position.
+
+
+
+                }
+            })
+
+        exitTransition = TransitionInflater.from(context)
+            .inflateTransition(R.transition.exit_transition)
 
         return binding.root
     }
@@ -244,10 +272,14 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        postponeEnterTransition()
+
+       view.doOnPreDraw { startPostponedEnterTransition() }
         tracker.onRestoreInstanceState(savedInstanceState)
     }
 
-    private fun clickListener(uri: String){
+    private fun clickListener(view: View, uri: String){
+        viewClicked = view as ImageView
         mainFragmentViewModel.onScreenshotClicked(uri)
     }
 
