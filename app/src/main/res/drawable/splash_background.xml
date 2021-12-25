@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list
-    xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:gravity="fill_horizontal|fill_vertical"
-        android:drawable="@drawable/ic_launcher_foreground">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/bg_gradient"/>
+    <item>
+        <bitmap android:gravity="center"
+            android:layout_width="match_parent"
+            android:src="@drawable/ic_splashscreen"/>
     </item>
 </layer-list>

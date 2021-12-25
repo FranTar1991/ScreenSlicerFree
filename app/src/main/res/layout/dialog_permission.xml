@@ -11,13 +11,13 @@
         android:id="@+id/text_show"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/berkshire_swash"
         android:padding="14dp"
-        android:textSize = "18sp"
-        android:textStyle = "bold"
-        tools:text="@string/permission_overlay"
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        tools:text="@string/permission_overlay" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

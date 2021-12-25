@@ -25,14 +25,24 @@
             android:id="@+id/toolbar_layout"
             android:layout_height="wrap_content">
         <androidx.appcompat.widget.Toolbar
-            style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
             android:id="@+id/myToolbar"
             android:layout_height="?attr/actionBarSize"
-            android:elevation="4dp"
-            tools:title="@string/app_name"
-            app:title="@string/app_name" />
+            android:elevation="4dp">
+
+            <TextView
+                android:id="@+id/app_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:fontFamily="@font/berkshire_swash"
+                android:text="@string/app_name"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
+
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/all_pictures"
@@ -46,18 +56,41 @@
             app:layout_constraintTop_toBottomOf="@+id/toolbar_layout"
             tools:listitem="@layout/list_item_picture" />
 
-        <ImageView
-            android:id="@+id/empty_view"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="0dp"
             android:layout_height="144dp"
-            android:src="@drawable/ic_notification"
-            app:tint="@color/Gray"
+            android:id="@+id/empty_view"
             android:visibility="@{allScreenshotsViewModel.getScreenshotCount == 0 &amp;&amp; !allScreenshotsViewModel.isLoading ? View.VISIBLE : View.GONE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/ic_notification"
+                app:layout_constraintBottom_toTopOf="@+id/textView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/Gray" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/no_screenshots"
+                android:gravity="center"
+                android:textSize="24sp"
+                android:textColor="@color/Gray"
+                android:fontFamily="@font/berkshire_swash"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/call_floating_window"
