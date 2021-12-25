@@ -1,9 +1,11 @@
 package com.example.android.partialscreenshot.utils
 
+import android.app.Activity
 import android.content.*
 import android.content.res.Resources
 import android.database.Cursor
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Matrix
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -14,13 +16,23 @@ import android.os.Vibrator
 import android.provider.MediaStore
 import android.util.Log
 import android.view.ActionMode
+import android.view.View
 import android.view.WindowManager.LayoutParams.*
+import android.view.animation.Animation
+import android.view.animation.BounceInterpolator
+import android.view.animation.TranslateAnimation
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
+import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import org.chromium.base.CollectionUtil.forEach
+import tourguide.tourguide.ToolTip
+import tourguide.tourguide.TourGuide
 import java.io.*
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -76,7 +88,7 @@ val Int.dp: Int
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            Log.i("MyUri","calling thumbnail")
+
             val id = ContentUris.parseId(url!!)
             val thumbBitmap: Bitmap? = MediaStore.Images.Thumbnails.getThumbnail(cr, id, MediaStore.Images.Thumbnails.MINI_KIND, null)
             //This is for backward compatibility.
@@ -201,6 +213,38 @@ fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
 
 }
 
+fun copyTextToClipboard(context: Context, source: String){
+    val clipboard = context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("label", source)
+    clipboard.setPrimaryClip(clip)
+    Toast.makeText(context,context.getString(R.string.text_copied), Toast.LENGTH_LONG).show()
+}
+
+ fun setMyTourGuide(activity: Activity, title: String,
+                           description: String,
+                           gravity: Int,
+                           view: View): TourGuide? {
+    val animation: Animation = TranslateAnimation(0f, 0f, 200f, 0f)
+    animation.duration = 1000
+    animation.fillAfter = true
+    animation.interpolator = BounceInterpolator()
+
+    val toolTip = ToolTip()
+        .setTextColor(ContextCompat.getColor(activity, R.color.secondaryTextColor))
+        .setBackgroundColor(ContextCompat.getColor(activity.applicationContext, R.color.secondaryColor))
+        .setShadow(true)
+        .setTitle(title)
+        .setDescription(description)
+        .setGravity(gravity)
+        .setEnterAnimation(animation)
+
+
+    return TourGuide.init(activity)
+        .with(TourGuide.Technique.CLICK)
+        .setToolTip(toolTip)
+        .playOn(view)
+}
+
 fun createActionDialog(actionToTake: ()-> Unit, activity: MainActivity, title: String,
                        message: String, actionMode: ActionMode?){
     val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
@@ -223,4 +267,8 @@ fun createActionDialog(actionToTake: ()-> Unit, activity: MainActivity, title: S
         }
     }
     alertDialogBuilder?.create()?.show()
+}
+
+class ScreenshotListener(val clickListener: (view: View, uri: String) -> Unit){
+    fun onClick(view: View, screenshot: ScreenshotItem) = clickListener(view,screenshot.uri)
 }

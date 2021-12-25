@@ -73,7 +73,7 @@ public class NotificationUtils {
         notificationLayout.setOnClickPendingIntent(R.id.home_btn,homePendingIntent);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
-        builder.setSmallIcon(R.drawable.ic_camera)
+        builder.setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(context.getString(R.string.recording))
                 .setPriority(Notification.PRIORITY_HIGH)

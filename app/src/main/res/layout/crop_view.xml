@@ -7,6 +7,7 @@
         xmlns:custom="http://schemas.android.com/apk/res-auto"
         android:id="@+id/chat_head"
         android:layout_width="wrap_content"
+        custom:crop_drawable="@drawable/ic_waiting_image"
         android:layout_height="wrap_content"
         custom:crop_left_up_drawable="@drawable/crop_left_up"
         custom:crop_left_down_drawable="@drawable/crop_left_down"
@@ -15,10 +16,10 @@
         custom:closeDrawable="@drawable/ic_baseline_cancel_24"
         custom:cornerSize2="24dp"
         custom:edgeColor="@color/white"
-        custom:fillColor="@color/back_main"
+        custom:fillColor="@color/secondaryLightColor"
         custom:layout_constraintBottom_toBottomOf="parent"
         custom:layout_constraintEnd_toEndOf="parent"
         custom:layout_constraintStart_toStartOf="parent"
         custom:layout_constraintTop_toTopOf="parent"
-        custom:minimumSide="96dp"
-        custom:outsideColor="@color/back_second" />
+        custom:minimumSide="72dp"
+        custom:outsideColor="@color/primaryColorTransparent" />

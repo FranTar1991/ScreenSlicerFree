@@ -11,27 +11,24 @@
         android:label="fragment_main"
         tools:layout="@layout/fragment_main" >
         <action
-            android:id="@+id/action_mainFragment_to_detailsFragment"
-            app:destination="@id/detailsFragment"
-            app:popUpTo="@id/mainFragment"
-            app:popUpToInclusive="false" />
+            android:id="@+id/action_mainFragment_to_viewPagerDetails"
+            app:destination="@id/viewPagerDetails" />
     </fragment>
     <fragment
         android:id="@+id/detailsFragment"
-        android:name="com.example.android.partialscreenshot.details_fragment.DetailsFragment"
+        android:name="com.example.android.partialscreenshot.detailsView.DetailsFragment"
         android:label="fragment_details"
         tools:layout="@layout/fragment_details" >
-        <action
-            android:id="@+id/action_detailsFragment_to_mainFragment"
-            app:destination="@id/mainFragment"
-            app:popUpTo="@id/mainFragment"
-            app:popUpToInclusive="true" />
         <argument
             android:name="uri"
             app:argType="string" />
-        <action
-            android:id="@+id/action_detailsFragment_self"
-            app:destination="@id/detailsFragment"
-            app:popUpToInclusive="false" />
+    </fragment>
+    <fragment
+        android:id="@+id/viewPagerDetails"
+        android:name="com.example.android.partialscreenshot.detailsView.viewpager.ViewPagerDetails"
+        android:label="ViewPagerDetails" >
+        <argument
+            android:name="uri"
+            app:argType="string" />
     </fragment>
 </navigation>

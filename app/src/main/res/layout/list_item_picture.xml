@@ -9,7 +9,7 @@
             type="com.example.android.partialscreenshot.database.ScreenshotItem" />
         <variable
             name="clickListener"
-            type="com.example.android.partialscreenshot.main_fragment.adapter.ScreenshotListener"/>
+            type="com.example.android.partialscreenshot.utils.ScreenshotListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

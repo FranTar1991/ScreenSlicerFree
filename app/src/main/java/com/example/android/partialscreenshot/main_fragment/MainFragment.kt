@@ -13,9 +13,7 @@ import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.databinding.FragmentMainBinding
 import com.example.android.partialscreenshot.main_fragment.adapter.MyItemDetailsLookup
 import com.example.android.partialscreenshot.main_fragment.adapter.MyItemKeyProvider
-import com.example.android.partialscreenshot.main_fragment.adapter.ScreenshotListener
 import com.example.android.partialscreenshot.main_fragment.adapter.ScreenshotsAdapter
-import com.example.android.partialscreenshot.utils.MainActivityViewModel
 import android.widget.Toast
 
 import android.view.*
@@ -23,27 +21,43 @@ import android.view.*
 import androidx.recyclerview.selection.*
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.widget.ImageView
 import androidx.appcompat.widget.Toolbar
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.SharedElementCallback
 import androidx.core.view.doOnPreDraw
 import androidx.navigation.fragment.FragmentNavigatorExtras
-import com.example.android.partialscreenshot.MainActivity
-import com.example.android.partialscreenshot.utils.createActionDialog
-import com.example.android.partialscreenshot.utils.deleteItemFromGallery
 
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
+import com.example.android.partialscreenshot.MainActivity
+import com.example.android.partialscreenshot.MainActivity.Companion.currentPosition
+
+import android.view.View.OnLayoutChangeListener
+import android.app.Activity
+import android.app.Service
+import android.content.SharedPreferences
+import com.example.android.partialscreenshot.utils.*
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+
+import tourguide.tourguide.TourGuide
+
+
+
 
 
 class MainFragment : Fragment() {
 
 
+
+    private var myTourGuide: TourGuide?= null
+    private lateinit var floatingButton: FloatingActionButton
+    private lateinit var recyclerView: RecyclerView
     private lateinit var viewClicked: ImageView
     private var allSelected: Boolean = false
+
+    private var sharedPreferences: SharedPreferences? = null
+    private var SHOW_FIRST_TOUR: String = "show_first_tour"
 
     private var uriList: MutableList<String> = mutableListOf()
     private lateinit var adapter: ScreenshotsAdapter
@@ -120,6 +134,7 @@ class MainFragment : Fragment() {
 
     private fun deleteThisItems(){
         val list = screenshotsSelected.toList()
+
         mainFragmentViewModel.onDeleteListWithUri(list)
         deleteItemFromGallery(screenshotsSelected.toList(), context?.contentResolver)
         Toast.makeText(context, getString(R.string.delete,screenshotsSelected.size()), Toast.LENGTH_SHORT).show()
@@ -148,7 +163,12 @@ class MainFragment : Fragment() {
         val binding: FragmentMainBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_main, container, false)
 
+        floatingButton = binding.callFloatingWindow
         binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
+            myTourGuide?.cleanUp()
+            val editor: SharedPreferences.Editor? = sharedPreferences?.edit()
+            editor?.putBoolean(SHOW_FIRST_TOUR, false)
+            editor?.apply()
             mainActivityViewModel.checkIfHasOverlayPermission(true)
         })
 
@@ -166,35 +186,39 @@ class MainFragment : Fragment() {
         toolBar = binding.myToolbar
 
         adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener), mainFragmentViewModel)
+        val manager = GridLayoutManager(activity,4)
+        recyclerView = binding.allPictures
+        recyclerView.
+            adapter = adapter
 
-        binding.allPictures.adapter = adapter
+          recyclerView.  layoutManager = manager
 
-
-        val manager = GridLayoutManager(activity,3)
-        binding.allPictures.layoutManager = manager
-
+        mainFragmentViewModel.setIsLoading(true)
 
         mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
             it?.let { newList ->
 
-                newList.forEach { list->
-                    uriList.add(list.uri)
-                }
-                adapter.submitList(newList)
-                mainFragmentViewModel.setScreenShotCount(newList.size)
+                    newList.forEach { list->
+                        uriList.add(list.uri)
+                    }
 
+                    adapter.submitList(newList)
+
+                    mainFragmentViewModel.setScreenShotCount(newList.size)
+                    (view?.parent as? ViewGroup)?.doOnPreDraw {
+                        startPostponedEnterTransition()
+                    }
+
+                mainFragmentViewModel.setIsLoading(false)
             }
         })
 
-
-
-
-        mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshot ->
-            screenshot?.let {
+        mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshotUri ->
+            screenshotUri?.let {
                 actionMode?.finish()
-                val extras = FragmentNavigatorExtras(viewClicked to "large_image")
+                val extras = FragmentNavigatorExtras(viewClicked to "large_image_$screenshotUri")
                 this.findNavController()
-                    .navigate(MainFragmentDirections.actionMainFragmentToDetailsFragment(screenshot),
+                    .navigate(MainFragmentDirections.actionMainFragmentToViewPagerDetails(screenshotUri),
                         extras)
                 mainFragmentViewModel.onScreenshotNavigated()
             }
@@ -202,7 +226,7 @@ class MainFragment : Fragment() {
 
         tracker = SelectionTracker.Builder<String>(
             "mySelection",
-            binding.allPictures,
+            recyclerView,
            MyItemKeyProvider(adapter),
             MyItemDetailsLookup(binding.allPictures),
            StorageStrategy.createStringStorage()
@@ -212,8 +236,7 @@ class MainFragment : Fragment() {
            .build()
         adapter.tracker = tracker
 
-        tracker.addObserver(
-            object : SelectionTracker.SelectionObserver<String>() {
+        tracker.addObserver(object : SelectionTracker.SelectionObserver<String>() {
                 override fun onSelectionRestored() {
                     super.onSelectionRestored()
                   setActionMode()
@@ -226,22 +249,44 @@ class MainFragment : Fragment() {
 
             })
 
-
-
-        setExitSharedElementCallback(
-            object : SharedElementCallback() {
+        setExitSharedElementCallback(object : SharedElementCallback() {
                 override fun onMapSharedElements(names: List<String?>, sharedElements: MutableMap<String?, View?>) {
-                    // Locate the ViewHolder for the clicked position.
 
-
-
+                    val selectedViewHolder = recyclerView.findViewHolderForAdapterPosition(currentPosition)
+                    if (selectedViewHolder?.itemView == null) {
+                        return
+                    }
+                    // Map the first shared element name to the child ImageView.
+                    sharedElements[names[0]] = selectedViewHolder.itemView.findViewById(R.id.imageView2)
                 }
             })
 
         exitTransition = TransitionInflater.from(context)
             .inflateTransition(R.transition.exit_transition)
 
+
+        mainActivityViewModel.permissionToSaveCalled.observe(viewLifecycleOwner, Observer {
+            if (startTourGuide()){
+                myTourGuide =  setMyTourGuide(activity as Activity, getString(R.string.title_welcome),
+                    getString(R.string.description_first_tour),
+                    Gravity.START or Gravity.TOP,
+                    floatingButton as View )
+            }
+        })
+
+
+
         return binding.root
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+    }
+
+    private fun startTourGuide(): Boolean {
+        sharedPreferences = context?.getSharedPreferences("MyPref", Service.MODE_PRIVATE)
+       return  sharedPreferences?.getBoolean(SHOW_FIRST_TOUR, true) ?: true
     }
 
 
@@ -274,12 +319,39 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         postponeEnterTransition()
 
-       view.doOnPreDraw { startPostponedEnterTransition() }
         tracker.onRestoreInstanceState(savedInstanceState)
+
+        recyclerView.addOnLayoutChangeListener(
+            object : OnLayoutChangeListener {
+                override fun onLayoutChange(
+                    view: View?,
+                    left: Int,
+                    top: Int,
+                    right: Int,
+                    bottom: Int,
+                    oldLeft: Int,
+                    oldTop: Int,
+                    oldRight: Int,
+                    oldBottom: Int
+                ) {
+                    recyclerView.removeOnLayoutChangeListener(this)
+                    val layoutManager: RecyclerView.LayoutManager = recyclerView.layoutManager!!
+                    val viewAtPosition = layoutManager.findViewByPosition(currentPosition)
+                    // Scroll to position if the view for the current position is null (not
+                    // currently part of layout manager children), or it's not completely
+                    // visible.
+                    if (viewAtPosition == null
+                        || layoutManager.isViewPartiallyVisible(viewAtPosition, false, true)
+                    ) {
+                        recyclerView.post { layoutManager.scrollToPosition(currentPosition) }
+                    }
+                }
+            })
     }
 
     private fun clickListener(view: View, uri: String){
         viewClicked = view as ImageView
+        currentPosition = uriList.indexOfFirst { it == uri }
         mainFragmentViewModel.onScreenshotClicked(uri)
     }
 

@@ -59,7 +59,6 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()
 
-                    Log.i("MYviewI","updating")
                     //Update the layout with new X & Y coordinate
                     updateViewLayout(myFloatingView, params)
                     myFloatingView?.setNewPositionOfSecondRect(params.x,params.y)
@@ -68,7 +67,6 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
             }
 
         }
-
         override fun onClose() {
             removeView(myFloatingView)
         }

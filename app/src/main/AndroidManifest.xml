@@ -16,9 +16,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PartialScreenshot">
 
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:theme="@style/SplashTheme"
             android:launchMode="singleTop">
 
             <intent-filter>
@@ -31,9 +36,10 @@
         <service
             android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
-        <service android:name=".floatingView.FloatingImageViewService" />
+        <service android:name=".floatingImageView.FloatingImageViewService" />
 
         <receiver android:name=".notification_utils.NotificationBroadcastReceiver" />
+
     </application>
 
 </manifest>

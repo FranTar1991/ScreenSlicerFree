@@ -21,6 +21,10 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
     val screenshotCount
         get() = _screenshotCount
 
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading
+        get() = _isLoading
+
     private val _navigateToScreenshot = MutableLiveData<String>()
     val navigateToScreenshot
         get() = _navigateToScreenshot
@@ -28,6 +32,10 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
 
     fun setScreenShotCount(count: Int) {
         _screenshotCount.value = count
+    }
+
+    fun setIsLoading(isLoading: Boolean){
+        _isLoading.value = isLoading
     }
 
     fun onSaveScreenshot(newScreenshotItem: ScreenshotItem){

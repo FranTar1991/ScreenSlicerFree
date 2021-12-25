@@ -19,13 +19,14 @@ interface OnMoveCropWindowListener{
 
 interface OnRequestTakeScreenShotListener{
     fun onRequestScreenShot(rect: Rect)
+    fun cleanUpMyTourGuide()
 }
 
 interface OnOptionsWindowSelectedListener{
     fun onSaveScreenshotSelected()
     fun onDeleteScreenshotSelected()
     fun onShareScreenshotSelected()
-    fun onAddNoteToScreenshotSelected()
+    fun onExtractTextSelected()
     fun onEditScreenshotSelected()
     fun onMinimizeCropView()
 }

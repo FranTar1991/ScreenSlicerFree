@@ -15,6 +15,7 @@ import com.example.android.partialscreenshot.database.ScreenshotItem
 
 import com.example.android.partialscreenshot.databinding.ListItemPictureBinding
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
+import com.example.android.partialscreenshot.utils.ScreenshotListener
 
 
 class ScreenshotsAdapter(
@@ -69,6 +70,8 @@ class ScreenshotsAdapter(
 
 
 
+
+
         }
 
         companion object {
@@ -96,10 +99,6 @@ class ScreenshotAdapterDiffCallback : DiffUtil.ItemCallback<ScreenshotItem>() {
     override fun areContentsTheSame(oldItem: ScreenshotItem, newItem: ScreenshotItem): Boolean {
         return oldItem == newItem
     }
-}
-
-class ScreenshotListener(val clickListener: (view: View, uri: String) -> Unit){
-    fun onClick(view: View, screenshot: ScreenshotItem) = clickListener(view,screenshot.uri)
 }
 
 class MyItemDetailsLookup(private val recyclerView: RecyclerView) :

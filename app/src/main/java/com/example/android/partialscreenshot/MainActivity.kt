@@ -6,6 +6,7 @@ import android.content.*
 import android.content.Intent.*
 
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
@@ -13,27 +14,28 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
-import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import androidx.core.view.GestureDetectorCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.partialscreenshot.database.ScreenshotItem
 import com.example.android.partialscreenshot.database.ScreenshotsDatabase
 import com.example.android.partialscreenshot.floatingCropWindow.CropViewFloatingWindowService
-import com.example.android.partialscreenshot.floatingView.FloatingImageViewService
+import com.example.android.partialscreenshot.floatingImageView.FloatingImageViewService
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewModel
 import com.example.android.partialscreenshot.main_fragment.MainFragmentViewmodelFactory
 import com.example.android.partialscreenshot.utils.*
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlin.properties.Delegates
 
-
+import android.content.ClipData
+import com.example.android.partialscreenshot.floatingCropWindow.optionsWindow.OptionsWindowView
 
 
 //Use this variables instead of OnActivityResult
@@ -95,14 +97,23 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         }
     }
 
+    companion object {
+        var currentPosition: Int = 0
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setTheme(R.style.Theme_PartialScreenshot)
+
         setContentView(R.layout.activity_main)
         closeAppFromNotification()
 
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
         val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
+
+
 
 
         screenshotViewModel =
@@ -129,6 +140,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             it?.let{
                 floatingImageViewService.setImageUri(Uri.parse(it))
                 viewModel.checkIfHasOverlayPermission(true)
+
             }
 
 
@@ -196,6 +208,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
                     Toast.makeText(this,getString(R.string.cant_save), Toast.LENGTH_SHORT).show()
                 }
+                viewModel.setPermissionToSaveCalled()
                 cropServiceViewFloatingWindowService.hideCropView(View.VISIBLE)
             }
     }
@@ -309,6 +322,10 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+    }
+
     /**
      * This method should be called by the floating window service
      */
@@ -373,7 +390,21 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     fun saveScreenshotWIthPermission(uri: String, name: String?){
      screenshotViewModel.onSaveScreenshot(ScreenshotItem(uri = uri, name = name ?: "no name"))
+    }
+
+    fun getTextFromImage(image: Bitmap, optionsWindowView: OptionsWindowView?){
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val image = InputImage.fromBitmap(image, 0)
+        val result = recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                optionsWindowView?.showExtractedText(visionText.text)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(applicationContext,getString(R.string.could_not_extract_text), Toast.LENGTH_LONG).show()
+            }
 
     }
+
+
 
 }

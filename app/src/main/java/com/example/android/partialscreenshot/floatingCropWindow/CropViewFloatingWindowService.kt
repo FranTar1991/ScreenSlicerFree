@@ -3,6 +3,7 @@ package com.example.android.partialscreenshot.floatingCropWindow
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -10,24 +11,29 @@ import android.os.*
 import android.util.Log
 import android.view.*
 import android.widget.Toast
-import androidx.appcompat.widget.ContentFrameLayout
-import androidx.appcompat.widget.ContentFrameLayout.OnAttachListener
 import com.example.android.partialscreenshot.MainActivity
 import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
 import com.example.android.partialscreenshot.floatingCropWindow.cropWindow.ScreenShotTaker
 import com.example.android.partialscreenshot.notification_utils.NotificationUtils
 import com.example.android.partialscreenshot.utils.*
-
+import tourguide.tourguide.TourGuide
 
 
 class CropViewFloatingWindowService: Service() {
 
 
+    private val SHOW_SECOND_TOUR: String ="show_second_tour"
+    private var showTourGuide: Boolean = true
+
+    private var mTourGuideHandler: TourGuide? = null
     private var floatingView: CropView? = null
     private var mData: Intent? = null
     var screenShotTaker: ScreenShotTaker? = null
     private var isCropWindowOn = false
+    private var sharedPreferences: SharedPreferences? = null
+
+
 
     private var takeScreenShotServiceCallback: FloatingWindowListener? = null
     private val binder: IBinder = LocalBinder()
@@ -35,6 +41,8 @@ class CropViewFloatingWindowService: Service() {
 
         lateinit var manager: WindowManager
     }
+
+
 
 
     inner class LocalBinder : Binder() {
@@ -47,29 +55,34 @@ class CropViewFloatingWindowService: Service() {
     }
 
     fun setServiceCallBacks(floatingAndTakeScreenShotServiceCallback: FloatingWindowListener?, from: String){
-        Log.i("myService","is this activity null when destroyed: $from")
 
         takeScreenShotServiceCallback = floatingAndTakeScreenShotServiceCallback
     }
 
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         if (!isCropWindowOn){
+            startSharedPreferences()
             setUpNotification()
             setUpFloatingWidget()
 
            screenShotTaker = ScreenShotTaker(applicationContext, this, floatingView, takeScreenShotServiceCallback as MainActivity)
 
-
-
             mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
 
+        } else {
+            floatingView?.setDrawMyWaitDrawable()
+            shakeItBaby(applicationContext)
         }
 
 
 
         return START_NOT_STICKY
+    }
+
+    private fun startSharedPreferences() {
+        sharedPreferences = getSharedPreferences("MyPref", MODE_PRIVATE)
+        showTourGuide =  sharedPreferences?.getBoolean(SHOW_SECOND_TOUR, true) ?: true
     }
 
     fun hideCropView(visibility: Int){
@@ -105,7 +118,7 @@ class CropViewFloatingWindowService: Service() {
 
     }
 
-    private fun setUpFloatingWidget() {
+     private fun setUpFloatingWidget() {
 
         manager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null) as CropView
@@ -114,6 +127,16 @@ class CropViewFloatingWindowService: Service() {
                 screenShotTaker?.getStartIntent(applicationContext, -1, mData)?.let {
                     screenShotTaker?.setUpScreenCapture(it, rect)
                 }
+            }
+
+            override fun cleanUpMyTourGuide() {
+                mTourGuideHandler?.cleanUp()
+                if(showTourGuide){
+                    val editor: SharedPreferences.Editor? = sharedPreferences?.edit()
+                    editor?.putBoolean(SHOW_SECOND_TOUR, false)
+                    editor?.apply()
+                }
+
             }
         })
 
@@ -129,14 +152,28 @@ class CropViewFloatingWindowService: Service() {
         }
         )
 
+
+
         manager.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0, INITIAL_POINT)
+
+         if(showTourGuide){
+             mTourGuideHandler=  setMyTourGuide(takeScreenShotServiceCallback as MainActivity, getString(R.string.title_crop_view_tut),
+                 getString(R.string.description_cropt_view_tut),
+                 Gravity.END or Gravity.BOTTOM,
+                 floatingView as View )
+         }
+
 
 
     }
+
+
 
     fun setCroppedImage(croppedBitmap: Bitmap?) {
         floatingView?.croppedImage = croppedBitmap
     }
+
+
 
 }
 

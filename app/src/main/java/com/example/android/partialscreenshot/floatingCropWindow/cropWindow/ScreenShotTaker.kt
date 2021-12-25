@@ -29,6 +29,7 @@ import android.graphics.Bitmap
 import android.view.*
 import androidx.core.view.isVisible
 import com.example.android.partialscreenshot.MainActivity
+import com.example.android.partialscreenshot.R
 import com.example.android.partialscreenshot.utils.*
 import kotlin.math.hypot
 
@@ -154,6 +155,7 @@ class ScreenShotTaker(
         val screenShotName = getCurrentTimeStamp()
         cropView?.showDrawable = true
         cropView?.resetView()
+
         mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, screenShotName)
         optionsWindowView?.destroyView()
 
@@ -166,6 +168,7 @@ class ScreenShotTaker(
             editScreenShot(mySavedScreenshotUri, mainActivityReference)
             isToEdit = false
         }
+        Toast.makeText(context,context.getString(R.string.screenshot_saved),Toast.LENGTH_SHORT).show()
 
     }
 
@@ -186,8 +189,9 @@ class ScreenShotTaker(
 
     override fun onDeleteScreenshotSelected() {
         cropView?.showDrawable = true
+        cropView?.resetView()
         optionsWindowView?.destroyView()
-        Toast.makeText(context,"Screenshot Deleted",Toast.LENGTH_SHORT).show()
+        Toast.makeText(context,context.getString(R.string.screenshot_deleted),Toast.LENGTH_SHORT).show()
     }
 
     override fun onShareScreenshotSelected() {
@@ -200,8 +204,10 @@ class ScreenShotTaker(
 
     }
 
-    override fun onAddNoteToScreenshotSelected() {
-        Toast.makeText(context,"onAddNoteToScreenshot",Toast.LENGTH_SHORT).show()
+    override fun onExtractTextSelected() {
+        Toast.makeText(context,context.getString(R.string.extracting),Toast.LENGTH_SHORT).show()
+        optionsWindowView?.showProgressBar()
+        mainActivityReference.getTextFromImage(croppedBitmap, optionsWindowView)
     }
 
     override fun onEditScreenshotSelected() {
@@ -427,7 +433,6 @@ class ScreenShotTaker(
     }
     inner class MediaProjectionStopCallback : MediaProjection.Callback() {
         override fun onStop() {
-            Log.e(TAG, "stopping projection.")
             mHandler?.post(Runnable {
                 mVirtualDisplay?.release()
                 mImageReader?.setOnImageAvailableListener(null, null)

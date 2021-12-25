@@ -9,6 +9,7 @@
         <attr name="crop_left_down_drawable" format="reference"/>
         <attr name="crop_right_up_drawable" format="reference"/>
         <attr name="crop_right_down_drawable" format="reference"/>
+        <attr name="crop_drawable" format="reference"/>
         <attr name="moveCornerDrawable" format="reference"/>
         <attr name="outsideColor" format="color"/>
         <attr name="edgeColor" format="color" />
