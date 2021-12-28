@@ -1,4 +1,4 @@
-package com.example.android.partialscreenshot
+package com.screenslicerpro
 
 import org.junit.Test
 

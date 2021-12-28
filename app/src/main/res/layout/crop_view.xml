@@ -2,7 +2,7 @@
 
 
 
-    <com.example.android.partialscreenshot.floatingCropWindow.cropWindow.CropView
+    <com.screenslicerpro.floatingCropWindow.cropWindow.CropView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:custom="http://schemas.android.com/apk/res-auto"
         android:id="@+id/chat_head"

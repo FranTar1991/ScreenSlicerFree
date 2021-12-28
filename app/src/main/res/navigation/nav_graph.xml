@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.example.android.partialscreenshot.main_fragment.MainFragment"
+        android:name="com.screenslicerpro.main_fragment.MainFragment"
         android:label="fragment_main"
         tools:layout="@layout/fragment_main" >
         <action
@@ -15,17 +15,8 @@
             app:destination="@id/viewPagerDetails" />
     </fragment>
     <fragment
-        android:id="@+id/detailsFragment"
-        android:name="com.example.android.partialscreenshot.detailsView.DetailsFragment"
-        android:label="fragment_details"
-        tools:layout="@layout/fragment_details" >
-        <argument
-            android:name="uri"
-            app:argType="string" />
-    </fragment>
-    <fragment
         android:id="@+id/viewPagerDetails"
-        android:name="com.example.android.partialscreenshot.detailsView.viewpager.ViewPagerDetails"
+        android:name="com.screenslicerpro.detailsView.viewpager.ViewPagerDetails"
         android:label="ViewPagerDetails" >
         <argument
             android:name="uri"

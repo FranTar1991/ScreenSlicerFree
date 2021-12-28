@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Screen Slicer</string>
+    <string name="text_copied">Texto Copiado</string>
+    <string name="extracting">Extrayendo el texto, espere…</string>
+    <string name="screenshot_deleted">Porción de pantalla borrado</string>
+    <string name="screenshot_saved">Porción de pantalla guardado</string>
+    <string name="could_not_extract_text">No se pudo extraer el texto, inténtelo nuevamente.</string>
+    <string name="already_on">La ventana de recorte ya está abierta</string>
+    <string name="description_first_tour">Presione aquí para empezar.</string>
+    <string name="start">Iniciar ventana de recorte</string>
+    <string name="recording">está listo para cortar tu pantalla</string>
+    <string name="no_screenshots">Nada que ver aquí…</string>
+    <string name="do_not_show_this_again">No mostrar esto de nuevo.</string>
+    <string name="crop_window">Ventana</string>
+    <string name="close">Cerrar</string>
+    <string name="home">Inicio</string>
+    <string name="title_dialog">Alerta</string>
+    <string name="permission_overlay">El siguiente permiso es necesario para poder abrir la ventana de recorte.</string>
+    <string name="permission_save">El siguiente permiso es necesario para poder guardar y compartir las porciones de pantalla.</string>
+    <string name="view_created">La ventana de recorte ha sido creada.</string>
+    <string name="cant_save">No podrás guardar ni compartir tus porciones de pantalla.</string>
+    <string name="delete">%1$d archivos borrados</string>
+    <string name="items_selected">%1$d archivo(s)</string>
+    <string name="select_all">Seleccionar todo</string>
+    <string name="edit">Editar</string>
+    <string name="delete_string">Borrar</string>
+    <string name="extract">Extraer imagen</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete_this">Action Borrar</string>
+    <string name="delete_this_message">¿Quieres borrar esta imagen(es)?</string>
+    <string name="edit_this">Action Editar</string>
+    <string name="edit_this_message">La imagen editada podría solo estar disponible en la gallería del teléfono.</string>
+    <string name="share_this">Acción Compartir</string>
+    <string name="share_this_message">¿Quieres compartir esta imagen(es)?</string>
+    <string name="msg_share_image">Compartir imagen</string>
+    <string name="share">Compartir ahora</string>
+    <string name="extract_this">Acción Extraer Imagen</string>
+    <string name="extract_this_message">Doble click en la imagen para cerrarla.</string>
+    <string name="how_to_move_crop_window">Pon otro dedo en la pantalla y\npodrás mover la ventana de corte.</string>
+    <string name="double_tap">Doble\nclick\npara\ncerrar</string>
+    <string name="extract_this_text">Acción Extraer Texto</string>
+    <string name="extract_this_text_message">El texto será extraído y copiado al portapapeles.</string>
+    <string name="title_crop_view_tut">Recorta tu pantalla ahora.</string>
+    <string name="description_cropt_view_tut">Arrastra esta ventana de sus equinas y luego suelta para obtener un recorte de la pantalla.\nDoble click para cerrar, ó para borrar la imagen mostrada.</string>
+    <string name="title_welcome">!Bienvenid@¡</string>
+</resources>

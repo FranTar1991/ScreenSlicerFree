@@ -1,21 +1,20 @@
 <resources>
-    <string name="app_name">Screen Slicer</string>
+    <string name="app_name" translatable="false">Screen Slicer</string>
     <string name="start">Start Slicer Window</string>
     <string name="recording">Is ready to slice your screen</string>
     <string name="no_screenshots">Nothing to see here…</string>
     <string name="do_not_show_this_again">Don´t show this again</string>
 
-    <string name="crop_window">Slicer window</string>
+    <string name="crop_window">Slice</string>
     <string name="close">Close</string>
     <string name="home">Home</string>
 
 
-    <string name="gotIt">OK</string>
+    <string name="gotIt" translatable="false">OK</string>
     <string name="title_dialog">Hint</string>
     <string name="permission_overlay">To use this function you need to grant the \"Draw over other apps\" permission</string>
-    <string name="permission_save">To save or share your screen slices, please grant the following permission.</string>
     <string name="view_created">Slicer view has been created</string>
-    <string name="cant_save">"Sorry, you won´t be able to save or share any screen slice then"</string>
+    <string name="permission_save">Please grant the following permission to be able to save and share your screen slices.</string>
 
     <string name="delete">%1$d items deleted</string>
     <string name="items_selected">%1$d item(s)</string>
@@ -37,18 +36,18 @@
     <string name="extract_this_message">Double tap the image to close it.</string>
     <string name="how_to_move_crop_window">Put another finger on the screen,\nand you will be able to move the \nSlicer window.</string>
     <string name="double_tap">Double\ntap\nthis to\nclose</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
     <string name="extract_this_text">Extract Text Action</string>
     <string name="extract_this_text_message">The text will be extracted and copied to the clipboard.</string>
-    <string name="title_crop_view_tut">Slice your screen now.</string>
     <string name="description_cropt_view_tut">Drag this window from its corners, and release to slice your screen. Double tap to close it or to remove the current slice.</string>
     <string name="title_welcome">Welcome!</string>
-    <string name="description_first_tour">Click here to start slicing your screen.</string>
     <string name="already_on">Slicer window is already open</string>
     <string name="could_not_extract_text">Could not extract text, please try again</string>
     <string name="screenshot_saved">Screen slice Saved</string>
     <string name="screenshot_deleted">Screen slice Deleted</string>
-    <string name="extracting">Extracting text, please wait...</string>
+    <string name="extracting">Extracting text, please wait…</string>
     <string name="text_copied">Text copied!</string>
+    <string name="description_first_tour">Click here to start slicing your screen.</string>
+    <string name="cant_save">Sorry, you won´t be able to save or share any screen slice then</string>
+    <string name="title_crop_view_tut">Slice your screen now.</string>
 </resources>

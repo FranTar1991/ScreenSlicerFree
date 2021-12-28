@@ -6,10 +6,10 @@
     <data>
         <variable
             name="screenshot"
-            type="com.example.android.partialscreenshot.database.ScreenshotItem" />
+            type="com.screenslicerpro.database.ScreenshotItem" />
         <variable
             name="clickListener"
-            type="com.example.android.partialscreenshot.utils.ScreenshotListener"/>
+            type="com.screenslicerpro.utils.ScreenshotListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
