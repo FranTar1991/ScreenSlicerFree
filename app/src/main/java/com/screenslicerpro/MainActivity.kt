@@ -283,7 +283,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      */
     private fun checkIfPermissionToShowOverlay(): Boolean{
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            && !Settings.canDrawOverlays(this)) {
 
             callPermissionToOverlayDialog()
             false
@@ -349,7 +350,6 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     private fun callPermissionToOverlayDialog() {
             permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
-
     }
 
     /**
@@ -401,6 +401,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             }
             .addOnFailureListener { e ->
                 Toast.makeText(applicationContext,getString(R.string.could_not_extract_text), Toast.LENGTH_LONG).show()
+                optionsWindowView?.hideProgressBar()
             }
 
     }

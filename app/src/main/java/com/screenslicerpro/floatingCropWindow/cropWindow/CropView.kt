@@ -20,7 +20,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
 import com.screenslicerpro.R
-import com.screenslicerpro.floatingCropWindow.CropViewFloatingWindowService.Companion.manager
+
 import com.screenslicerpro.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.screenslicerpro.utils.*
 import kotlin.math.abs
@@ -162,12 +162,12 @@ class CropView @JvmOverloads constructor(context: Context,
     private var touchRadius: Float = 0f
 
     private var moveType: Type? = null
-
+    private var manager: WindowManager = WindowManagerClass.getMyWindowManager(context)
 
 
     init {
 
-    context.withStyledAttributes(attrs, styles.CropView){
+        context.withStyledAttributes(attrs, styles.CropView){
 
         minimumSideLength = (getDimensionPixelSize(styles.CropView_minimumSide, 20))
 

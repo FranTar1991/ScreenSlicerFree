@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#AAA">
+   >
 
     <LinearLayout
         android:id="@+id/crop_window_btn"
@@ -20,6 +20,7 @@
             android:id="@+id/main_image"
             android:layout_width="24dp"
             android:layout_height="24dp"
+
             android:src="@drawable/ic_notification" />
 
         <TextView
@@ -72,6 +73,28 @@
             android:layout_height="wrap_content"
             style="@style/TextAppearance.Compat.Notification.Title"
             android:text="@string/close"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_weight ="1"
+        android:animateLayoutChanges="true"
+        android:padding = "8dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/toggle_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.Compat.Notification.Title"
+            android:text="@string/gestures"/>
 
     </LinearLayout>
 

@@ -1,6 +1,9 @@
 package com.screenslicerpro.notification_utils;
 
 
+import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
+import static com.screenslicerpro.utils.UtilsKt.MY_VIEW_ID;
+
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -20,6 +23,7 @@ import com.screenslicerpro.R;
 import com.screenslicerpro.floatingCropWindow.CropViewFloatingWindowService;
 
 
+
 public class NotificationUtils {
 
     public static final int N_ID_F_ScreenShot = 1337;
@@ -27,9 +31,13 @@ public class NotificationUtils {
     private static final String NOTIFICATION_CHANNEL_ID = "com.screenslicerpro";
     private static final String NOTIFICATION_CHANNEL_NAME ="com.screenslicerpro";
 
-    public static Pair<Integer, Notification> getNotification(@NonNull Context context, int id) {
+    private static int updateFlag;
+    private static int cancelFlag;
+
+
+    public static Pair<Integer, Notification> getNotification(@NonNull Context context, int id, int drawable) {
         createNotificationChannel(context);
-        Notification notification = createNotification(context);
+        Notification notification = createNotification(context, drawable);
         NotificationManager notificationManager
                 = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(id, notification);
@@ -50,37 +58,85 @@ public class NotificationUtils {
         }
     }
 
-    private static Notification createNotification(@NonNull Context context) {
+    private static Notification createNotification(@NonNull Context context, int drawable) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            updateFlag = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+            cancelFlag = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+        } else {
+            updateFlag = PendingIntent.FLAG_UPDATE_CURRENT;
+            cancelFlag = FLAG_CANCEL_CURRENT;
+        }
+
+        RemoteViews notificationLayout = new RemoteViews(context.getPackageName(),
+                R.layout.custom_layout_notification);
 
         Intent cropWindowIntent = new Intent(context, CropViewFloatingWindowService.class);
         cropWindowIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-        PendingIntent cropWindowPendingIntent = PendingIntent.getService(context, 0 , cropWindowIntent, 0);
 
 
-        Intent closeIntent = new Intent(context, NotificationBroadcastReceiver.class);
-        PendingIntent closePendingIntent = PendingIntent.getBroadcast(context, 0 ,
-                closeIntent, 0);
-
-        Intent homeIntent = new Intent(context, MainActivity.class);
-        PendingIntent homePendingIntent = PendingIntent.getActivity(context, 0 ,
-                homeIntent, 0);
-
-
-        RemoteViews notificationLayout = new RemoteViews(context.getPackageName(), R.layout.custom_layout_notification);
-        notificationLayout.setOnClickPendingIntent(R.id.crop_window_btn, cropWindowPendingIntent);
-        notificationLayout.setOnClickPendingIntent(R.id.close_btn,closePendingIntent);
-        notificationLayout.setOnClickPendingIntent(R.id.home_btn,homePendingIntent);
+        setHomeIntent(context, notificationLayout);
+        setCloseIntent(context, notificationLayout);
+        setGesturesIntent(context, notificationLayout, drawable, cropWindowIntent);
+        setCropWindowIntent(context, notificationLayout, cropWindowIntent);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
         builder.setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(context.getString(R.string.recording))
                 .setPriority(Notification.PRIORITY_HIGH)
-                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setOnlyAlertOnce(true)
                 .setCustomContentView(notificationLayout)
                 .setShowWhen(false);
         return builder.build();
+    }
+
+    private static void setHomeIntent(Context context, RemoteViews notificationLayout) {
+        Intent homeIntent = new Intent(context, MainActivity.class);
+        PendingIntent homePendingIntent = PendingIntent.getActivity(context, 0 ,
+                homeIntent, 0);
+        notificationLayout.setOnClickPendingIntent(R.id.home_btn,homePendingIntent);
+    }
+
+    private static void setCloseIntent(Context context, RemoteViews notificationLayout) {
+        Intent closeIntent = new Intent(context, NotificationBroadcastReceiver.class);
+        PendingIntent closePendingIntent = PendingIntent.getBroadcast(context, 0 ,
+                closeIntent, 0);
+        notificationLayout.setOnClickPendingIntent(R.id.close_btn,closePendingIntent);
+    }
+
+    private static void setGesturesIntent(Context context, RemoteViews notificationLayout,
+                                          int drawable,
+                                          Intent gesturesWindowIntent) {
+
+
+        gesturesWindowIntent.putExtra(MY_VIEW_ID,drawable);
+
+        PendingIntent cropWindowPendingIntent = PendingIntent.getService(context,
+                0,
+                gesturesWindowIntent,
+                updateFlag);
+        notificationLayout.setOnClickPendingIntent(R.id.toggle_button, cropWindowPendingIntent);
+
+        notificationLayout.setImageViewResource(R.id.toggle_button,drawable);
+
+
+    }
+
+    private static void setCropWindowIntent(Context context,
+                                            RemoteViews notificationLayout,
+                                            Intent cropWindowIntent) {
+
+        cropWindowIntent.putExtra(MY_VIEW_ID,-2);
+
+        PendingIntent cropWindowPendingIntent = PendingIntent.getService(context,
+                0 ,
+                cropWindowIntent,
+                cancelFlag);
+
+        notificationLayout.setOnClickPendingIntent(R.id.crop_window_btn, cropWindowPendingIntent);
+
+
     }
 
 

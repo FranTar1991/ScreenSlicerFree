@@ -5,7 +5,7 @@
     <string name="no_screenshots">Nothing to see here…</string>
     <string name="do_not_show_this_again">Don´t show this again</string>
 
-    <string name="crop_window">Slice</string>
+    <string name="crop_window">Slicer</string>
     <string name="close">Close</string>
     <string name="home">Home</string>
 
@@ -39,7 +39,7 @@
 
     <string name="extract_this_text">Extract Text Action</string>
     <string name="extract_this_text_message">The text will be extracted and copied to the clipboard.</string>
-    <string name="description_cropt_view_tut">Drag this window from its corners, and release to slice your screen. Double tap to close it or to remove the current slice.</string>
+    <string name="description_cropt_view_tut">Drag this window from its corners, and release to get a slice of your screen. Double tap to close it or to remove the current slice.</string>
     <string name="title_welcome">Welcome!</string>
     <string name="already_on">Slicer window is already open</string>
     <string name="could_not_extract_text">Could not extract text, please try again</string>
@@ -50,4 +50,5 @@
     <string name="description_first_tour">Click here to start slicing your screen.</string>
     <string name="cant_save">Sorry, you won´t be able to save or share any screen slice then</string>
     <string name="title_crop_view_tut">Slice your screen now.</string>
+    <string name="gestures">Gestures</string>
 </resources>

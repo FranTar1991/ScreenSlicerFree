@@ -129,11 +129,12 @@ class OptionsWindowView (private val context: Context,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             layoutFlag,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
 
         //Specify the view position
+        params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
 
         //Specify the view position
         params.gravity =
@@ -277,7 +278,7 @@ class OptionsWindowView (private val context: Context,
     }
 
     fun showExtractedText(text: String) {
-        progressBar?.visibility = GONE
+        hideProgressBar()
         extractedTextEt?.setText(text, TextView.BufferType.EDITABLE)
         extractedTextContainer?.visibility = VISIBLE
 
@@ -286,5 +287,9 @@ class OptionsWindowView (private val context: Context,
 
     fun showProgressBar() {
         progressBar?.visibility = VISIBLE
+    }
+
+    fun hideProgressBar() {
+        progressBar?.visibility = GONE
     }
 }

@@ -39,7 +39,9 @@
         <service
             android:name=".floatingCropWindow.CropViewFloatingWindowService"
             android:foregroundServiceType="mediaProjection" />
+
         <service android:name=".floatingImageView.FloatingImageViewService" />
+
 
         <receiver android:name=".notification_utils.NotificationBroadcastReceiver" />
 

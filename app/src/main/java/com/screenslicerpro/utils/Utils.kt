@@ -17,6 +17,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.ActionMode
 import android.view.View
+import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
 import android.view.animation.Animation
 import android.view.animation.BounceInterpolator
@@ -26,9 +27,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.room.Room
+import com.google.android.datatransport.runtime.backends.BackendResponse.ok
 import com.screenslicerpro.MainActivity
 import com.screenslicerpro.R
 import com.screenslicerpro.database.ScreenshotItem
+import com.screenslicerpro.database.ScreenshotsDatabase
 import com.screenslicerpro.main_fragment.MainFragmentViewModel
 import org.chromium.base.CollectionUtil.forEach
 import tourguide.tourguide.ToolTip
@@ -51,6 +56,13 @@ val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 const val STOP_INTENT = "com.partialscreenshot.stop"
 const val PERMISSION_TO_OVERLAY ="overlay"
 const val PERMISSION_TO_SAVE ="save"
+const val MY_VIEW_ID = "My_view_id"
+const val allFlags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+        WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM or
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
 
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
 var INITIAL_POINT = 120
@@ -166,6 +178,7 @@ fun deleteItemFromGallery(listToDelete: List<String?>, resolver: ContentResolver
         }
     }
 }
+
 
 fun shareScreenShot(context: Context?, uri: Uri?, mainActivity: MainActivity?) {
 
