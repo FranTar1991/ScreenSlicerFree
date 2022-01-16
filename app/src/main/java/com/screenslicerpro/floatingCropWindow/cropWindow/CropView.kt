@@ -10,7 +10,6 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
-import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.view.MotionEvent.*
@@ -71,6 +70,7 @@ class CropView @JvmOverloads constructor(context: Context,
     }
 
 
+
     private var drawWaitDrawable: Boolean = false
     private var anotherFingerTextSize: Int = 0
     private var doubleTapTextSize: Int = 0
@@ -89,7 +89,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
     private lateinit var mHandler: Handler
     private lateinit var mRunnable: Runnable
-    private var mTime: Long = 6000
+
 
     var showDrawable: Boolean = true
     set(value) {
@@ -120,8 +120,8 @@ class CropView @JvmOverloads constructor(context: Context,
     private var rectangleFullWIdth: Int = 0
     private var inMatchParentMode = false
 
-    private var newX = 0
-    private var newY = INITIAL_POINT
+    private var newX = INITIAL_POINT_X
+    private var newY = INITIAL_POINT_Y
     private var xSide: Int = 0
     private var ySide: Int = 0
     private var heightConstraint: Int = 0
@@ -244,7 +244,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
     // start handler function
     private fun startHandler(){
-        mHandler.postDelayed(mRunnable, mTime)
+        mHandler.postDelayed(mRunnable, TIME_TO_SET_WAITING_DRAWABLE)
     }
 
     // stop handler function
@@ -342,8 +342,8 @@ class CropView @JvmOverloads constructor(context: Context,
         heightOfRect = minimumSideLength
         xSide = minimumSideLength
         ySide = minimumSideLength
-        mainRectPoints.setTheRect(0)
-        secondRectPoints.setTheRect(INITIAL_POINT)
+        mainRectPoints.setTheRect(0, 0)
+        secondRectPoints.setTheRect(INITIAL_POINT_X,INITIAL_POINT_Y)
     }
 
     private fun drawMyWaitDrawable(canvas: Canvas) {
@@ -365,27 +365,27 @@ class CropView @JvmOverloads constructor(context: Context,
     }
 
 
-    private fun Array<Point>.setTheRect(initialPoint: Int){
-        this[0].x = 0
-        this[0].y = initialPoint
+    private fun Array<Point>.setTheRect(initialX: Int, initialY: Int){
+        this[0].x = initialX
+        this[0].y = initialY
 
         this[1].x = minimumSideLength
-        this[1].y = initialPoint
+        this[1].y = initialY
 
-        this[2].x = 0
-        this[2].y = initialPoint+minimumSideLength
+        this[2].x = initialX
+        this[2].y = initialY+minimumSideLength
 
         this[3].x = minimumSideLength
-        this[3].y = initialPoint+minimumSideLength
+        this[3].y = initialY+minimumSideLength
     }
     fun resetView(){
 
         setInitialRects()
         moveView = false
         attacher.setZoomable(false)
-        this.newX = 0
-        this.newY = INITIAL_POINT
-        manager.removeMyView(this, WRAP_CONTENT,0, INITIAL_POINT)
+        this.newX = INITIAL_POINT_X
+        this.newY = INITIAL_POINT_Y
+        manager.removeMyView(this, WRAP_CONTENT, INITIAL_POINT_X, INITIAL_POINT_Y)
         drawWaitDrawable = false
         stopHandler()
         startHandler()
@@ -581,6 +581,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
                     }
                     else ->    {
+
                         thisOptionsView?.destroyView()
                         showDrawable = false
                         changeWrapMode(MATCH_PARENT)

@@ -53,21 +53,24 @@ val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 } else {
     TYPE_PHONE
 }
+
+const val TIME_TO_SET_WAITING_DRAWABLE: Long = 6000
 const val STOP_INTENT = "com.partialscreenshot.stop"
 const val PERMISSION_TO_OVERLAY ="overlay"
 const val PERMISSION_TO_SAVE ="save"
 const val MY_VIEW_ID = "My_view_id"
 const val NEW_POSITION_X ="new_pos_x"
 const val NEW_POSITION_Y ="new_pos_y"
-const val allFlags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-        WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM or
-        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+const val allFlags = FLAG_WATCH_OUTSIDE_TOUCH or
+        FLAG_LAYOUT_IN_SCREEN or
+        FLAG_NOT_TOUCH_MODAL or
+        FLAG_ALT_FOCUSABLE_IM or
+        FLAG_NOT_FOCUSABLE or
+        FLAG_NOT_TOUCHABLE
 
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
-var INITIAL_POINT = 120
+const val INITIAL_POINT_Y = 0
+const val INITIAL_POINT_X = 0
 
 val Int.dp: Int
     get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()

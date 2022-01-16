@@ -61,7 +61,7 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
 
                     //Update the layout with new X & Y coordinate
                     updateViewLayout(myFloatingView, params)
-                    myFloatingView?.setNewPositionOfSecondRect(params.x,params.y)
+                    myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
 
                 }
             }

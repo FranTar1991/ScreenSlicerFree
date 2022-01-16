@@ -82,7 +82,7 @@ class CropViewFloatingWindowService: Service() {
            if (!isCropWindowOn){
 
                setUpNotification()
-               setUpFloatingWidget()
+               setUpFloatingWidget(newPosition)
 
                screenShotTaker = ScreenShotTaker(applicationContext, this, floatingView, takeScreenShotServiceCallback as MainActivity)
 
@@ -207,7 +207,7 @@ class CropViewFloatingWindowService: Service() {
 
     }
 
-     private fun setUpFloatingWidget() {
+     private fun setUpFloatingWidget(newPosition: Pair<Float?, Float?>) {
 
         floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null) as CropView
         floatingView?.setOnRequestTakeScreenShotListener(object: OnRequestTakeScreenShotListener {
@@ -242,7 +242,9 @@ class CropViewFloatingWindowService: Service() {
 
 
 
-         manager?.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,0, INITIAL_POINT)
+         manager?.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,
+            newPosition.first?.toInt() ?:  INITIAL_POINT_X,
+             newPosition.second?.toInt() ?:  INITIAL_POINT_Y)
 
 
 
