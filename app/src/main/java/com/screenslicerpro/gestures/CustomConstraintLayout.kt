@@ -14,9 +14,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.screenslicerpro.floatingCropWindow.CropViewFloatingWindowService
-import com.screenslicerpro.utils.WindowManagerClass
-import com.screenslicerpro.utils.allFlags
-import com.screenslicerpro.utils.layoutFlag
+import com.screenslicerpro.utils.*
 
 
 class CustomConstraintLayout @JvmOverloads constructor(
@@ -85,6 +83,8 @@ class CustomConstraintLayout @JvmOverloads constructor(
                     Toast.makeText(context,"double swipe on ${event?.x} and ${event?.y}",Toast.LENGTH_SHORT).show()
                     stopHandler()
                     val intent = Intent(context, CropViewFloatingWindowService::class.java)
+                    intent.putExtra(NEW_POSITION_X,event?.x)
+                    intent.putExtra(NEW_POSITION_Y,event?.y)
                    context.startService(intent)
 
                     changeFlags(allFlags, 96)

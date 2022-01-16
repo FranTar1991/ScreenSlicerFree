@@ -16,7 +16,9 @@
     <color name="secondaryTextColor">#ffffff</color>
 
     <color name="white">#FFFFFF</color>
+
     <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
     <color name="primaryColorTransparent">#82441B6C</color>
     <color name="secondaryLightColorTransparent">#7FFF9900</color>
 

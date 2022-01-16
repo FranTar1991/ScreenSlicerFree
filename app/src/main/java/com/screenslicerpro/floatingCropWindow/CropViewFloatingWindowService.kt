@@ -70,6 +70,8 @@ class CropViewFloatingWindowService: Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         val currentDrawable = intent?.getIntExtra(MY_VIEW_ID,-1) ?: -1
+        val newPosition = getNewPosition(intent)
+        Log.i("NewPos","$newPosition")
 
         if(currentDrawable == -1 || currentDrawable == -2)
        {
@@ -104,6 +106,13 @@ class CropViewFloatingWindowService: Service() {
 
 
         return START_NOT_STICKY
+    }
+
+    private fun getNewPosition(intent: Intent?): Pair<Float?,Float?> {
+
+        return Pair(intent?.getFloatExtra(NEW_POSITION_X, 0f),
+            intent?.getFloatExtra(NEW_POSITION_Y, 0f))
+
     }
 
     private fun isToAddOrRemove(currentDrawable: Int) {
