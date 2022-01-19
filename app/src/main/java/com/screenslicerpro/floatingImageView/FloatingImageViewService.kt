@@ -18,6 +18,12 @@ import com.screenslicerpro.R
 import com.screenslicerpro.utils.OnMoveCropWindowListener
 import com.screenslicerpro.utils.flags
 import com.screenslicerpro.utils.layoutFlag
+import android.widget.Toast
+
+import com.screenslicerpro.MainActivity
+
+
+
 
 
 class FloatingImageViewService: Service() {
@@ -57,6 +63,11 @@ class FloatingImageViewService: Service() {
     fun setImageUri(uri: Uri){
         mImageUri = uri
     }
+
+
+
+
+
 
     private fun setGestureDetector() {
 

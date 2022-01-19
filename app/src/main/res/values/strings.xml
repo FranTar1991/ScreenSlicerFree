@@ -51,4 +51,8 @@
     <string name="cant_save">Sorry, you won´t be able to save or share any screen slice then</string>
     <string name="title_crop_view_tut">Slice your screen now.</string>
     <string name="gestures">Gestures</string>
+    <string name="launch_on_gesture_settings">Launch on gesture settings</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="exception_list">Exception List</string>
+    <string name="launch_on_double_swipe">Launch on double swipe (with 2 fingers)</string>
 </resources>

@@ -14,7 +14,7 @@ import com.screenslicerpro.MainActivity
 import com.screenslicerpro.R
 import com.screenslicerpro.floatingCropWindow.cropWindow.CropView
 import com.screenslicerpro.floatingCropWindow.cropWindow.ScreenShotTaker
-import com.screenslicerpro.gestures.CustomConstraintLayout
+import com.screenslicerpro.gestures.action.CustomConstraintLayout
 import com.screenslicerpro.notification_utils.NotificationUtils
 import com.screenslicerpro.utils.*
 import tourguide.tourguide.TourGuide
@@ -23,7 +23,7 @@ import tourguide.tourguide.TourGuide
 class CropViewFloatingWindowService: Service() {
 
 
-    private lateinit var floatingGestureView: CustomConstraintLayout
+    private var floatingGestureView: CustomConstraintLayout? = null
     private var drawableForSwitch: Int = R.drawable.ic_toggle_off
     private val SHOW_SECOND_TOUR: String ="show_second_tour"
     private var showTourGuide: Boolean = true
@@ -71,11 +71,12 @@ class CropViewFloatingWindowService: Service() {
 
         val currentDrawable = intent?.getIntExtra(MY_VIEW_ID,-1) ?: -1
         val newPosition = getNewPosition(intent)
-        Log.i("NewPos","$newPosition")
+        Log.i("MyRects","newPos: $newPosition")
 
         if(currentDrawable == -1 || currentDrawable == -2)
        {
            if (!isGestureWindowOn && drawableForSwitch == R.drawable.ic_toggle_on){
+
                setUpGestureWidget()
            }
 
@@ -149,7 +150,7 @@ class CropViewFloatingWindowService: Service() {
         paramsF.gravity = Gravity.TOP or Gravity.START
 
         manager?.addView(floatingGestureView, paramsF)
-        floatingGestureView.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
+        floatingGestureView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(p0: View?) {
                 isGestureWindowOn = true
             }
@@ -201,7 +202,7 @@ class CropViewFloatingWindowService: Service() {
             screenShotTaker?.optionsWindowView?.destroyView()
         }
 
-        if (floatingGestureView.isShown){
+        if (floatingGestureView?.isShown == true){
             manager?.removeView(floatingGestureView)
         }
 
@@ -231,6 +232,7 @@ class CropViewFloatingWindowService: Service() {
         floatingView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(p0: View?) {
                 isCropWindowOn = true
+
             }
 
             override fun onViewDetachedFromWindow(p0: View?) {
@@ -242,9 +244,10 @@ class CropViewFloatingWindowService: Service() {
 
 
 
+         Log.i("MyRects","newPos after: ${newPosition.first?.toInt()} and ${newPosition.second?.toInt()}")
+
          manager?.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,
-            newPosition.first?.toInt() ?:  INITIAL_POINT_X,
-             newPosition.second?.toInt() ?:  INITIAL_POINT_Y)
+         INITIAL_POINT_X, INITIAL_POINT_Y)
 
 
 

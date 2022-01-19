@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/launch_gesture_settings_on_menu"
+        android:title="@string/launch_on_gesture_settings"
+        app:showAsAction="never" />
+    <item android:id="@+id/privacy_policy_on_menu"
+        android:title="@string/privacy_policy"
+        app:showAsAction="never" />
+</menu>

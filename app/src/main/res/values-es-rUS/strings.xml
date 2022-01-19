@@ -44,4 +44,9 @@
     <string name="title_crop_view_tut">Recorta tu pantalla ahora.</string>
     <string name="description_cropt_view_tut">Arrastra esta ventana de sus equinas y luego suelta para obtener un recorte de la pantalla.\nDoble click para cerrar, ó para borrar la imagen mostrada.</string>
     <string name="title_welcome">!Bienvenid@¡</string>
+    <string name="gestures">Gestos</string>
+    <string name="launch_on_double_swipe">Iniciar con doble swipe (con dos dedos)</string>
+    <string name="launch_on_gesture_settings">Configuración de gestos</string>
+    <string name="privacy_policy">Política de privacidad</string>
+    <string name="exception_list">Lista de apps donde no funcionarán los gestos</string>
 </resources>

@@ -21,9 +21,7 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
 import com.screenslicerpro.databinding.OptionsViewBinding
 import com.screenslicerpro.floatingCropWindow.cropWindow.CropView
-import com.screenslicerpro.utils.layoutFlag
-import com.screenslicerpro.utils.OnOptionsWindowSelectedListener
-import com.screenslicerpro.utils.copyTextToClipboard
+import com.screenslicerpro.utils.*
 
 
 class OptionsWindowView (private val context: Context,
@@ -150,7 +148,10 @@ class OptionsWindowView (private val context: Context,
     fun destroyView() {
         mFloatingView?.root?.let {
             if(it.isAttachedToWindow){
-                if (mFloatingView != null) mWindowManager?.removeView(mFloatingView?.root)
+                if (mFloatingView != null) {
+                    mWindowManager?.removeView(mFloatingView?.root)
+
+                }
             }
         }
 

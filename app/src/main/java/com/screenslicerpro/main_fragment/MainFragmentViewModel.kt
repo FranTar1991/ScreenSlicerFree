@@ -29,6 +29,10 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
     val navigateToScreenshot
         get() = _navigateToScreenshot
 
+    private val _navigateToGSettings= MutableLiveData<Boolean>()
+    val navigateToGSettings
+        get() = _navigateToGSettings
+
 
     fun setScreenShotCount(count: Int) {
         _screenshotCount.value = count
@@ -69,6 +73,14 @@ class MainFragmentViewModel  (val database: ScreenshotsDAO, application: Applica
 
     fun onScreenshotNavigated() {
         _navigateToScreenshot.value = null
+    }
+
+    fun onNavigateToGestureSettingsClicked() {
+        _navigateToGSettings.value = true
+    }
+
+    fun onNavigateToGestureSettingsNavigated() {
+        _navigateToGSettings.value = null
     }
 
 }

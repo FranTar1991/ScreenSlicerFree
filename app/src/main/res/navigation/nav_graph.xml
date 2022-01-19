@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_mainFragment_to_viewPagerDetails"
             app:destination="@id/viewPagerDetails" />
+        <action
+            android:id="@+id/action_mainFragment_to_gesturesFragmentSettings"
+            app:destination="@id/gesturesFragmentSettings" />
     </fragment>
     <fragment
         android:id="@+id/viewPagerDetails"
@@ -22,4 +25,8 @@
             android:name="uri"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/gesturesFragmentSettings"
+        android:name="com.screenslicerpro.gestures.view.GesturesFragmentSettings"
+        android:label="GesturesFragmentSettings" />
 </navigation>

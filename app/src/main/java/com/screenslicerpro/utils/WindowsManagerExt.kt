@@ -68,6 +68,8 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
 
         }
         override fun onClose() {
+             INITIAL_POINT_Y = 0
+             INITIAL_POINT_X = 0
             removeView(myFloatingView)
         }
 

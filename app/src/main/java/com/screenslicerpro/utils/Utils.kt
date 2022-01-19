@@ -69,8 +69,8 @@ const val allFlags = FLAG_WATCH_OUTSIDE_TOUCH or
         FLAG_NOT_TOUCHABLE
 
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
-const val INITIAL_POINT_Y = 0
-const val INITIAL_POINT_X = 0
+ var INITIAL_POINT_Y = 0
+ var INITIAL_POINT_X = 0
 
 val Int.dp: Int
     get() = (this * Resources.getSystem().displayMetrics.density + 0.5f).toInt()

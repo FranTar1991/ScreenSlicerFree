@@ -1,4 +1,4 @@
-package com.screenslicerpro.gestures;
+package com.screenslicerpro.gestures.action;
 
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;

@@ -184,6 +184,21 @@ class MainFragment : Fragment() {
         binding.allScreenshotsViewModel = mainFragmentViewModel
         binding.lifecycleOwner = activity
         toolBar = binding.myToolbar
+        toolBar.inflateMenu(R.menu.menu_main)
+        toolBar.setOnMenuItemClickListener {
+            // Handle item selection
+             when (it.itemId) {
+                R.id.launch_gesture_settings_on_menu -> {
+                    launchGestureSettings()
+                    true
+                }
+                R.id.privacy_policy_on_menu -> {
+                    launchPrivacyPolicy()
+                    true
+                }
+                else -> super.onOptionsItemSelected(it)
+            }
+        }
 
         adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener), mainFragmentViewModel)
         val manager = GridLayoutManager(activity,4)
@@ -221,6 +236,15 @@ class MainFragment : Fragment() {
                     .navigate(MainFragmentDirections.actionMainFragmentToViewPagerDetails(screenshotUri),
                         extras)
                 mainFragmentViewModel.onScreenshotNavigated()
+            }
+        })
+
+        mainFragmentViewModel.navigateToGSettings.observe(viewLifecycleOwner, Observer { booleanVariable ->
+            booleanVariable?.let {
+
+                this.findNavController()
+                    .navigate(MainFragmentDirections.actionMainFragmentToGesturesFragmentSettings())
+                mainFragmentViewModel.onNavigateToGestureSettingsNavigated()
             }
         })
 
@@ -347,6 +371,18 @@ class MainFragment : Fragment() {
                     }
                 }
             })
+    }
+
+
+
+
+
+    private fun launchPrivacyPolicy() {
+
+    }
+
+    private fun launchGestureSettings() {
+       mainFragmentViewModel.onNavigateToGestureSettingsClicked()
     }
 
     private fun clickListener(view: View, uri: String){

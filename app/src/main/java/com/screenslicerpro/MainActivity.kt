@@ -1,41 +1,51 @@
 package com.screenslicerpro
 
 import android.Manifest
+import android.Manifest.permission.PACKAGE_USAGE_STATS
 import android.app.Activity
+import android.app.AppOpsManager
 import android.content.*
 import android.content.Intent.*
-
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Process
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.screenslicerpro.database.ScreenshotItem
 import com.screenslicerpro.database.ScreenshotsDatabase
 import com.screenslicerpro.floatingCropWindow.CropViewFloatingWindowService
+import com.screenslicerpro.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.screenslicerpro.floatingImageView.FloatingImageViewService
 import com.screenslicerpro.main_fragment.MainFragmentViewModel
 import com.screenslicerpro.main_fragment.MainFragmentViewmodelFactory
 import com.screenslicerpro.utils.*
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlin.properties.Delegates
+import android.app.usage.UsageStatsManager
 
-import android.content.ClipData
-import com.screenslicerpro.floatingCropWindow.optionsWindow.OptionsWindowView
+import android.app.usage.UsageStats
+
+import android.os.Build.VERSION_CODES
+
+import android.os.Build.VERSION
+
+import androidx.annotation.NonNull
+import androidx.core.content.PermissionChecker
 
 
 //Use this variables instead of OnActivityResult
@@ -109,6 +119,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         setContentView(R.layout.activity_main)
         closeAppFromNotification()
 
+        if(!permissionToSeForegroundApp()){
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            startActivity(intent)
+        }
+
+
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
         val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
@@ -147,6 +163,61 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         })
 
+    }
+
+    override fun onUserLeaveHint() {
+     
+        Toast.makeText(this@MainActivity, "Home buton pressed", Toast.LENGTH_LONG).show()
+        super.onUserLeaveHint()
+    }
+
+    private fun permissionToSeForegroundApp(): Boolean {
+        val appOps = baseContext.getSystemService(APP_OPS_SERVICE) as AppOpsManager
+
+        val mode = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(), packageName)
+        } else {
+            appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(), packageName)
+        }
+
+
+        return if (mode == AppOpsManager.MODE_DEFAULT) {
+           if (VERSION.SDK_INT >= VERSION_CODES.M) {
+               checkCallingOrSelfPermission(PACKAGE_USAGE_STATS) == PackageManager.PERMISSION_GRANTED
+           } else {
+               //the permission was granted before the app was installed
+               true
+           }
+
+       } else {
+            (mode == AppOpsManager.MODE_ALLOWED);
+        }
+    }
+
+    fun permissionToSeForegroundApp(context: Context): Boolean {
+        // Usage Stats is theoretically available on API v19+, but official/reliable support starts with API v21.
+        val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
+            ?: return false
+        val mode = appOpsManager.checkOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            Process.myUid(),
+            context.packageName
+        )
+        if (mode != AppOpsManager.MODE_ALLOWED) {
+            return false
+        }
+
+        // Verify that access is possible. Some devices "lie" and return MODE_ALLOWED even when it's not.
+        val now = System.currentTimeMillis()
+        val mUsageStatsManager = context.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+        val stats = mUsageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            now - 1000 * 10,
+            now
+        )
+        return stats != null && stats.isNotEmpty()
     }
 
     /**
@@ -321,10 +392,6 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
             stopService(Intent(this, CropViewFloatingWindowService::class.java))
 
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
     }
 
     /**

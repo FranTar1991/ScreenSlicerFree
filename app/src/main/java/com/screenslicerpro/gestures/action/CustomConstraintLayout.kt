@@ -1,12 +1,12 @@
-package com.screenslicerpro.gestures
+package com.screenslicerpro.gestures.action
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -15,6 +15,11 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.screenslicerpro.floatingCropWindow.CropViewFloatingWindowService
 import com.screenslicerpro.utils.*
+
+import android.app.usage.UsageStats
+
+import android.app.usage.UsageStatsManager
+import java.util.*
 
 
 class CustomConstraintLayout @JvmOverloads constructor(
@@ -44,15 +49,41 @@ class CustomConstraintLayout @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
-        startHandler()
-        changeFlags(notFocusableFlag, MATCH_PARENT)
-        event?.let {
-            swipeWithTwoFingerDetector.onTouchEvent(event)
+        if (printForegroundTask() == "com.screenslicerpro" || printForegroundTask() == "ni.com.lafise" ){
+            startHandler()
+            changeFlags(notFocusableFlag, MATCH_PARENT)
+            event?.let {
+                swipeWithTwoFingerDetector.onTouchEvent(event)
+            }
         }
 
         return false
 
     }
+
+
+    @SuppressLint("WrongConstant")
+    private fun printForegroundTask(): String {
+        var currentApp = ""
+        val usm = context.getSystemService("usagestats") as UsageStatsManager
+        val time = System.currentTimeMillis()
+        val appList =
+            usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000 * 1000, time)
+        if (appList != null && appList.size > 0) {
+            val mySortedMap: SortedMap<Long, UsageStats> = TreeMap()
+            for (usageStats in appList) {
+                mySortedMap[usageStats.lastTimeUsed] = usageStats
+            }
+            if (!mySortedMap.isEmpty()) {
+                currentApp = mySortedMap[mySortedMap.lastKey()]?.packageName ?: "Not detected"
+            }
+        }
+
+        Log.e("adapter", "Current App in foreground is: $currentApp")
+        return currentApp
+    }
+
+
 
     private fun setGestureDetector() {
 
@@ -87,6 +118,8 @@ class CustomConstraintLayout @JvmOverloads constructor(
                     intent.putExtra(NEW_POSITION_Y,event?.y)
                    context.startService(intent)
 
+                    INITIAL_POINT_X = event?.x?.toInt() ?: 0
+                    INITIAL_POINT_Y = event?.y?.toInt() ?: 0
                     changeFlags(allFlags, 96)
 
                 }
