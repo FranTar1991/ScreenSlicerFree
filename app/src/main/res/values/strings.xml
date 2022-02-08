@@ -15,6 +15,8 @@
     <string name="permission_overlay">To use this function you need to grant the \"Draw over other apps\" permission</string>
     <string name="view_created">Slicer view has been created</string>
     <string name="permission_save">Please grant the following permission to be able to save and share your screen slices.</string>
+    <string name="permission_for_gestures">In order for you to be able to select the apps in which this feature will work, we will need to know which app is in the foreground. So please search for ScreenSlicer on the list and accept the permission.</string>
+
 
     <string name="delete">%1$d items deleted</string>
     <string name="items_selected">%1$d item(s)</string>
@@ -53,6 +55,11 @@
     <string name="gestures">Gestures</string>
     <string name="launch_on_gesture_settings">Launch on gesture settings</string>
     <string name="privacy_policy">Privacy policy</string>
-    <string name="exception_list">Exception List</string>
+    <string name="allowed_apps">Allowed apps</string>
     <string name="launch_on_double_swipe">Launch on double swipe (with 2 fingers)</string>
+    <string name="settings">Settings</string>
+    <string name="no_apps_loaded">No allowed apps yet…</string>
+    <string name="we_need_the_permission">"Without this permission we won´t be able to take the screen slices."</string>
+    <string name="turn_on_gestures_title">If this switch is on and the Screen Slicer notification is on: </string>
+    <string name="description_gestures">You will be able to pull up the screen slicer window from any app and control the apps in which this feature will work.</string>
 </resources>

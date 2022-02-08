@@ -2,7 +2,6 @@ package com.screenslicerpro.detailsView.viewpager
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -27,16 +26,19 @@ import com.screenslicerpro.R
 import com.screenslicerpro.database.ScreenshotItem
 import com.screenslicerpro.database.ScreenshotsDAO
 import com.screenslicerpro.database.ScreenshotsDatabase
-import com.screenslicerpro.databinding.FragmentViewPagerDetailsBinding
+
 import com.screenslicerpro.detailsView.DetailsViewModel
 import com.screenslicerpro.detailsView.DetailsViewModelFactory
 import com.screenslicerpro.utils.*
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.screenslicerpro.MainActivity.Companion.currentPosition
+import com.screenslicerpro.databinding.FragmentViewPagerDetailsBinding
 
 
-class ViewPagerDetails : Fragment() {
+class ViewPagerDetailsFragment : Fragment() {
 
+
+    private lateinit var myItemPassedUri: String
     private var indexOfItemToSet: Int = 0
     private  lateinit var currentItem: ScreenshotItem
     private lateinit var viewPagerOnPageChangeCallback: OnPageChangeCallback
@@ -60,12 +62,13 @@ class ViewPagerDetails : Fragment() {
 
         val application = requireNotNull(this.activity).application
 
-       val  myItemPassed = ViewPagerDetailsArgs.fromBundle(requireArguments())
+        val myItemPassed = ViewPagerDetailsFragmentArgs.fromBundle(requireArguments())
+         myItemPassedUri = myItemPassed.uri
 
 
         // Create an instance of the ViewModel Factory.
         dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
-        val viewModelFactory = DetailsViewModelFactory(myItemPassed.uri, dataSource)
+        val viewModelFactory = DetailsViewModelFactory(myItemPassedUri, dataSource)
 
 
         // Get a reference to the ViewModel associated with this fragment.
@@ -96,21 +99,27 @@ class ViewPagerDetails : Fragment() {
         viewPager.adapter = adapter
 
         screenshotDetailViewModel.screenshots.observe(viewLifecycleOwner, Observer {
+
+            println("My list is null")
             it?.let {
+
+
+                println("My list is: $it")
                 if (it.isEmpty()) {
                     this.findNavController().navigateUp()
+                }else{
+                    listOfAllScreenshots = it
+                    adapter.submitList(it)
+
+                    indexOfItemToSet =
+                        listOfAllScreenshots.indexOfFirst { itemFound -> itemFound.uri == myItemPassedUri}
+                    println("My index: $myItemPassedUri")
+
+                    screenshotDetailViewModel.setNewScreenshot(listOfAllScreenshots[indexOfItemToSet])
+                    viewPager.setCurrentItem( indexOfItemToSet, false)
                 }
 
-                listOfAllScreenshots = it
-                adapter.submitList(it)
 
-                indexOfItemToSet = if (listOfAllScreenshots.indexOfFirst { itemFound -> itemFound.uri == myItemPassed.uri } == -1){
-                    +1
-                } else {
-                    listOfAllScreenshots.indexOfFirst { itemFound -> itemFound.uri == myItemPassed.uri }
-                }
-
-                viewPager.setCurrentItem( indexOfItemToSet, false)
                 (view?.parent as? ViewGroup)?.doOnPreDraw {
                     startPostponedEnterTransition()
                 }
@@ -132,12 +141,8 @@ class ViewPagerDetails : Fragment() {
 
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-
                 currentPosition = position
-                if (listOfAllScreenshots.isNotEmpty()){
-                    screenshotDetailViewModel.setNewScreenshot(listOfAllScreenshots[position])
 
-                }
             }
         }
 
@@ -211,11 +216,28 @@ class ViewPagerDetails : Fragment() {
 
         binding.deleteOptions.setOnClickListener(View.OnClickListener {
             getUserAuthorizationToTakeAction(it.id){
+
+                myItemPassedUri= getTheNextItemToPass()
                 val list = listOf(currentItem.uri)
                 screenshotDetailViewModel.onDeleteListWithUri(list)
                 deleteItemFromGallery(list,context?.contentResolver)
             }
         })
+    }
+
+    private fun getTheNextItemToPass(): String {
+        val itemOfCurrentIndex = listOfAllScreenshots.indexOf(currentItem)
+        val nextIndex =if (listOfAllScreenshots.size <= 1){
+            0
+        }else{
+            if (itemOfCurrentIndex == 0){
+                1
+            }else{
+                itemOfCurrentIndex-1
+            }
+        }
+
+        return listOfAllScreenshots[nextIndex].uri
     }
 
     private fun getUserAuthorizationToTakeAction(id: Int, actionToTake: ()->Unit) {
@@ -230,7 +252,7 @@ class ViewPagerDetails : Fragment() {
             else -> Pair("","")
         }
 
-        createActionDialog(actionToTake, activity as MainActivity,title, message, null)
+        createActionDialog( activity as MainActivity,title, message, null,actionToTake,)
     }
 
     private fun setUpVisibility() {

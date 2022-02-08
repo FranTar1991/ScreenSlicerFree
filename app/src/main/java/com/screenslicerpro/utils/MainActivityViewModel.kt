@@ -22,6 +22,19 @@ class MainActivityViewModel : ViewModel() {
     val permissionToSaveCalled
         get() = _permissionToSaveCalled
 
+
+    private val _destroyService = MutableLiveData<Boolean>()
+    val destroyService
+        get() = _destroyService
+
+    private val _cleanTourGuide = MutableLiveData<String>()
+    val cleanTourGuide
+        get() = _cleanTourGuide
+
+    fun setDestroyService(value: Boolean){
+        _destroyService.value = value
+    }
+
     fun setPermissionToSaveCalled(){
         _permissionToSaveCalled.value = true
     }
@@ -43,6 +56,9 @@ class MainActivityViewModel : ViewModel() {
         mutableOverlayCall.value = false
     }
 
+    fun setCleanTourGuide(key: String) {
+        _cleanTourGuide.value = key
+    }
 
 
 }

@@ -2,7 +2,10 @@ package com.screenslicerpro.notification_utils;
 
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
+import static com.screenslicerpro.utils.UtilsKt.MY_INTENT_EXTRA;
 import static com.screenslicerpro.utils.UtilsKt.MY_VIEW_ID;
+
+import static org.chromium.base.ContextUtils.getApplicationContext;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -44,6 +47,10 @@ public class NotificationUtils {
         notificationManager.notify(id, notification);
         return new Pair<>(id, notification);
     }
+
+
+
+
 
     @TargetApi(Build.VERSION_CODES.O)
     private static void createNotificationChannel(@NonNull Context context) {
@@ -111,13 +118,13 @@ public class NotificationUtils {
                                           Intent gesturesWindowIntent) {
 
 
-        gesturesWindowIntent.putExtra(MY_VIEW_ID,drawable);
+        gesturesWindowIntent.putExtra(MY_INTENT_EXTRA,drawable);
 
-        PendingIntent cropWindowPendingIntent = PendingIntent.getService(context,
+        PendingIntent gesturePendingIntent = PendingIntent.getService(context,
                 0,
                 gesturesWindowIntent,
                 updateFlag);
-        notificationLayout.setOnClickPendingIntent(R.id.toggle_button, cropWindowPendingIntent);
+        notificationLayout.setOnClickPendingIntent(R.id.toggle_button, gesturePendingIntent);
 
         notificationLayout.setImageViewResource(R.id.toggle_button,drawable);
 
@@ -128,7 +135,7 @@ public class NotificationUtils {
                                             RemoteViews notificationLayout,
                                             Intent cropWindowIntent) {
 
-        cropWindowIntent.putExtra(MY_VIEW_ID,-2);
+        cropWindowIntent.putExtra(MY_INTENT_EXTRA,-1);
 
       PendingIntent cropWindowPendingIntent = PendingIntent.getService(context,
                 0 ,

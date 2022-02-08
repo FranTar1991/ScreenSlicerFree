@@ -1,49 +1,44 @@
 package com.screenslicerpro.main_fragment
 
+
+import android.app.Activity
+import android.app.Service
+import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.view.*
+import android.view.View.OnLayoutChangeListener
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.SharedElementCallback
+import androidx.core.view.doOnPreDraw
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.selection.Selection
+import androidx.recyclerview.selection.SelectionPredicates
+import androidx.recyclerview.selection.SelectionTracker
+import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.TransitionInflater
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.screenslicerpro.MainActivity
+import com.screenslicerpro.MainActivity.Companion.currentPosition
 import com.screenslicerpro.R
 import com.screenslicerpro.database.ScreenshotsDatabase
 import com.screenslicerpro.databinding.FragmentMainBinding
 import com.screenslicerpro.main_fragment.adapter.MyItemDetailsLookup
 import com.screenslicerpro.main_fragment.adapter.MyItemKeyProvider
 import com.screenslicerpro.main_fragment.adapter.ScreenshotsAdapter
-import android.widget.Toast
-
-import android.view.*
-
-import androidx.recyclerview.selection.*
-import android.content.Intent
-import android.net.Uri
-import android.widget.ImageView
-import androidx.appcompat.widget.Toolbar
-import androidx.core.app.SharedElementCallback
-import androidx.core.view.doOnPreDraw
-import androidx.navigation.fragment.FragmentNavigatorExtras
-
-
-import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.TransitionInflater
-import com.screenslicerpro.MainActivity
-import com.screenslicerpro.MainActivity.Companion.currentPosition
-
-import android.view.View.OnLayoutChangeListener
-import android.app.Activity
-import android.app.Service
-import android.content.SharedPreferences
 import com.screenslicerpro.utils.*
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-
 import tourguide.tourguide.TourGuide
-
-
-
 
 
 class MainFragment : Fragment() {
@@ -129,7 +124,7 @@ class MainFragment : Fragment() {
             else -> Pair("","")
         }
 
-        createActionDialog(actionToTake, activity as MainActivity,title, message, actionMode)
+        createActionDialog( activity as MainActivity,title, message, actionMode,actionToTake)
     }
 
     private fun deleteThisItems(){
@@ -164,11 +159,8 @@ class MainFragment : Fragment() {
             inflater, R.layout.fragment_main, container, false)
 
         floatingButton = binding.callFloatingWindow
-        binding.callFloatingWindow.setOnClickListener(View.OnClickListener {
-            myTourGuide?.cleanUp()
-            val editor: SharedPreferences.Editor? = sharedPreferences?.edit()
-            editor?.putBoolean(SHOW_FIRST_TOUR, false)
-            editor?.apply()
+        floatingButton.setOnClickListener(View.OnClickListener {
+           closeTourGuide()
             mainActivityViewModel.checkIfHasOverlayPermission(true)
         })
 
@@ -184,12 +176,13 @@ class MainFragment : Fragment() {
         binding.allScreenshotsViewModel = mainFragmentViewModel
         binding.lifecycleOwner = activity
         toolBar = binding.myToolbar
-        toolBar.inflateMenu(R.menu.menu_main)
+
         toolBar.setOnMenuItemClickListener {
             // Handle item selection
              when (it.itemId) {
                 R.id.launch_gesture_settings_on_menu -> {
                     launchGestureSettings()
+
                     true
                 }
                 R.id.privacy_policy_on_menu -> {
@@ -203,13 +196,9 @@ class MainFragment : Fragment() {
         adapter = ScreenshotsAdapter(ScreenshotListener(::clickListener), mainFragmentViewModel)
         val manager = GridLayoutManager(activity,4)
         recyclerView = binding.allPictures
-        recyclerView.
-            adapter = adapter
-
-          recyclerView.  layoutManager = manager
-
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = manager
         mainFragmentViewModel.setIsLoading(true)
-
         mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
             it?.let { newList ->
 
@@ -303,14 +292,21 @@ class MainFragment : Fragment() {
         return binding.root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onStop() {
+        super.onStop()
+        closeTourGuide()
     }
 
     private fun startTourGuide(): Boolean {
-        sharedPreferences = context?.getSharedPreferences("MyPref", Service.MODE_PRIVATE)
+        sharedPreferences = context?.getSharedPreferences(MY_PREFS_NAME, Service.MODE_PRIVATE)
        return  sharedPreferences?.getBoolean(SHOW_FIRST_TOUR, true) ?: true
+    }
+
+    fun closeTourGuide() {
+        myTourGuide?.cleanUp()
+        val editor: SharedPreferences.Editor? = sharedPreferences?.edit()
+        editor?.putBoolean(SHOW_FIRST_TOUR, false)
+        editor?.apply()
     }
 
 
@@ -337,6 +333,11 @@ class MainFragment : Fragment() {
             tracker.onSaveInstanceState(outState)
         }
 
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mainActivityViewModel.setCleanTourGuide(SHOW_FIRST_TOUR)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -378,11 +379,14 @@ class MainFragment : Fragment() {
 
 
     private fun launchPrivacyPolicy() {
-
+        val uriUrl = Uri.parse("https://sites.google.com/view/appclaud-privacy-policy/home")
+        val launchBrowser = Intent(Intent.ACTION_VIEW, uriUrl)
+        startActivity(launchBrowser)
     }
 
     private fun launchGestureSettings() {
        mainFragmentViewModel.onNavigateToGestureSettingsClicked()
+
     }
 
     private fun clickListener(view: View, uri: String){

@@ -19,7 +19,14 @@ import com.screenslicerpro.utils.*
 import android.app.usage.UsageStats
 
 import android.app.usage.UsageStatsManager
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.GET_META_DATA
+import com.screenslicerpro.gestures.action.database.AppItem
+import com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel
 import java.util.*
+import android.net.Uri
+import com.screenslicerpro.notification_utils.setUpNotification
 
 
 class CustomConstraintLayout @JvmOverloads constructor(
@@ -27,10 +34,14 @@ class CustomConstraintLayout @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0): ConstraintLayout(ct,attrs, defStyleAttr) {
 
+
+    private var listOfAppsInExceptionList: List<AppItem>? = null
+
     private var audioManager: AudioManager
     private lateinit var doubleTapGesture: GestureDetector
     private lateinit var swipeWithTwoFingerDetector: SimpleTwoFingerSwipeDetector
     private var wm: WindowManager? = null
+    private var gesturesViewModel: GestureSettingsViewModel? = null
 
 
     private lateinit var mHandler: Handler
@@ -48,8 +59,20 @@ class CustomConstraintLayout @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        val packageManager = context.packageManager
+        val packageName = getCurrentPackageName()
 
-        if (printForegroundTask() == "com.screenslicerpro" || printForegroundTask() == "ni.com.lafise" ){
+        saveCurrentAppInForeground(packageName, packageManager)
+
+        val appItemInList = checkIfPackageNameIsInList(packageName)
+
+        val isInList = appItemInList != null
+        val isAllowed = appItemInList?.isAllowed
+
+        println("isInList: $isInList and isAllowed: $isAllowed and the list: $listOfAppsInExceptionList")
+
+        if ((isInList && isAllowed == true) || !isInList){
+
             startHandler()
             changeFlags(notFocusableFlag, MATCH_PARENT)
             event?.let {
@@ -61,10 +84,54 @@ class CustomConstraintLayout @JvmOverloads constructor(
 
     }
 
+    private fun checkIfPackageNameIsInList(packageName: String): AppItem ?{
+
+        return  listOfAppsInExceptionList?.firstOrNull() {
+                it.packageName == packageName
+        }
+
+    }
+
+
 
     @SuppressLint("WrongConstant")
-    private fun printForegroundTask(): String {
-        var currentApp = ""
+    private fun saveCurrentAppInForeground(packageName: String, packageManager: PackageManager) {
+
+
+        val appInfo: ApplicationInfo? = getAppInfo(packageManager, packageName)
+
+        appInfo?.let {
+            val appName = appInfo.loadLabel(packageManager) as String
+            val appIconUri = getIconUri(appInfo, packageName)
+            val appItem = AppItem( packageName = packageName, appName = appName, appIconUri = appIconUri)
+            gesturesViewModel?.onInsertNewApp(appItem)
+        }
+
+    }
+
+    private fun getIconUri(appInfo: ApplicationInfo, packageName: String): String? {
+
+       return  if (appInfo.icon != 0) {
+          Uri.parse("android.resource://" + packageName + "/" + appInfo.icon).toString()
+       } else{
+            null
+       }
+
+    }
+
+    private fun getAppInfo(packageManager: PackageManager, packageName: String): ApplicationInfo? {
+       return try {
+            packageManager.getApplicationInfo(packageName, GET_META_DATA)
+        } catch (nameNotFoundException: PackageManager.NameNotFoundException){
+            Log.e("NameNotFound","$nameNotFoundException")
+           null
+        }
+    }
+
+    @SuppressLint("WrongConstant")
+    private fun getCurrentPackageName(): String {
+
+        var currentAppPackageName = ""
         val usm = context.getSystemService("usagestats") as UsageStatsManager
         val time = System.currentTimeMillis()
         val appList =
@@ -75,14 +142,18 @@ class CustomConstraintLayout @JvmOverloads constructor(
                 mySortedMap[usageStats.lastTimeUsed] = usageStats
             }
             if (!mySortedMap.isEmpty()) {
-                currentApp = mySortedMap[mySortedMap.lastKey()]?.packageName ?: "Not detected"
+                currentAppPackageName = mySortedMap[mySortedMap.lastKey()]?.packageName ?: "Not detected"
             }
         }
-
-        Log.e("adapter", "Current App in foreground is: $currentApp")
-        return currentApp
+        return currentAppPackageName
     }
 
+    fun setUpGesturesViewModel(gestureVM: GestureSettingsViewModel?){
+        this.gesturesViewModel = gestureVM
+    }
+    fun setListOfAppsInException(list: List<AppItem>?){
+        listOfAppsInExceptionList = list
+    }
 
 
     private fun setGestureDetector() {
@@ -99,7 +170,6 @@ class CustomConstraintLayout @JvmOverloads constructor(
         doubleTapGesture = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
 
             override fun onSingleTapUp(event: MotionEvent?): Boolean {
-                Toast.makeText(context,"double tap on ${event?.x} and ${event?.y}",Toast.LENGTH_SHORT).show()
                 changeFlags(allFlags, 96)
                 stopHandler()
                 return super.onSingleTapUp(event)
@@ -109,9 +179,8 @@ class CustomConstraintLayout @JvmOverloads constructor(
 
     private fun setSwipeWithTwoFingerDetector(){
                  swipeWithTwoFingerDetector =
-            object : SimpleTwoFingerSwipeDetector() {
+            object : SimpleTwoFingerSwipeDetector(context) {
                 override fun onTwoFingerSwipeDetector(event: MotionEvent?) {
-                    Toast.makeText(context,"double swipe on ${event?.x} and ${event?.y}",Toast.LENGTH_SHORT).show()
                     stopHandler()
                     val intent = Intent(context, CropViewFloatingWindowService::class.java)
                     intent.putExtra(NEW_POSITION_X,event?.x)
@@ -167,4 +236,5 @@ class CustomConstraintLayout @JvmOverloads constructor(
 
 
     }
+
 }

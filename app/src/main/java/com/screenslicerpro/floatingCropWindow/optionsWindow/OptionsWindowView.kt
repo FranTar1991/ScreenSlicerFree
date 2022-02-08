@@ -163,33 +163,16 @@ class OptionsWindowView (private val context: Context,
     }
 
 
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
 
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
 
         when(event?.actionMasked){
             ACTION_DOWN -> {
-                //remember the initial position.
-                initialX = params.x
-                initialY = params.y
-
-                //get the touch location
-                initialTouchX = event.rawX
-                initialTouchY = event.rawY
                 setChangeColor(v?.id, ACTION_DOWN)
             }
             ACTION_UP -> {
                 setChangeColor(v?.id, ACTION_UP)
-                if (initialX == params.x && initialY == params.y){
-                    onTouchButton(v?.id)
-                }
-            }
-
-            ACTION_MOVE -> {
-                //Calculate the X and Y coordinates of the view.
-                params.x = initialX + (event.rawX - initialTouchX).toInt()
-                params.y = initialY + (event.rawY - initialTouchY).toInt()
-
-                mWindowManager?.updateViewLayout(mFloatingView?.root, params);
+                onTouchButton(v?.id)
             }
         }
 

@@ -48,5 +48,12 @@
     <string name="launch_on_double_swipe">Iniciar con doble swipe (con dos dedos)</string>
     <string name="launch_on_gesture_settings">Configuración de gestos</string>
     <string name="privacy_policy">Política de privacidad</string>
-    <string name="exception_list">Lista de apps donde no funcionarán los gestos</string>
+    <string name="allowed_apps">Applicaciones permitidas.</string>
+    <string name="settings">Configuración</string>
+    <string name="permission_for_gestures">Para poder elegir las aplicaciones en las que esta función estará disponible, deberás buscar a ScreenSlicer en la siguiente lista y aceptar el permiso solicitado.</string>
+    <string name="no_apps_loaded">No hay aplicaciones permitidas aún…</string>
+    <string name="we_need_the_permission">Sin este permiso no podremos tomar las porciones de pantalla.</string>
+    <string name="turn_on_gestures_title">Si este switch está encendido y la notificación de Screen Slicer está en tu teléfono: </string>
+    <string name="description_gestures">Podrás iniciar la ventana de recorte desde cualquier aplicación y controlar las aplicaciones en donde esta función estará disponible.</string>
+
 </resources>

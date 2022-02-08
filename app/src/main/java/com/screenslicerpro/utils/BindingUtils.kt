@@ -7,6 +7,8 @@ import android.widget.ImageView
 import androidx.databinding.BindingAdapter
 import com.screenslicerpro.R
 import com.screenslicerpro.database.ScreenshotItem
+import com.screenslicerpro.gestures.action.database.AppItem
+import com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel
 import java.io.InputStream
 import java.lang.Exception
 
@@ -33,4 +35,26 @@ fun ImageView.setScreenshotUri(item: ScreenshotItem?) {
         }
 
 
+}
+
+
+@BindingAdapter("setIcon", "viewModel")
+fun ImageView.setIcon(item: AppItem?, viewModel: GestureSettingsViewModel) {
+    item?.let {
+
+        val uriExist: Boolean = try {
+            context.contentResolver.openInputStream(Uri.parse(item.appIconUri))
+            true
+        } catch (e: Exception) {
+            Log.e("MyDeleteRequest", "Exception $e")
+            false
+        }
+
+        if (uriExist) {
+            setImageURI(Uri.parse(item.appIconUri))
+        } else{
+            viewModel.onDelete(item)
+        }
+
+    }
 }

@@ -15,11 +15,15 @@
             app:destination="@id/viewPagerDetails" />
         <action
             android:id="@+id/action_mainFragment_to_gesturesFragmentSettings"
-            app:destination="@id/gesturesFragmentSettings" />
+            app:destination="@id/gesturesFragmentSettings"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"
+            app:popEnterAnim="@anim/from_right"
+            app:popExitAnim="@anim/to_right" />
     </fragment>
     <fragment
         android:id="@+id/viewPagerDetails"
-        android:name="com.screenslicerpro.detailsView.viewpager.ViewPagerDetails"
+        android:name="com.screenslicerpro.detailsView.viewpager.ViewPagerDetailsFragment"
         android:label="ViewPagerDetails" >
         <argument
             android:name="uri"

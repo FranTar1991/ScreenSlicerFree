@@ -43,9 +43,17 @@ import android.app.usage.UsageStats
 import android.os.Build.VERSION_CODES
 
 import android.os.Build.VERSION
+import android.util.Log
 
 import androidx.annotation.NonNull
 import androidx.core.content.PermissionChecker
+import com.screenslicerpro.gestures.action.database.AllAppsDatabase
+import com.screenslicerpro.gestures.action.database.AppItem
+import com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel
+import com.screenslicerpro.gestures.view.viewmodel.GesturesSettingsViewModelFactory
+import com.screenslicerpro.notification_utils.NotificationUtils
+import com.screenslicerpro.notification_utils.cancelNotification
+import com.screenslicerpro.notification_utils.setUpNotification
 
 
 //Use this variables instead of OnActivityResult
@@ -63,15 +71,19 @@ private var mData: Intent? = null
 class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener{
 
 
+
     private lateinit var screenshotViewModel: MainFragmentViewModel
     private val viewModel: MainActivityViewModel by viewModels()
+    private var gestureSettingsViewModel: GestureSettingsViewModel? = null
+
 
     private lateinit var permissionsDialog: PermissionsDialog
     private var myBroadcastReceiverToClose: BroadcastReceiver? = null
 
+
     //These are used to connect the Crop window service with it´s calling activity
     private var bound by Delegates.notNull<Boolean>()
-    private lateinit var cropServiceViewFloatingWindowService: CropViewFloatingWindowService
+    private var cropServiceViewFloatingWindowService: CropViewFloatingWindowService? = null
     private val cropViewFloatingWindowServiceConnection: ServiceConnection = object :
         ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -80,8 +92,8 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             cropServiceViewFloatingWindowService = binder.getService()
             bound = true
 
-            cropServiceViewFloatingWindowService.setServiceCallBacks(this@MainActivity, "connected") // register
-            permissionsDialog = PermissionsDialog()
+            cropServiceViewFloatingWindowService?.setServiceCallBacks(this@MainActivity, "connected") // register
+
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -117,20 +129,24 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         setTheme(R.style.Theme_PartialScreenshot)
 
         setContentView(R.layout.activity_main)
+
         closeAppFromNotification()
-
-        if(!permissionToSeForegroundApp()){
-            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-            startActivity(intent)
-        }
-
+        permissionsDialog = PermissionsDialog()
 
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
         val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
 
+        gestureSettingsViewModel = setGestureSettingsViewModel()
 
+        viewModel.destroyService.observe(this, Observer { destroyService->
+            if (destroyService)  {
+                cropServiceViewFloatingWindowService?.onDestroy()
+                cropServiceViewFloatingWindowService?.stopForeground(true)
 
+                viewModel.setDestroyService(false)
+            }
+        })
 
         screenshotViewModel =
             ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
@@ -141,8 +157,9 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            PermissionsDialog()
-                .show(supportFragmentManager, PERMISSION_TO_SAVE)
+
+            permissionsDialog
+                .showDialog(supportFragmentManager, PERMISSION_TO_SAVE)
         }
 
         viewModel.overlayCall.observe(this, Observer { call ->
@@ -158,67 +175,43 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
                 viewModel.checkIfHasOverlayPermission(true)
 
             }
-
-
-
         })
 
+        viewModel.cleanTourGuide.observe(this, Observer {
+            it?.let {
+               cropServiceViewFloatingWindowService?.closeTourGuide(it)
+            }
+        })
+
+
+
     }
 
-    override fun onUserLeaveHint() {
-     
-        Toast.makeText(this@MainActivity, "Home buton pressed", Toast.LENGTH_LONG).show()
-        super.onUserLeaveHint()
+
+    private fun setTheExceptionListObserver(){
+        gestureSettingsViewModel?.apps?.observe(this, Observer {list->
+            list?.let {
+                cropServiceViewFloatingWindowService?.apply {
+                    setNewExceptionList(list)
+                }
+
+            }
+        })
     }
 
-    private fun permissionToSeForegroundApp(): Boolean {
-        val appOps = baseContext.getSystemService(APP_OPS_SERVICE) as AppOpsManager
-
-        val mode = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
-            appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(), packageName)
-        } else {
-            appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(), packageName)
-        }
-
-
-        return if (mode == AppOpsManager.MODE_DEFAULT) {
-           if (VERSION.SDK_INT >= VERSION_CODES.M) {
-               checkCallingOrSelfPermission(PACKAGE_USAGE_STATS) == PackageManager.PERMISSION_GRANTED
-           } else {
-               //the permission was granted before the app was installed
-               true
-           }
-
-       } else {
-            (mode == AppOpsManager.MODE_ALLOWED);
-        }
+    private fun setGestureSettingsViewModel(): GestureSettingsViewModel? {
+        val dataSource = AllAppsDatabase.getInstance(application).appsDAO
+        val sharedPreferences = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE)
+        val viewModelFactory = GesturesSettingsViewModelFactory(dataSource, sharedPreferences, application)
+        return ViewModelProvider(this, viewModelFactory).get(
+            GestureSettingsViewModel::class.java)
     }
 
-    fun permissionToSeForegroundApp(context: Context): Boolean {
-        // Usage Stats is theoretically available on API v19+, but official/reliable support starts with API v21.
-        val appOpsManager = context.getSystemService(APP_OPS_SERVICE) as AppOpsManager
-            ?: return false
-        val mode = appOpsManager.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            Process.myUid(),
-            context.packageName
-        )
-        if (mode != AppOpsManager.MODE_ALLOWED) {
-            return false
-        }
 
-        // Verify that access is possible. Some devices "lie" and return MODE_ALLOWED even when it's not.
-        val now = System.currentTimeMillis()
-        val mUsageStatsManager = context.getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-        val stats = mUsageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_DAILY,
-            now - 1000 * 10,
-            now
-        )
-        return stats != null && stats.isNotEmpty()
+    fun getGestureViewModel(): GestureSettingsViewModel? {
+        return gestureSettingsViewModel
     }
+
 
     /**
      * bind the crop window service and the floating image window service so we can
@@ -254,7 +247,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
                 } else {
                     //show toast explaining that without this permission the app can´t work
-                    Toast.makeText(this, "Without this permission we won´t be able to take the screenshots",
+                    Toast.makeText(this, getString(R.string.we_need_the_permission),
                         Toast.LENGTH_SHORT).show()
                 }
             }
@@ -273,14 +266,14 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {
                     isGranted: Boolean ->
                 if (isGranted){
-                    cropServiceViewFloatingWindowService.screenShotTaker?.saveScreenshot()
+                    cropServiceViewFloatingWindowService?.screenShotTaker?.saveScreenshot()
 
                 } else {
 
                     Toast.makeText(this,getString(R.string.cant_save), Toast.LENGTH_SHORT).show()
                 }
                 viewModel.setPermissionToSaveCalled()
-                cropServiceViewFloatingWindowService.hideCropView(View.VISIBLE)
+                cropServiceViewFloatingWindowService?.hideCropView(View.VISIBLE)
             }
     }
 
@@ -374,24 +367,28 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      */
 
     override fun onDestroy() {
+        stopMyService()
+        super.onDestroy()
 
-            unregisterReceiver(myBroadcastReceiverToClose)
-            super.onDestroy()
-            if (bound) {
-                cropServiceViewFloatingWindowService.stopForeground(true)
-                cropServiceViewFloatingWindowService.setServiceCallBacks(null, "destroy") // unregister
+    }
 
-                unbindService(cropViewFloatingWindowServiceConnection)
-                bound = false
-            }
+    private fun stopMyService() {
+        unregisterReceiver(myBroadcastReceiverToClose)
 
-            if (floatingImageViewServiceBound){
-                unbindService(floatingImageViewServiceConnection)
-                floatingImageViewServiceBound = false
-            }
+        if (bound) {
+            cropServiceViewFloatingWindowService?.stopForeground(true)
+            cropServiceViewFloatingWindowService?.setServiceCallBacks(null, "destroy") // unregister
 
-            stopService(Intent(this, CropViewFloatingWindowService::class.java))
+            unbindService(cropViewFloatingWindowServiceConnection)
+            bound = false
+        }
 
+        if (floatingImageViewServiceBound){
+            unbindService(floatingImageViewServiceConnection)
+            floatingImageViewServiceBound = false
+        }
+
+        stopService(Intent(this, CropViewFloatingWindowService::class.java))
     }
 
     /**
@@ -416,7 +413,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      */
 
     private fun callPermissionToOverlayDialog() {
-            permissionsDialog.show(supportFragmentManager, PERMISSION_TO_OVERLAY)
+            permissionsDialog.showDialog(supportFragmentManager, PERMISSION_TO_OVERLAY)
     }
 
     /**
@@ -432,6 +429,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
      * have been granted.
      */
     private fun callCropWindow() {
+        setTheExceptionListObserver()
             val intent = Intent(this, CropViewFloatingWindowService::class.java)
             startService(intent)
     }

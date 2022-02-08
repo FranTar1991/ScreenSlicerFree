@@ -70,4 +70,10 @@ class PermissionsDialog(): DialogFragment() {
                     " must implement NoticeDialogListener"))
         }
     }
+
+    fun showDialog(supportFragmentManager: FragmentManager, PERMISSION_TO_SAVE: String){
+        if (!isAdded){
+            this.show(supportFragmentManager, PERMISSION_TO_SAVE)
+        }
+    }
 }

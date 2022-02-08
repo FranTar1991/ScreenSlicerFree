@@ -18,6 +18,7 @@
 
     </style>
 
+
     <style name="SplashTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
 
         <item name="colorPrimary">@color/primaryColor</item>

@@ -3,4 +3,5 @@
     <dimen name="top_tool_icon_width">50dp</dimen>
     <dimen name="another_finger_font_size">16sp</dimen>
     <dimen name="double_tap_font_size">12sp</dimen>
+    <dimen name="double_swipe_threshold">50dp</dimen>
 </resources>

@@ -2,12 +2,13 @@ package com.screenslicerpro.floatingCropWindow
 
 import android.app.Service
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
-import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.*
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import com.screenslicerpro.MainActivity
@@ -15,7 +16,10 @@ import com.screenslicerpro.R
 import com.screenslicerpro.floatingCropWindow.cropWindow.CropView
 import com.screenslicerpro.floatingCropWindow.cropWindow.ScreenShotTaker
 import com.screenslicerpro.gestures.action.CustomConstraintLayout
-import com.screenslicerpro.notification_utils.NotificationUtils
+import com.screenslicerpro.gestures.action.database.AppItem
+import com.screenslicerpro.gestures.view.GesturesFragmentSettings
+import com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel
+import com.screenslicerpro.notification_utils.setUpNotification
 import com.screenslicerpro.utils.*
 import tourguide.tourguide.TourGuide
 
@@ -24,7 +28,7 @@ class CropViewFloatingWindowService: Service() {
 
 
     private var floatingGestureView: CustomConstraintLayout? = null
-    private var drawableForSwitch: Int = R.drawable.ic_toggle_off
+    private var newDrawableOnSwitch: Int = R.drawable.ic_toggle_off
     private val SHOW_SECOND_TOUR: String ="show_second_tour"
     private var showTourGuide: Boolean = true
 
@@ -36,6 +40,7 @@ class CropViewFloatingWindowService: Service() {
     private var isGestureWindowOn = false
     private var sharedPreferences: SharedPreferences? = null
     private var editor: SharedPreferences.Editor? = null
+    private var gestureSettingsViewModel: GestureSettingsViewModel? = null
 
     private var manager: WindowManager? = null
 
@@ -58,55 +63,76 @@ class CropViewFloatingWindowService: Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startSharedPreferences()
         manager = WindowManagerClass.getMyWindowManager(applicationContext)
     }
 
     fun setServiceCallBacks(floatingAndTakeScreenShotServiceCallback: FloatingWindowListener?, from: String){
 
         takeScreenShotServiceCallback = floatingAndTakeScreenShotServiceCallback
+        gestureSettingsViewModel = (takeScreenShotServiceCallback as MainActivity).getGestureViewModel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        val currentDrawable = intent?.getIntExtra(MY_VIEW_ID,-1) ?: -1
+        startSharedPreferences()
+        newDrawableOnSwitch = getLaunchingDrawable()
+        val drawableInIntentExtra = getIntentExtra(intent)
         val newPosition = getNewPosition(intent)
-        Log.i("MyRects","newPos: $newPosition")
 
-        if(currentDrawable == -1 || currentDrawable == -2)
-       {
-           if (!isGestureWindowOn && drawableForSwitch == R.drawable.ic_toggle_on){
-
+        if(drawableInIntentExtra == -1) {
+           if (!isGestureWindowOn && newDrawableOnSwitch == R.drawable.ic_toggle_on){
                setUpGestureWidget()
            }
 
            if (!isCropWindowOn){
 
-               setUpNotification()
+               setUpNotification(applicationContext, newDrawableOnSwitch, this)
                setUpFloatingWidget(newPosition)
 
-               screenShotTaker = ScreenShotTaker(applicationContext, this, floatingView, takeScreenShotServiceCallback as MainActivity)
+               screenShotTaker = ScreenShotTaker(applicationContext,
+                   this,
+                   floatingView,
+                   takeScreenShotServiceCallback as MainActivity)
 
                mData = takeScreenShotServiceCallback?.getDataToRecordScreen()
 
 
            } else {
-               floatingView?.setDrawMyWaitDrawable()
-               shakeItBaby(applicationContext)
+               floatingView?.apply {
+                   removeMyWaitDrawable()
+                   manager?.removeMyView(this,
+                       ViewGroup.LayoutParams.WRAP_CONTENT,
+                       newPosition.first?.toInt() ?: 0,
+                       newPosition.second?.toInt() ?: 0)
+
+                   setNewPositionOfSecondRect(newPosition.first?.toInt() ?: 0,
+                       newPosition.second?.toInt() ?: 0)
+                   shakeItBaby(applicationContext)
+               }
            }
 
        }else {
-
-            drawableForSwitch = getNextDrawable(currentDrawable)
-            saveToSharedPreferences(drawableForSwitch)
-            setUpNotification()
-
-            isToAddOrRemove(drawableForSwitch)
-
+            if(checkIfHasPermission()){
+                newDrawableOnSwitch = getNextDrawable(drawableInIntentExtra)
+                saveToSharedPreferences()
+               setUpNotification(applicationContext,newDrawableOnSwitch, this)
+                addOrRemoveServiceView(newDrawableOnSwitch)
+            }else {
+                callSettingsActivity()
+            }
         }
 
 
         return START_NOT_STICKY
+    }
+
+    private fun callSettingsActivity() {
+        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+        intent.flags = FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+    }
+
+    private fun getIntentExtra(intent: Intent?): Int {
+        return intent?.getIntExtra(MY_INTENT_EXTRA, -1) ?: -1
     }
 
     private fun getNewPosition(intent: Intent?): Pair<Float?,Float?> {
@@ -116,25 +142,44 @@ class CropViewFloatingWindowService: Service() {
 
     }
 
-    private fun isToAddOrRemove(currentDrawable: Int) {
+    private fun addOrRemoveServiceView(currentDrawable: Int) {
 
         when(currentDrawable){
-            R.drawable.ic_toggle_on ->{ setUpGestureWidget()}
+            R.drawable.ic_toggle_on ->{
+                destroyCurrentCropAndOptionsWindow()
+                setUpGestureWidget()
+            }
             R.drawable.ic_toggle_off ->{ manager?.removeView(floatingGestureView)}
         }
     }
 
     private fun getNextDrawable(currentDrawable: Int): Int {
-        return if (currentDrawable == R.drawable.ic_toggle_on){
-            R.drawable.ic_toggle_off
-        } else{
+
+        return if (currentDrawable == R.drawable.ic_toggle_off){
             R.drawable.ic_toggle_on
+        } else{
+            R.drawable.ic_toggle_off
         }
     }
 
-    private fun saveToSharedPreferences(currentDrawable: Int) {
-        editor?.putInt(MY_VIEW_ID,currentDrawable)
-        editor?.apply()
+    private fun saveToSharedPreferences(){
+
+        if (newDrawableOnSwitch == R.drawable.ic_toggle_on){
+            editor?.putBoolean(MY_VIEW_ID, true)
+
+        } else{
+            editor?.putBoolean(MY_VIEW_ID, false)
+        }
+
+        editor?.commit()
+
+
+    }
+
+    private fun checkIfHasPermission(): Boolean {
+
+        val viewModel = (takeScreenShotServiceCallback as MainActivity).getGestureViewModel()
+        return (viewModel?.checkIfHasPermission(applicationContext) == true)
     }
 
     private fun setUpGestureWidget() {
@@ -153,6 +198,9 @@ class CropViewFloatingWindowService: Service() {
         floatingGestureView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(p0: View?) {
                 isGestureWindowOn = true
+                floatingGestureView?.apply{
+                    setListOfAppsInException(gestureSettingsViewModel?.apps?.value)
+                }
             }
 
             override fun onViewDetachedFromWindow(p0: View?) {
@@ -161,54 +209,53 @@ class CropViewFloatingWindowService: Service() {
 
         }
         )
+        floatingGestureView?.setUpGesturesViewModel(gestureSettingsViewModel)
 
     }
 
     private fun startSharedPreferences() {
-        sharedPreferences = getSharedPreferences("MyPref", MODE_PRIVATE)
+        sharedPreferences = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE)
         showTourGuide =  sharedPreferences?.getBoolean(SHOW_SECOND_TOUR, true) ?: true
         editor = sharedPreferences?.edit()
-        drawableForSwitch = sharedPreferences?.getInt(MY_VIEW_ID,R.drawable.ic_toggle_off) ?: R.drawable.ic_toggle_off
+
+        println("new drawable: ${sharedPreferences?.getBoolean(MY_VIEW_ID, false)}")
+    }
+
+    private fun getLaunchingDrawable(): Int {
+      return  if(sharedPreferences?.getBoolean(MY_VIEW_ID, false) == false){
+            R.drawable.ic_toggle_off
+        } else{
+            R.drawable.ic_toggle_on
+        }
     }
 
     fun hideCropView(visibility: Int){
         floatingView?.visibility = visibility
         screenShotTaker?.optionsWindowView?.hideOptionsView(visibility)
     }
-    private fun setUpNotification() {
 
-        // create notification
-        val notification = NotificationUtils.getNotification(this,
-            NotificationUtils.N_ID_F_ScreenShot, drawableForSwitch)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-            startForeground(
-                notification.first,
-                notification.second,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-            )
-        }else{
-            startForeground(
-                notification.first,
-                notification.second
-            )
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
+       destroyCurrentCropAndOptionsWindow()
+        destroyCurrentGesturesWindow()
+    }
+
+    private fun destroyCurrentCropAndOptionsWindow() {
+
         if(floatingView?.isShown == true){
             manager?.removeView(floatingView)
             screenShotTaker?.optionsWindowView?.destroyView()
         }
+    }
 
+    private fun destroyCurrentGesturesWindow(){
         if (floatingGestureView?.isShown == true){
             manager?.removeView(floatingGestureView)
         }
-
     }
 
-     private fun setUpFloatingWidget(newPosition: Pair<Float?, Float?>) {
+    private fun setUpFloatingWidget(newPosition: Pair<Float?, Float?>) {
 
         floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null) as CropView
         floatingView?.setOnRequestTakeScreenShotListener(object: OnRequestTakeScreenShotListener {
@@ -219,13 +266,7 @@ class CropViewFloatingWindowService: Service() {
             }
 
             override fun cleanUpMyTourGuide() {
-                mTourGuideHandler?.cleanUp()
-                if(showTourGuide){
-                    val editor: SharedPreferences.Editor? = sharedPreferences?.edit()
-                    editor?.putBoolean(SHOW_SECOND_TOUR, false)
-                    editor?.apply()
-                }
-
+               closeTourGuide(SHOW_SECOND_TOUR)
             }
         })
 
@@ -243,11 +284,8 @@ class CropViewFloatingWindowService: Service() {
         )
 
 
-
-         Log.i("MyRects","newPos after: ${newPosition.first?.toInt()} and ${newPosition.second?.toInt()}")
-
          manager?.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,
-         INITIAL_POINT_X, INITIAL_POINT_Y)
+         newPosition.first?.toInt() ?: 0, newPosition.second?.toInt() ?: 0)
 
 
 
@@ -262,13 +300,26 @@ class CropViewFloatingWindowService: Service() {
 
     }
 
+     fun closeTourGuide(key: String) {
+        mTourGuideHandler?.cleanUp()
+        if(showTourGuide){
+            editor?.putBoolean(key, false)
+            editor?.apply()
+        }
+    }
+
 
     fun setCroppedImage(croppedBitmap: Bitmap?) {
         floatingView?.croppedImage = croppedBitmap
     }
 
+    fun setNewExceptionList(listOfAppsInException: List<AppItem>) {
 
+        floatingGestureView?.apply {
+            setListOfAppsInException(listOfAppsInException)
+        }
 
+    }
 }
 
 

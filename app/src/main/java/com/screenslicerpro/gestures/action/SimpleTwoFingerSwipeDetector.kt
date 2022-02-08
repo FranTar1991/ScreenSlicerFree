@@ -1,18 +1,20 @@
 package com.screenslicerpro.gestures.action
 
+import android.content.Context
 import android.util.Log
 import android.view.MotionEvent
+import com.screenslicerpro.R
 import kotlin.math.abs
 
 enum class AllModes {SWIPE,NONE}
 
-abstract class SimpleTwoFingerSwipeDetector {
+abstract class SimpleTwoFingerSwipeDetector(val context: Context) {
 
     private var p2StopY: Float = 0f
     private var p1StopY: Float = 0f
     private var p2StartY: Float = 0f
     private var p1StartY: Float = 0f
-    private val DOUBLE_SWIPE_THRESHOLD: Long = 100
+    private val DOUBLE_SWIPE_THRESHOLD: Long = context.resources.getDimensionPixelSize(R.dimen.another_finger_font_size).toLong()
     private lateinit var mode: AllModes
     fun onTouchEvent(event: MotionEvent): Boolean {
 

@@ -84,7 +84,6 @@
                 app:layout_constraintTop_toTopOf="@+id/save_bk"
                 />
 
-
             <ImageView
 
                 android:id="@+id/edit_bk"

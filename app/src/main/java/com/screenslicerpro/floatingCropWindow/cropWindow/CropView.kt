@@ -223,7 +223,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
     }
 
-    fun setDrawMyWaitDrawable(){
+    fun removeMyWaitDrawable(){
         drawWaitDrawable = false
     }
     private fun setHandler(){
@@ -238,7 +238,7 @@ class CropView @JvmOverloads constructor(context: Context,
     }
 
     private fun startSharedPreferences() {
-        sharedPreferences = context.getSharedPreferences("MyPref", MODE_PRIVATE)
+        sharedPreferences = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE)
         showDoubleTapString =  sharedPreferences?.getBoolean(SHOW_DOUBLE_TAP_STRING, true) ?: true
         showPutAnotherFingerString = sharedPreferences?.getBoolean(SHOW_ANOTHER_FINGER_STRING, true) ?: true
     }
@@ -390,13 +390,15 @@ class CropView @JvmOverloads constructor(context: Context,
     }
     fun resetView(){
 
-        setInitialRects()
+
         INITIAL_POINT_Y = 0
         INITIAL_POINT_X = 0
+        setInitialRects()
         moveView = false
         attacher.setZoomable(false)
         this.newX = INITIAL_POINT_X
         this.newY = INITIAL_POINT_Y
+
         manager.removeMyView(this, WRAP_CONTENT, INITIAL_POINT_X, INITIAL_POINT_Y)
         drawWaitDrawable = false
         stopHandler()
@@ -1144,6 +1146,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
         insideRectPoints[3].x = (zeroPosX + xSide)
         insideRectPoints[3].y = (zeroPosY  + ySide)
+
 
     }
     private fun changeWrapMode(mode: Int, isToClose: Boolean = false){

@@ -14,11 +14,13 @@ import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.view.ActionMode
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
+import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.BounceInterpolator
 import android.view.animation.TranslateAnimation
@@ -28,12 +30,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.ContextCompat.startActivity
 import androidx.room.Room
 import com.google.android.datatransport.runtime.backends.BackendResponse.ok
 import com.screenslicerpro.MainActivity
 import com.screenslicerpro.R
 import com.screenslicerpro.database.ScreenshotItem
 import com.screenslicerpro.database.ScreenshotsDatabase
+import com.screenslicerpro.gestures.action.database.AppItem
 import com.screenslicerpro.main_fragment.MainFragmentViewModel
 import org.chromium.base.CollectionUtil.forEach
 import tourguide.tourguide.ToolTip
@@ -59,6 +63,7 @@ const val STOP_INTENT = "com.partialscreenshot.stop"
 const val PERMISSION_TO_OVERLAY ="overlay"
 const val PERMISSION_TO_SAVE ="save"
 const val MY_VIEW_ID = "My_view_id"
+const val MY_INTENT_EXTRA= "my_intent_extra"
 const val NEW_POSITION_X ="new_pos_x"
 const val NEW_POSITION_Y ="new_pos_y"
 const val allFlags = FLAG_WATCH_OUTSIDE_TOUCH or
@@ -67,6 +72,10 @@ const val allFlags = FLAG_WATCH_OUTSIDE_TOUCH or
         FLAG_ALT_FOCUSABLE_IM or
         FLAG_NOT_FOCUSABLE or
         FLAG_NOT_TOUCHABLE
+
+const val FROM_NOTIFICATION = "from notification"
+
+const val MY_PREFS_NAME: String ="settings_shared_preferences"
 
 const val flags = FLAG_NOT_FOCUSABLE or FLAG_LAYOUT_IN_SCREEN
  var INITIAL_POINT_Y = 0
@@ -127,6 +136,8 @@ val Int.dp: Int
 
     return url
 }
+
+
 private fun storeThumbnail(cr: ContentResolver, source: Bitmap, id: Long, width: Float, height: Float, kind: Int): Bitmap? {
 
     // create the matrix to scale it
@@ -247,6 +258,12 @@ fun copyTextToClipboard(context: Context, source: String){
     animation.fillAfter = true
     animation.interpolator = BounceInterpolator()
 
+     val exitAnimation = AlphaAnimation(1f, 0f)
+         .apply {
+             duration = 600
+             fillAfter = true
+         }
+
     val toolTip = ToolTip()
         .setTextColor(ContextCompat.getColor(activity, R.color.secondaryTextColor))
         .setBackgroundColor(ContextCompat.getColor(activity.applicationContext, R.color.secondaryColor))
@@ -263,8 +280,8 @@ fun copyTextToClipboard(context: Context, source: String){
         .playOn(view)
 }
 
-fun createActionDialog(actionToTake: ()-> Unit, activity: MainActivity, title: String,
-                       message: String, actionMode: ActionMode?){
+fun createActionDialog(activity: MainActivity, title: String,
+                       message: String, actionMode: ActionMode?,actionToTake: ()-> Unit){
     val alertDialogBuilder: AlertDialog.Builder? = activity?.let {
         val builder = AlertDialog.Builder(it)
 
@@ -289,4 +306,8 @@ fun createActionDialog(actionToTake: ()-> Unit, activity: MainActivity, title: S
 
 class ScreenshotListener(val clickListener: (view: View, uri: String) -> Unit){
     fun onClick(view: View, screenshot: ScreenshotItem) = clickListener(view,screenshot.uri)
+}
+
+class AppClickListener(val clickListener: (view: View, app: AppItem) -> Unit){
+    fun onClick(view: View, app: AppItem) = clickListener(view,app)
 }
