@@ -1,4 +1,4 @@
-package com.screenslicerpro
+package com.screenslicerfree
 
 import org.junit.Test
 

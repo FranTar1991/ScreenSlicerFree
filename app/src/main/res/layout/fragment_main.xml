@@ -7,7 +7,7 @@
         <import type="android.view.View"/>
         <variable
             name="allScreenshotsViewModel"
-            type="com.screenslicerpro.main_fragment.MainFragmentViewModel" />
+            type="com.screenslicerfree.main_fragment.MainFragmentViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -42,6 +42,15 @@
                 android:text="@string/app_name"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/pro_on_view"
+                android:layout_gravity="end"
+                android:layout_margin="8dp"
+                android:src="@drawable/ic_vector_pro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
 
         </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>

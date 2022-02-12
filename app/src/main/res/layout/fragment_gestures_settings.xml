@@ -7,7 +7,7 @@
 
         <variable
             name="gestureSettingsViewModel"
-            type="com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel" />
+            type="com.screenslicerfree.gestures.view.viewmodel.GestureSettingsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -163,6 +163,16 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/constraintLayout2" />
+
+        <ImageView
+            android:id="@+id/proImage"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginBottom="30dp"
+            android:layout_marginEnd="-24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/switch1"
+            app:layout_constraintEnd_toStartOf="@+id/switch1"
+            app:srcCompat="@drawable/pro_vector" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

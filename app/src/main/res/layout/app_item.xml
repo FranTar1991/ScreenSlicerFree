@@ -6,14 +6,14 @@
     <data>
         <variable
             name="app"
-            type="com.screenslicerpro.gestures.action.database.AppItem" />
+            type="com.screenslicerfree.gestures.action.database.AppItem" />
         <variable
             name="viewModel"
-            type="com.screenslicerpro.gestures.view.viewmodel.GestureSettingsViewModel" />
+            type="com.screenslicerfree.gestures.view.viewmodel.GestureSettingsViewModel" />
 
         <variable
             name="clickListener"
-            type="com.screenslicerpro.utils.AppClickListener"/>
+            type="com.screenslicerfree.utils.AppClickListener"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

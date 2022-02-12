@@ -81,8 +81,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/save_bk"
                 app:layout_constraintEnd_toEndOf="@+id/save_bk"
                 app:layout_constraintStart_toStartOf="@+id/save_bk"
-                app:layout_constraintTop_toTopOf="@+id/save_bk"
-                />
+                app:layout_constraintTop_toTopOf="@+id/save_bk" />
 
             <ImageView
 
@@ -131,6 +130,16 @@
                 app:layout_constraintStart_toStartOf="@+id/extract_text_bk"
                 app:layout_constraintTop_toTopOf="@+id/extract_text_bk" />
 
+            <ImageView
+                android:id="@+id/pro_vector"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="12dp"
+                android:src="@drawable/vector_pro"
+                app:layout_constraintBottom_toBottomOf="@+id/extract_text"
+                app:layout_constraintEnd_toEndOf="@+id/extract_text" />
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -141,7 +150,8 @@
             android:layout_marginBottom="4dp"
             android:src="@drawable/rounded_button"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/main_btn_container"
+            app:layout_constraintStart_toStartOf="@+id/main_btn_container"
             app:layout_constraintTop_toBottomOf="@+id/main_btn_container" />
 
         <ImageView
@@ -150,7 +160,7 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_min"
             app:layout_constraintBottom_toBottomOf="@+id/min_max_bk"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/min_max_bk"
             app:layout_constraintStart_toStartOf="@+id/min_max_bk"
             app:layout_constraintTop_toTopOf="@+id/min_max_bk" />
 
@@ -238,6 +248,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 
 

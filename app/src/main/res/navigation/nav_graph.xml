@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.screenslicerpro.main_fragment.MainFragment"
+        android:name="com.screenslicerfree.main_fragment.MainFragment"
         android:label="fragment_main"
         tools:layout="@layout/fragment_main" >
         <action
@@ -20,10 +20,17 @@
             app:exitAnim="@android:anim/fade_out"
             app:popEnterAnim="@anim/from_right"
             app:popExitAnim="@anim/to_right" />
+        <action
+            android:id="@+id/action_mainFragment_to_proVersionFragment"
+            app:destination="@id/proVersionFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out" />
     </fragment>
     <fragment
         android:id="@+id/viewPagerDetails"
-        android:name="com.screenslicerpro.detailsView.viewpager.ViewPagerDetailsFragment"
+        android:name="com.screenslicerfree.detailsView.viewpager.ViewPagerDetailsFragment"
         android:label="ViewPagerDetails" >
         <argument
             android:name="uri"
@@ -31,6 +38,10 @@
     </fragment>
     <fragment
         android:id="@+id/gesturesFragmentSettings"
-        android:name="com.screenslicerpro.gestures.view.GesturesFragmentSettings"
+        android:name="com.screenslicerfree.gestures.view.GesturesFragmentSettings"
         android:label="GesturesFragmentSettings" />
+    <fragment
+        android:id="@+id/proVersionFragment"
+        android:name="com.screenslicerfree.main_fragment.ProVersionFragment"
+        android:label="ProVersionFragment" />
 </navigation>

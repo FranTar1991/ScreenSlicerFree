@@ -62,4 +62,8 @@
     <string name="we_need_the_permission">"Without this permission we won´t be able to take the screen slices."</string>
     <string name="turn_on_gestures_title">If this switch is on and the Screen Slicer notification is on: </string>
     <string name="description_gestures">You will be able to pull up the screen slicer window from any app and control the apps in which this feature will work.</string>
+    <string name="only_pro">The option %1$s is only available in the pro version of this app.</string>
+    <string name="extract_text"> to extract the text</string>
+    <string name="gesture_feature"> to use double swipe</string>
+    <string name="buy_pro">buy pro</string>
 </resources>

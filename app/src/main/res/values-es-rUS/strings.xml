@@ -55,5 +55,8 @@
     <string name="we_need_the_permission">Sin este permiso no podremos tomar las porciones de pantalla.</string>
     <string name="turn_on_gestures_title">Si este switch está encendido y la notificación de Screen Slicer está en tu teléfono: </string>
     <string name="description_gestures">Podrás iniciar la ventana de recorte desde cualquier aplicación y controlar las aplicaciones en donde esta función estará disponible.</string>
-
+    <string name="only_pro">La opción de %1$s está solamente disponible en la versión de paga.</string>
+    <string name="extract_text">extraer el texto</string>
+    <string name="gesture_feature">usar doble swipe</string>
+    <string name="buy_pro">version pro</string>
 </resources>
