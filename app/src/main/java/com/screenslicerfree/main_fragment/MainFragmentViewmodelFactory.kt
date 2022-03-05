@@ -6,13 +6,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.screenslicerfree.database.DAOScrenshots
 
 class MainFragmentViewmodelFactory (
-    private val dataSource: DAOScrenshots,
-    private val application: Application
+    private val dataSource: DAOScrenshots
 ) : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainFragmentViewModel::class.java)) {
-            return MainFragmentViewModel(dataSource, application) as T
+            return MainFragmentViewModel(dataSource) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

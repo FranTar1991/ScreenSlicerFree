@@ -1,22 +1,19 @@
 package com.screenslicerfree.utils
 
-import android.content.Context
-import android.net.Uri
-import android.widget.Toast
+import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.google.android.gms.ads.interstitial.InterstitialAd
 
-class MainActivityViewModel : ViewModel() {
+class MainActivityViewModel() : ViewModel() {
     private val mutableOverlayCall = MutableLiveData<Boolean>()
     val overlayCall: LiveData<Boolean> get() = mutableOverlayCall
 
     private val _imageInFloatingWindowUri = MutableLiveData<String?>()
     val imageInFloatingWindow
             get() = _imageInFloatingWindowUri
+
 
     private val _permissionToSaveCalled = MutableLiveData<Boolean>()
     val permissionToSaveCalled
@@ -27,6 +24,8 @@ class MainActivityViewModel : ViewModel() {
     val destroyService
         get() = _destroyService
 
+
+
     private val _cleanTourGuide = MutableLiveData<String>()
     val cleanTourGuide
         get() = _cleanTourGuide
@@ -34,6 +33,7 @@ class MainActivityViewModel : ViewModel() {
     fun setDestroyService(value: Boolean){
         _destroyService.value = value
     }
+
 
     fun setPermissionToSaveCalled(){
         _permissionToSaveCalled.value = true
@@ -59,6 +59,7 @@ class MainActivityViewModel : ViewModel() {
     fun setCleanTourGuide(key: String) {
         _cleanTourGuide.value = key
     }
+
 
 
 }

@@ -40,7 +40,7 @@
     <string name="double_tap">Double\ntap\nthis to\nclose</string>
 
     <string name="extract_this_text">Extract Text Action</string>
-    <string name="extract_this_text_message">The text will be extracted and copied to the clipboard.</string>
+    <string name="extract_this_text_message">This is a pro feature. Watch an ad and you will be able to extract the text. </string>
     <string name="description_cropt_view_tut">Drag this window from its corners, and release to get a slice of your screen. Double tap to close it or to remove the current slice.</string>
     <string name="title_welcome">Welcome!</string>
     <string name="already_on">Slicer window is already open</string>
@@ -48,7 +48,7 @@
     <string name="screenshot_saved">Screen slice Saved</string>
     <string name="screenshot_deleted">Screen slice Deleted</string>
     <string name="extracting">Extracting text, please wait…</string>
-    <string name="text_copied">Text copied!</string>
+    <string name="text_copied">The text was extracted and it´s ready to be pasted!</string>
     <string name="description_first_tour">Click here to start slicing your screen.</string>
     <string name="cant_save">Sorry, you won´t be able to save or share any screen slice then</string>
     <string name="title_crop_view_tut">Slice your screen now.</string>
@@ -66,4 +66,13 @@
     <string name="extract_text"> to extract the text</string>
     <string name="gesture_feature"> to use double swipe</string>
     <string name="buy_pro">buy pro</string>
+    <string name="no_more_adds">Get no more adds.</string>
+    <string name="use_gestures">Launch on double swipe.</string>
+    <string name="extract_text_pro">Extract the text on the image.</string>
+    <string name="help_me_improve">Help me create better apps.</string>
+    <string name="why_buy_pro">With pro you will:</string>
+    <string name="privacy_policy_url">"https://sites.google.com/view/appclaud-privacy-policy/home"</string>
+    <string name="ad_not_loaded">The ad was not loaded, try again later.</string>
+    <string name="o_k">Ok</string>
+
 </resources>

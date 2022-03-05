@@ -241,7 +241,7 @@ class OptionsWindowView (private val context: Context,
     }
 
     private fun getTextFromImage() {
-        copyTextToClipboard(context, extractedTextEt?.text.toString())
+        copyTextToClipboard(context, extractedTextEt?.text.toString(), null)
 
         extractedTextEt?.setText("", TextView.BufferType.EDITABLE)
         extractedTextContainer?.visibility = GONE

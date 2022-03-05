@@ -1,4 +1,4 @@
-package com.screenslicerfree.main_fragment
+package com.screenslicerfree
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -8,14 +8,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.findNavController
-import com.screenslicerfree.R
 import com.screenslicerfree.databinding.FragmentProVersionBinding
 
 
 class ProVersionFragment : Fragment() {
 
+
+    private lateinit var toolbar: Toolbar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +30,9 @@ class ProVersionFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding: FragmentProVersionBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_pro_version, container, false)
+        binding.lifecycleOwner = activity
 
-
-        val toolbar = binding.toolBarPro
+        toolbar = binding.toolBarPro
         binding.launchButton.setOnClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.screenslicerpro")))
@@ -39,12 +41,13 @@ class ProVersionFragment : Fragment() {
             }
         }
 
+
         toolbar.apply {
             setNavigationOnClickListener(View.OnClickListener {
                 this.findNavController().navigateUp()
             })
         }
-        return inflater.inflate(R.layout.fragment_pro_version, container, false)
+        return binding.root
     }
 
 }

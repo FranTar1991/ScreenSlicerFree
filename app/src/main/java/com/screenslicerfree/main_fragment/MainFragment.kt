@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.*
 import android.view.View.OnLayoutChangeListener
 import android.widget.ImageView
@@ -22,6 +23,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.selection.Selection
@@ -31,6 +33,8 @@ import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.screenslicerfree.MainActivity
 import com.screenslicerfree.MainActivity.Companion.currentPosition
@@ -42,6 +46,7 @@ import com.screenslicerfree.main_fragment.adapter.MyItemKeyProvider
 import com.screenslicerfree.main_fragment.adapter.ScreenshotsAdapter
 import com.screenslicerfree.utils.*
 import com.screenslicerfree.R
+import com.screenslicerfree.adds.*
 import com.screenslicerfree.databinding.FragmentMainBinding
 
 import tourguide.tourguide.TourGuide
@@ -50,12 +55,17 @@ import tourguide.tourguide.TourGuide
 class MainFragment : Fragment() {
 
 
+    private lateinit var passsedScreenshotUri: String
+    private lateinit var extras: FragmentNavigator.Extras
+
     private lateinit var proIconOnToolbar: ImageView
     private var myTourGuide: TourGuide?= null
     private lateinit var floatingButton: FloatingActionButton
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewClicked: ImageView
     private var allSelected: Boolean = false
+
+    private lateinit var myInterstitialAdManager: MyInterstitialAd
 
     private lateinit var mHandler: Handler
     private lateinit var mRunnable: Runnable
@@ -148,9 +158,10 @@ class MainFragment : Fragment() {
 
     private fun shareThisItem(){
         val files: ArrayList<Uri> = ArrayList<Uri>()
-        uriList.forEach {
+        screenshotsSelected.toList().forEach {
             files.add(Uri.parse(it))
         }
+        Log.i("MyListToShare","$files")
 
         val sendIntent = Intent().apply {
             type = "image/jpeg"
@@ -184,11 +195,12 @@ class MainFragment : Fragment() {
 
         val application = requireNotNull(this.activity).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
-        val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
+        val viewModelFactory = MainFragmentViewmodelFactory(dataSource)
 
         setHandler()
         mainFragmentViewModel =
             ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
+
 
 
         binding.allScreenshotsViewModel = mainFragmentViewModel
@@ -205,7 +217,7 @@ class MainFragment : Fragment() {
                 }
                 R.id.privacy_policy_on_menu -> {
 
-                    launchInBrowser(context, Uri.parse("https://sites.google.com/view/appclaud-privacy-policy/home"))
+                    launchInBrowser(context, Uri.parse(getString(R.string.privacy_policy_url)))
                     true
                 }
                  R.id.pro_on_menu ->{
@@ -240,14 +252,18 @@ class MainFragment : Fragment() {
             }
         })
 
+        myInterstitialAdManager = MyInterstitialAd(activity as MainActivity,
+            launchToDetailsInterstitialUnitID,
+            true,
+            null,
+            ::launchDetailsView)
+
         mainFragmentViewModel.navigateToScreenshot.observe(viewLifecycleOwner, Observer { screenshotUri ->
             screenshotUri?.let {
                 actionMode?.finish()
-                val extras = FragmentNavigatorExtras(viewClicked to "large_image_$screenshotUri")
-                this.findNavController()
-                    .navigate(MainFragmentDirections.actionMainFragmentToViewPagerDetails(screenshotUri),
-                        extras)
-                mainFragmentViewModel.onScreenshotNavigated()
+                extras = FragmentNavigatorExtras(viewClicked to "large_image_$screenshotUri")
+                passsedScreenshotUri = screenshotUri
+                myInterstitialAdManager.showInterstitial()
             }
         })
 
@@ -322,10 +338,12 @@ class MainFragment : Fragment() {
             }
         })
 
-
+        loadBanner(binding.adView)
 
         return binding.root
     }
+
+
 
     private fun launchProVersionInGooglePlay() {
         mainFragmentViewModel.onNavigateToProClicked()
@@ -416,6 +434,7 @@ class MainFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+       myInterstitialAdManager.loadInterstitial()
         startHandler()
     }
 
@@ -451,5 +470,12 @@ class MainFragment : Fragment() {
     }
 
 
-
+    private fun launchDetailsView() {
+        this.findNavController()
+            .navigate(MainFragmentDirections.actionMainFragmentToViewPagerDetails(passsedScreenshotUri),
+                extras)
+        mainFragmentViewModel.onScreenshotNavigated()
+    }
 }
+
+

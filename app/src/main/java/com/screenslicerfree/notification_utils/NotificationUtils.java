@@ -84,7 +84,6 @@ public class NotificationUtils {
 
         setHomeIntent(context, notificationLayout);
         setCloseIntent(context, notificationLayout);
-        setGesturesIntent(context, notificationLayout, drawable, cropWindowIntent);
         setCropWindowIntent(context, notificationLayout, cropWindowIntent);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
@@ -112,23 +111,7 @@ public class NotificationUtils {
         notificationLayout.setOnClickPendingIntent(R.id.close_btn,closePendingIntent);
     }
 
-    private static void setGesturesIntent(Context context, RemoteViews notificationLayout,
-                                          int drawable,
-                                          Intent gesturesWindowIntent) {
 
-
-        gesturesWindowIntent.putExtra(MY_INTENT_EXTRA,drawable);
-
-        PendingIntent gesturePendingIntent = PendingIntent.getService(context,
-                0,
-                gesturesWindowIntent,
-                updateFlag);
-        notificationLayout.setOnClickPendingIntent(R.id.toggle_button, gesturePendingIntent);
-
-        notificationLayout.setImageViewResource(R.id.toggle_button,drawable);
-
-
-    }
     @SuppressLint("UnspecifiedImmutableFlag")
     private static void setCropWindowIntent(Context context,
                                             RemoteViews notificationLayout,

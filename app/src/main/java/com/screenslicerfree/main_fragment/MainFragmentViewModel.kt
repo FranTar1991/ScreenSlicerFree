@@ -3,14 +3,18 @@ package com.screenslicerfree.main_fragment
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.screenslicerfree.database.ScreenshotItem
 import com.screenslicerfree.database.DAOScrenshots
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainFragmentViewModel  (val database: DAOScrenshots, application: Application) : AndroidViewModel(application) {
+class MainFragmentViewModel  (val database: DAOScrenshots)
+    : ViewModel() {
 
 
     private val _screenshots = database.getAllScreenshots()
@@ -20,6 +24,7 @@ class MainFragmentViewModel  (val database: DAOScrenshots, application: Applicat
     private val _screenshotCount = MutableLiveData<Int>()
     val screenshotCount
         get() = _screenshotCount
+
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading
@@ -37,9 +42,11 @@ class MainFragmentViewModel  (val database: DAOScrenshots, application: Applicat
     val navigateToProFragment
         get() = _navigateToProFragment
 
+
     fun setScreenShotCount(count: Int) {
         _screenshotCount.value = count
     }
+
 
     fun setIsLoading(isLoading: Boolean){
         _isLoading.value = isLoading

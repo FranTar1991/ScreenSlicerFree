@@ -3,35 +3,39 @@ package com.screenslicerfree.floatingCropWindow.cropWindow
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.view.MotionEvent.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.LinearLayout
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.drawable.DrawableCompat
+import com.github.chrisbanes.photoview.PhotoView
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.screenslicerfree.R
-
 import com.screenslicerfree.floatingCropWindow.optionsWindow.OptionsWindowView
 import com.screenslicerfree.utils.*
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
-import androidx.appcompat.content.res.AppCompatResources
-import com.github.chrisbanes.photoview.PhotoView
-import android.content.Context.MODE_PRIVATE
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 
 
 // endregion
@@ -56,7 +60,7 @@ typealias styles = R.styleable
 @SuppressLint("AppCompatCustomView")
 class CropView @JvmOverloads constructor(context: Context,
                                          attrs: AttributeSet? = null,
-                                         defStyleAttr: Int = 0): PhotoView(context,attrs, defStyleAttr) {
+                                         defStyleAttr: Int = 0): PhotoView(context,attrs, defStyleAttr), ViewMobil {
 
 
     override fun setImageDrawable(drawable: Drawable?) {
@@ -69,6 +73,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
 
     }
+
 
 
 
@@ -221,7 +226,10 @@ class CropView @JvmOverloads constructor(context: Context,
         startHandler()
         setInitialRects()
 
+
     }
+
+
 
     fun removeMyWaitDrawable(){
         drawWaitDrawable = false
@@ -427,7 +435,6 @@ class CropView @JvmOverloads constructor(context: Context,
                    setImageBitmap(null)
                    drawMyBackground(this)
                    drawMyRect(this, insideRectPoints)
-
                    setCloseDrawable(canvas)
 
                } else{
@@ -825,7 +832,7 @@ class CropView @JvmOverloads constructor(context: Context,
     }
 
     //region: Set callbacks
-    fun setWindowManagerCallback(onVIewCropWindowListener: OnMoveCropWindowListener){
+    override fun setWindowManagerCallback(onVIewCropWindowListener: OnMoveCropWindowListener){
         this.callBackForWindowManager = onVIewCropWindowListener
     }
     fun setOnRequestTakeScreenShotListener(onRequestTakeScreenShotListener: OnRequestTakeScreenShotListener){

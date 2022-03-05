@@ -42,6 +42,6 @@
         android:label="GesturesFragmentSettings" />
     <fragment
         android:id="@+id/proVersionFragment"
-        android:name="com.screenslicerfree.main_fragment.ProVersionFragment"
+        android:name="com.screenslicerfree.ProVersionFragment"
         android:label="ProVersionFragment" />
 </navigation>

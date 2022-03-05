@@ -3,41 +3,30 @@ package com.screenslicerfree.utils
 import android.app.Activity
 import android.content.*
 import android.content.res.Resources
-import android.database.Cursor
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.Matrix
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
-import android.provider.Settings
 import android.util.Log
 import android.view.ActionMode
 import android.view.View
-import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.BounceInterpolator
 import android.view.animation.TranslateAnimation
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.ContextCompat.startActivity
-import androidx.room.Room
-import com.google.android.datatransport.runtime.backends.BackendResponse.ok
+import com.google.android.material.snackbar.Snackbar
 import com.screenslicerfree.MainActivity
 import com.screenslicerfree.database.ScreenshotItem
-import com.screenslicerfree.database.ScreenshotsDatabase
 import com.screenslicerfree.gestures.action.database.AppItem
-import com.screenslicerfree.main_fragment.MainFragmentViewModel
 import com.screenslicerfree.R
 import org.chromium.base.CollectionUtil.forEach
 import tourguide.tourguide.ToolTip
@@ -249,11 +238,26 @@ fun editScreenShot(uriToEdit: Uri?, mainActivity: MainActivity?) {
 
 }
 
-fun copyTextToClipboard(context: Context, source: String){
+fun copyTextToClipboard(context: Context,
+                        source: String,
+                        snackBar: Snackbar?) {
+
     val clipboard = context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = ClipData.newPlainText("label", source)
-    clipboard.setPrimaryClip(clip)
-    Toast.makeText(context,context.getString(R.string.text_copied), Toast.LENGTH_LONG).show()
+
+        clipboard.setPrimaryClip(clip)
+
+    if (snackBar != null){
+        snackBar.apply {
+            setText(context.getString(R.string.text_copied))
+            setAction(context.getString(R.string.o_k), View.OnClickListener { dismiss() })
+            show()
+        }
+
+    } else{
+        Toast.makeText(context,context.getString(R.string.text_copied), Toast.LENGTH_LONG).show()
+    }
+
 }
 
  fun setMyTourGuide(activity: Activity, title: String,

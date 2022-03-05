@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Screen Slicer</string>
-    <string name="text_copied">Texto Copiado</string>
+    <string name="text_copied">El texto ha sido extraído y está listo para que lo pegues.</string>
     <string name="extracting">Extrayendo el texto, espere…</string>
     <string name="screenshot_deleted">Porción de pantalla borrado</string>
     <string name="screenshot_saved">Porción de pantalla guardado</string>
@@ -40,7 +40,7 @@
     <string name="how_to_move_crop_window">Pon otro dedo en la pantalla y\npodrás mover la ventana de corte.</string>
     <string name="double_tap">Doble\nclick\npara\ncerrar</string>
     <string name="extract_this_text">Acción Extraer Texto</string>
-    <string name="extract_this_text_message">El texto será extraído y copiado al portapapeles.</string>
+    <string name="extract_this_text_message">Esta es una opción de paga. Mira la siguiente publicidad y podrás extraer el texto de la imagen.</string>
     <string name="title_crop_view_tut">Recorta tu pantalla ahora.</string>
     <string name="description_cropt_view_tut">Arrastra esta ventana de sus equinas y luego suelta para obtener un recorte de la pantalla.\nDoble click para cerrar, ó para borrar la imagen mostrada.</string>
     <string name="title_welcome">!Bienvenid@¡</string>
@@ -59,4 +59,12 @@
     <string name="extract_text">extraer el texto</string>
     <string name="gesture_feature">usar doble swipe</string>
     <string name="buy_pro">version pro</string>
+    <string name="no_more_adds">Detener la publicidad.</string>
+    <string name="use_gestures">Usar doble swipe.</string>
+    <string name="extract_text_pro">Extraer el texto en imágenes.</string>
+    <string name="help_me_improve">Ayudarme a crear mejores apps.</string>
+    <string name="why_buy_pro">Con pro podrás:</string>
+    <string name="privacy_policy_url">"https://sites.google.com/view/appclaud-privacy-policy/home"</string>
+    <string name="ad_not_loaded">No se pudo cargar la publicidad, inténtalo más de nuevo.</string>
+    <string name="o_k">Ok</string>
 </resources>

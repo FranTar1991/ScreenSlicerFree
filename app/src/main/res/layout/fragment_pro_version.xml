@@ -11,7 +11,7 @@
         android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".main_fragment.ProVersionFragment">
+        tools:context=".ProVersionFragment">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/toolbar_layout"
@@ -40,14 +40,158 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/berkshire_swash"
-                    android:text="@string/buy_pro"
+                    android:text="@string/why_buy_pro"
                     android:textColor="@color/white"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    tools:text="@string/buy_pro" />
+                    tools:text="@string/why_buy_pro" />
             </androidx.appcompat.widget.Toolbar>
 
         </com.google.android.material.appbar.AppBarLayout>
+
+
+        <ImageView
+            android:id="@+id/imageView3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:alpha="0.4"
+            android:src="@drawable/ic_vector_pro"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout"
+            app:layout_constraintVertical_chainStyle="spread" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/no_adds_constraint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="@+id/use_gestures_constraint"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/use_gestures_constraint">
+
+                <ImageView
+                    android:id="@+id/no_adds_image"
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:src="@drawable/ic_no_more_adds"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/no_adds_txt"
+                    style="@style/my_text_in_pro_fragment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_more_adds"
+                    app:layout_constraintEnd_toEndOf="@+id/no_adds_image"
+                    app:layout_constraintStart_toStartOf="@+id/no_adds_image"
+                    app:layout_constraintTop_toBottomOf="@+id/no_adds_image" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/help_us_improve"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/use_gestures_constraint">
+
+                <ImageView
+                    android:id="@+id/help_us_improve_image"
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:src="@drawable/ic_help_me_grow_02"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/help_us_improve_txt"
+                    style="@style/my_text_in_pro_fragment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/help_me_improve"
+                    app:layout_constraintEnd_toEndOf="@+id/help_us_improve_image"
+                    app:layout_constraintStart_toStartOf="@+id/help_us_improve_image"
+                    app:layout_constraintTop_toBottomOf="@+id/help_us_improve_image" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/extract_text_constraint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/help_us_improve"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/help_us_improve">
+
+                <ImageView
+                    android:id="@+id/extract_text_constraint_image"
+                    android:layout_width="128dp"
+                    android:layout_height="128dp"
+                    android:src="@drawable/ic_extract_text_icon_2"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/extract_text_constraint_txt"
+                    style="@style/my_text_in_pro_fragment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/extract_text_pro"
+                    app:layout_constraintEnd_toEndOf="@+id/extract_text_constraint_image"
+                    app:layout_constraintStart_toStartOf="@+id/extract_text_constraint_image"
+                    app:layout_constraintTop_toBottomOf="@+id/extract_text_constraint_image" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/use_gestures_constraint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/no_adds_constraint"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/use_gestures_constraint_image"
+                    android:layout_width="124dp"
+                    android:layout_height="128dp"
+                    android:src="@drawable/ic_double_swipe_02"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/use_gestures_constraint_txt"
+                    style="@style/my_text_in_pro_fragment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/baloo_chettan"
+                    android:text="@string/use_gestures"
+                    app:layout_constraintEnd_toEndOf="@+id/use_gestures_constraint_image"
+                    app:layout_constraintStart_toStartOf="@+id/use_gestures_constraint_image"
+                    app:layout_constraintTop_toBottomOf="@+id/use_gestures_constraint_image" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button
             android:id="@+id/launch_button"
@@ -55,24 +199,13 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:text="Button"
+            android:text="@string/buy_pro"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView3" />
+            app:layout_constraintEnd_toEndOf="@+id/constraintLayout3"
+            app:layout_constraintStart_toStartOf="@+id/constraintLayout3"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout3" />
 
-        <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/launch_button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout"
-            app:layout_constraintVertical_chainStyle="spread"
-            tools:src="@tools:sample/backgrounds/scenic" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

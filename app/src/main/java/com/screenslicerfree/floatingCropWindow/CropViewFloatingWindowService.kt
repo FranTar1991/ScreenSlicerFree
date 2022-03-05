@@ -9,19 +9,23 @@ import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.*
 import android.provider.Settings
-import android.util.Log
 import android.view.*
+import android.widget.ImageView
+import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import com.google.android.gms.ads.*
 import com.screenslicerfree.MainActivity
 
 import com.screenslicerfree.floatingCropWindow.cropWindow.CropView
 import com.screenslicerfree.floatingCropWindow.cropWindow.ScreenShotTaker
 import com.screenslicerfree.gestures.action.CustomConstraintLayout
 import com.screenslicerfree.gestures.action.database.AppItem
-import com.screenslicerfree.gestures.view.GesturesFragmentSettings
 import com.screenslicerfree.gestures.view.viewmodel.GestureSettingsViewModel
 import com.screenslicerfree.notification_utils.setUpNotification
 import com.screenslicerfree.utils.*
 import com.screenslicerfree.R
+import com.screenslicerfree.adds.ConstraintLayoutForAdBanner
+import com.screenslicerfree.adds.loadBanner
 
 
 import tourguide.tourguide.TourGuide
@@ -30,6 +34,9 @@ import tourguide.tourguide.TourGuide
 class CropViewFloatingWindowService: Service() {
 
 
+    private lateinit var adBannerView: ConstraintLayoutForAdBanner
+    private var bannerIsAttached: Boolean = false
+    private lateinit var adView: AdView
     private var floatingGestureView: CustomConstraintLayout? = null
     private var newDrawableOnSwitch: Int = R.drawable.ic_toggle_off
     private val SHOW_SECOND_TOUR: String ="show_second_tour"
@@ -67,6 +74,7 @@ class CropViewFloatingWindowService: Service() {
     override fun onCreate() {
         super.onCreate()
         manager = WindowManagerClass.getMyWindowManager(applicationContext)
+
     }
 
     fun setServiceCallBacks(floatingAndTakeScreenShotServiceCallback: FloatingWindowListener?, from: String){
@@ -260,11 +268,16 @@ class CropViewFloatingWindowService: Service() {
 
     private fun setUpFloatingWidget(newPosition: Pair<Float?, Float?>) {
 
-        floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null) as CropView
+        floatingView  = LayoutInflater.from(this).inflate(R.layout.crop_view, null)
+                as CropView
         floatingView?.setOnRequestTakeScreenShotListener(object: OnRequestTakeScreenShotListener {
             override fun onRequestScreenShot(rect: Rect) {
                 screenShotTaker?.getStartIntent(applicationContext, -1, mData)?.let {
                     screenShotTaker?.setUpScreenCapture(it, rect)
+                    if (!bannerIsAttached){
+                        setBannerAd(newPosition)
+                    }
+
                 }
             }
 
@@ -285,9 +298,7 @@ class CropViewFloatingWindowService: Service() {
 
         }
         )
-
-
-         manager?.addMyCropView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,
+         manager?.addMovableView(floatingView, ViewGroup.LayoutParams.WRAP_CONTENT,
          newPosition.first?.toInt() ?: 0, newPosition.second?.toInt() ?: 0)
 
 
@@ -303,7 +314,60 @@ class CropViewFloatingWindowService: Service() {
 
     }
 
-     fun closeTourGuide(key: String) {
+    private fun setBannerAd(newPosition: Pair<Float?, Float?>) {
+        adBannerView  = LayoutInflater.from(this).inflate(R.layout.banner_ad_layout, null)
+                as ConstraintLayoutForAdBanner
+
+        adBannerView.findViewById<ImageView>(R.id.close_img).setOnClickListener {
+            adBannerView.getWindowCallback().onClose()
+        }
+
+        adView = adBannerView.findViewById(R.id.banner)
+
+
+        loadBanner(adView)
+        adView.adListener = object: AdListener() {
+            override fun onAdLoaded() {
+                manager?.addMovableView(
+                    adBannerView, ViewGroup.LayoutParams.WRAP_CONTENT,
+                    newPosition.first?.toInt() ?: 0, newPosition.second?.toInt() ?: 0)
+            }
+
+            override fun onAdFailedToLoad(adError : LoadAdError) {
+                // Code to be executed when an ad request fails.
+            }
+
+            override fun onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            override fun onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            override fun onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        }
+
+
+         var TAG = "MyAddsManager"
+        adBannerView.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
+            override fun onViewAttachedToWindow(p0: View?) {
+                bannerIsAttached = true
+            }
+
+            override fun onViewDetachedFromWindow(p0: View?) {
+                bannerIsAttached = false
+            }
+
+        })
+
+    }
+
+    fun closeTourGuide(key: String) {
         mTourGuideHandler?.cleanUp()
         if(showTourGuide){
             editor?.putBoolean(key, false)

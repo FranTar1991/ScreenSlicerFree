@@ -63,14 +63,11 @@ class ScreenshotsAdapter(
         ) {
             binding.screenshot = item
             binding.clickListener = clickListener
+            binding.viewModel = mainFragmentViewModel
             binding.executePendingBindings()
 
                 binding.selectedItem.isVisible = isActivated
                 itemView.isSelected = isActivated
-
-
-
-
 
         }
 

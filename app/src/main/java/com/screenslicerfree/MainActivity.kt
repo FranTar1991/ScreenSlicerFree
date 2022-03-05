@@ -1,11 +1,8 @@
 package com.screenslicerfree
 
 import android.Manifest
-import android.Manifest.permission.PACKAGE_USAGE_STATS
 import android.app.Activity
-import android.app.AppOpsManager
 import android.content.*
-import android.content.Intent.*
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.projection.MediaProjectionManager
@@ -13,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Process
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -24,9 +20,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.screenslicerfree.adds.*
 import com.screenslicerfree.database.ScreenshotItem
 import com.screenslicerfree.database.ScreenshotsDatabase
 import com.screenslicerfree.floatingCropWindow.CropViewFloatingWindowService
@@ -36,25 +34,11 @@ import com.screenslicerfree.main_fragment.MainFragmentViewModel
 import com.screenslicerfree.main_fragment.MainFragmentViewmodelFactory
 import com.screenslicerfree.utils.*
 import kotlin.properties.Delegates
-import android.app.usage.UsageStatsManager
 
-import android.app.usage.UsageStats
-
-import android.os.Build.VERSION_CODES
-
-import android.os.Build.VERSION
-import android.util.Log
-
-import androidx.annotation.NonNull
-import androidx.core.content.PermissionChecker
 import com.screenslicerfree.gestures.action.database.AllAppsDatabase
-import com.screenslicerfree.gestures.action.database.AppItem
 import com.screenslicerfree.gestures.view.viewmodel.GestureSettingsViewModel
 import com.screenslicerfree.gestures.view.viewmodel.GesturesSettingsViewModelFactory
-import com.screenslicerfree.notification_utils.NotificationUtils
-import com.screenslicerfree.notification_utils.cancelNotification
-import com.screenslicerfree.notification_utils.setUpNotification
-import com.screenslicerfree.R
+
 
 
 //Use this variables instead of OnActivityResult
@@ -71,16 +55,18 @@ private var mData: Intent? = null
 
 class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDialog.NoticeDialogListener{
 
-
+    private var showTourGuide: Boolean = true
+    private val SHOW_SECOND_TOUR: String ="show_second_tour"
+    private var sharedPreferences: SharedPreferences? = null
+    private lateinit var myInterstitialAdManager: MyInterstitialAd
 
     private lateinit var screenshotViewModel: MainFragmentViewModel
     private val viewModel: MainActivityViewModel by viewModels()
     private var gestureSettingsViewModel: GestureSettingsViewModel? = null
 
-
     private lateinit var permissionsDialog: PermissionsDialog
     private var myBroadcastReceiverToClose: BroadcastReceiver? = null
-
+    private var TAG = "MyAddsManager"
 
     //These are used to connect the Crop window service with it´s calling activity
     private var bound by Delegates.notNull<Boolean>()
@@ -122,6 +108,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
     companion object {
         var currentPosition: Int = 0
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,7 +123,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         val application = requireNotNull(this).application
         val dataSource = ScreenshotsDatabase.getInstance(application).screenshotsDAO
-        val viewModelFactory = MainFragmentViewmodelFactory(dataSource, application)
+        val viewModelFactory = MainFragmentViewmodelFactory(dataSource)
 
         gestureSettingsViewModel = setGestureSettingsViewModel()
 
@@ -152,9 +139,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         screenshotViewModel =
             ViewModelProvider(this, viewModelFactory).get(MainFragmentViewModel::class.java)
 
+        startSharedPreferences()
         setLaunchers()
 
        bindTheServices()
+
+
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
                 this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -184,7 +174,10 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             }
         })
 
-
+        myInterstitialAdManager = MyInterstitialAd(this,
+            cropWindowInterstitialUnitID,
+            true, null,
+            ::callCropWindow)
 
     }
 
@@ -208,6 +201,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             GestureSettingsViewModel::class.java)
     }
 
+    private fun startSharedPreferences() {
+        sharedPreferences = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE)
+        showTourGuide =  sharedPreferences?.getBoolean(SHOW_SECOND_TOUR, true) ?: true
+
+        println("new drawable: ${sharedPreferences?.getBoolean(MY_VIEW_ID, false)}")
+    }
 
     fun getGestureViewModel(): GestureSettingsViewModel? {
         return gestureSettingsViewModel
@@ -244,7 +243,12 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
                     val data: Intent? = result.data
                     mData = data
 
-                    callCropWindow()
+                    if(showTourGuide){
+                        callCropWindow()
+                    }else{
+                        myInterstitialAdManager.showInterstitial()
+                    }
+
 
                 } else {
                     //show toast explaining that without this permission the app can´t work
@@ -278,6 +282,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
             }
     }
 
+
     /**
      * if the imageUri is null then the user wants to show the crop window so we need to check if we have the proper
      * permissions for that, then if it is not null it means that the user wants to show an image in a floating window
@@ -304,9 +309,14 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
         if (mData==null){
             getPermissionToRecord()
         } else {
-            callCropWindow()
+           myInterstitialAdManager. showInterstitial()
         }
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        myInterstitialAdManager.loadInterstitial()
     }
 
     private fun callFloatingImageView() {
@@ -378,7 +388,7 @@ class MainActivity : AppCompatActivity(), FloatingWindowListener, PermissionsDia
 
         if (bound) {
             cropServiceViewFloatingWindowService?.stopForeground(true)
-            cropServiceViewFloatingWindowService?.setServiceCallBacks(null, "destroy") // unregister
+//            cropServiceViewFloatingWindowService?.setServiceCallBacks(null, "destroy") // unregister
 
             unbindService(cropViewFloatingWindowServiceConnection)
             bound = false

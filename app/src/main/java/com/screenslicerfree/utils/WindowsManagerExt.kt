@@ -2,14 +2,15 @@ package com.screenslicerfree.utils
 
 import android.graphics.PixelFormat
 import android.os.Build
-import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
+import com.screenslicerfree.adds.ConstraintLayoutForAdBanner
 import com.screenslicerfree.floatingCropWindow.cropWindow.CropView
 
-fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int, initY: Int){
+fun WindowManager.addMovableView(myFloatingView: ViewMobil?, mode: Int, initX: Int, initY: Int){
 
     val params = WindowManager.LayoutParams(
         mode,
@@ -20,7 +21,12 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
     )
 
     //Specify the view position
-    params.gravity = Gravity.TOP or Gravity.START    //Initially view will be added to top-left corner
+    if (myFloatingView is ConstraintLayoutForAdBanner){
+        params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+    } else {
+        params.gravity = Gravity.START or Gravity.TOP
+    }
+ //Initially view will be added to top-left corner
     params.x = initX
     params.y = initY
 
@@ -60,8 +66,12 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
                     params.y = initialY + (event.rawY - initialTouchY).toInt()
 
                     //Update the layout with new X & Y coordinate
-                    updateViewLayout(myFloatingView, params)
-                    myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
+                    updateViewLayout(myFloatingView as View, params)
+
+                    if (myFloatingView is CropView){
+                        myFloatingView.setNewPositionOfSecondRect(params.x,params.y)
+                    }
+
 
                 }
             }
@@ -70,17 +80,17 @@ fun WindowManager.addMyCropView(myFloatingView: CropView?, mode: Int, initX: Int
         override fun onClose() {
              INITIAL_POINT_Y = 0
              INITIAL_POINT_X = 0
-            removeView(myFloatingView)
+            removeView(myFloatingView as View)
         }
 
     })
 
 
-        addView(myFloatingView, params)
+        addView(myFloatingView as View, params)
 
 
 }
-fun WindowManager.removeMyView(myFloatingView: CropView, mode: Int, newX: Int, newY: Int){
-    removeView(myFloatingView)
-    addMyCropView(myFloatingView, mode, newX, newY)
+fun WindowManager.removeMyView(myFloatingView: ViewMobil, mode: Int, newX: Int, newY: Int){
+    removeView(myFloatingView as View)
+    addMovableView(myFloatingView, mode, newX, newY)
 }
