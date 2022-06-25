@@ -21,8 +21,7 @@ import com.screenslicerfree.databinding.ListItemPictureBinding
 class ScreenshotsAdapter(
     private val clickListener: ScreenshotListener,
     private val mainFragmentViewModel: MainFragmentViewModel
-) : ListAdapter<ScreenshotItem,
-        ScreenshotsAdapter.ViewHolder>(ScreenshotAdapterDiffCallback()) {
+) : ListAdapter<ScreenshotItem, ScreenshotsAdapter.ViewHolder> (ScreenshotAdapterDiffCallback()) {
     var tracker: SelectionTracker<String>? = null
 
     init {
@@ -46,7 +45,8 @@ class ScreenshotsAdapter(
     }
 
 
-     class ViewHolder private constructor(private val binding: ListItemPictureBinding, private val adapter: ScreenshotsAdapter)
+     class ViewHolder private constructor(private val binding: ListItemPictureBinding,
+                                          private val adapter: ScreenshotsAdapter)
         : RecyclerView.ViewHolder(binding.root) {
 
          fun getItemDetails(): ItemDetailsLookup.ItemDetails<String> =

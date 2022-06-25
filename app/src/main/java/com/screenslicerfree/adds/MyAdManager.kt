@@ -51,6 +51,7 @@ class MyInterstitialAd(private val activity: MainActivity, private val addUnitID
 
      private fun setInterstitialCallBacks(mInterstitialAd: InterstitialAd?){
         mInterstitialAd?.fullScreenContentCallback = object: FullScreenContentCallback() {
+
             override fun onAdDismissedFullScreenContent() {
                 Log.i(TAG, "Ad was dismissed.")
                 if (!showAdFirstThenAction){
@@ -61,7 +62,9 @@ class MyInterstitialAd(private val activity: MainActivity, private val addUnitID
 
             }
 
-            override fun onAdFailedToShowFullScreenContent(adError: AdError?) {
+
+
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 Log.i(TAG, "Ad failed to show.: $adError")
                 action()
                 isLoaded = false

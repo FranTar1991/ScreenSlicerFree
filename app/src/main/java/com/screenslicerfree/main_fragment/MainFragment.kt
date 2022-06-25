@@ -234,6 +234,7 @@ class MainFragment : Fragment() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = manager
         mainFragmentViewModel.setIsLoading(true)
+
         mainFragmentViewModel.screenshots.observe(viewLifecycleOwner, Observer {
             it?.let { newList ->
 
