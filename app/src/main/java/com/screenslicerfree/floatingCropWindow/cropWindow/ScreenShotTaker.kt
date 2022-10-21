@@ -98,10 +98,17 @@ class ScreenShotTaker(
      */
 
     private fun callOptionsFloatingWindowService(){
-        optionsWindowView = OptionsWindowView(context, cropView).apply {
-            this.setOnOnOptionsWindowSelected(this@ScreenShotTaker)
+
+        if (optionsWindowView == null){
+            optionsWindowView = OptionsWindowView(context, cropView).apply {
+                this.setOnOnOptionsWindowSelected(this@ScreenShotTaker)
+            }
+            optionsWindowView?.createView()
+        }else{
+            optionsWindowView?.reEnableButtons()
         }
-        optionsWindowView?.createView()
+
+
     }
 
     /**
@@ -124,10 +131,11 @@ class ScreenShotTaker(
                     ).let { baseBitmap ->
 
                         baseBitmap?.apply {
+                            callOptionsFloatingWindowService()
                             baseBitmap.copyPixelsFromBuffer(buffer)
                             croppedBitmap = cropBaseBitmap(baseBitmap)
                             cropViewFloatingWindowService.setCroppedImage(croppedBitmap)
-                            callOptionsFloatingWindowService()
+
                             baseBitmap.recycle()
 
                         }
@@ -158,7 +166,7 @@ class ScreenShotTaker(
         cropView?.resetView()
 
         mySavedScreenshotUri = saveImageToPhotoGallery(context.contentResolver, croppedBitmap, screenShotName)
-        optionsWindowView?.destroyView()
+        optionsWindowView?.disableActionButtons()
 
         mainActivityReference.saveScreenshotWIthPermission(mySavedScreenshotUri.toString(), screenShotName)
 
@@ -191,7 +199,7 @@ class ScreenShotTaker(
     override fun onDeleteScreenshotSelected() {
         cropView?.showDrawable = true
         cropView?.resetView()
-        optionsWindowView?.destroyView()
+        optionsWindowView?.disableActionButtons()
         Toast.makeText(context,context.getString(R.string.screenshot_deleted),Toast.LENGTH_SHORT).show()
     }
 

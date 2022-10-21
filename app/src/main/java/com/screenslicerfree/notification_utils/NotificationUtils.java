@@ -2,6 +2,7 @@ package com.screenslicerfree.notification_utils;
 
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
 import static com.screenslicerfree.utils.UtilsKt.MY_INTENT_EXTRA;
 import static com.screenslicerfree.utils.UtilsKt.MY_VIEW_ID;
 
@@ -67,7 +68,7 @@ public class NotificationUtils {
 
     private static Notification createNotification(@NonNull Context context, int drawable) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            updateFlag = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+            updateFlag = FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
 
         } else {
             updateFlag = PendingIntent.FLAG_UPDATE_CURRENT;
@@ -100,14 +101,15 @@ public class NotificationUtils {
     private static void setHomeIntent(Context context, RemoteViews notificationLayout) {
         Intent homeIntent = new Intent(context, MainActivity.class);
         PendingIntent homePendingIntent = PendingIntent.getActivity(context, 0 ,
-                homeIntent, 0);
+                homeIntent, FLAG_IMMUTABLE);
+
         notificationLayout.setOnClickPendingIntent(R.id.home_btn,homePendingIntent);
     }
 
     private static void setCloseIntent(Context context, RemoteViews notificationLayout) {
         Intent closeIntent = new Intent(context, NotificationBroadcastReceiver.class);
         PendingIntent closePendingIntent = PendingIntent.getBroadcast(context, 0 ,
-                closeIntent, 0);
+                closeIntent, FLAG_IMMUTABLE);
         notificationLayout.setOnClickPendingIntent(R.id.close_btn,closePendingIntent);
     }
 
@@ -122,7 +124,7 @@ public class NotificationUtils {
       PendingIntent cropWindowPendingIntent = PendingIntent.getService(context,
                 0 ,
                 cropWindowIntent,
-                FLAG_CANCEL_CURRENT);
+              FLAG_IMMUTABLE);
 
         notificationLayout.setOnClickPendingIntent(R.id.crop_window_btn, cropWindowPendingIntent);
 

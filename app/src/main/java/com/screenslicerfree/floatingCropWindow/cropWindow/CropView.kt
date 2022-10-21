@@ -9,7 +9,7 @@ import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.os.Handler
+
 import android.os.Looper
 import android.util.AttributeSet
 import android.util.DisplayMetrics
@@ -92,9 +92,6 @@ class CropView @JvmOverloads constructor(context: Context,
     private var mIsToClose: Boolean = false
     private var isMultiTouch: Boolean = false
     var thisOptionsView: OptionsWindowView? = null
-
-    private lateinit var mHandler: Handler
-    private lateinit var mRunnable: Runnable
 
 
     var showDrawable: Boolean = true
@@ -222,8 +219,7 @@ class CropView @JvmOverloads constructor(context: Context,
         shakeItBaby(context)
         setUpZoomFeature()
         startSharedPreferences()
-        setHandler()
-        startHandler()
+
         setInitialRects()
 
 
@@ -234,16 +230,7 @@ class CropView @JvmOverloads constructor(context: Context,
     fun removeMyWaitDrawable(){
         drawWaitDrawable = false
     }
-    private fun setHandler(){
-        // Initializing the handler and the runnable
-        mHandler = Handler(Looper.getMainLooper())
-        mRunnable = Runnable {
-            if(showDrawable && rectangleFullWIdth == rectangleFullHeight && !moveView){
-                drawWaitDrawable = true
-            }
 
-        }
-    }
 
     private fun startSharedPreferences() {
         sharedPreferences = context.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE)
@@ -251,21 +238,13 @@ class CropView @JvmOverloads constructor(context: Context,
         showPutAnotherFingerString = sharedPreferences?.getBoolean(SHOW_ANOTHER_FINGER_STRING, true) ?: true
     }
 
-    // start handler function
-    private fun startHandler(){
-        mHandler.postDelayed(mRunnable, TIME_TO_SET_WAITING_DRAWABLE)
-    }
 
-    // stop handler function
-    private fun stopHandler(){
-        mHandler.removeCallbacks(mRunnable)
-    }
 
     private fun setUpZoomFeature() {
         attacher.setZoomable(false)
 
         attacher.setOnDoubleTapListener(object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent?): Boolean {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
                 if (attacher.isZoomEnabled) {
                     attacher.setZoomable(false)
                 }
@@ -304,7 +283,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
       doubleTapGesture = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
 
-          override fun onDoubleTap(e: MotionEvent?): Boolean {
+          override fun onDoubleTap(e: MotionEvent): Boolean {
 
               if(showDrawable){
                   callBackForWindowManager.onClose()
@@ -313,7 +292,7 @@ class CropView @JvmOverloads constructor(context: Context,
               } else {
                   croppedImage = null
                   showDrawable = true
-                  thisOptionsView?.destroyView()
+                  thisOptionsView?.disableActionButtons()
 
               }
 
@@ -327,17 +306,17 @@ class CropView @JvmOverloads constructor(context: Context,
               return super.onDoubleTap(e)
           }
 
-          override fun onSingleTapUp(e: MotionEvent?): Boolean {
+          override fun onSingleTapUp(e: MotionEvent): Boolean {
 
               if (drawWaitDrawable){
                   drawWaitDrawable = false
-                  stopHandler()
-                  startHandler()
               }
               return super.onSingleTapUp(e)
           }
       })
     }
+
+
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
@@ -409,8 +388,7 @@ class CropView @JvmOverloads constructor(context: Context,
 
         manager.removeMyView(this, WRAP_CONTENT, INITIAL_POINT_X, INITIAL_POINT_Y)
         drawWaitDrawable = false
-        stopHandler()
-        startHandler()
+
     }
 
     //region: Overrides
@@ -565,17 +543,14 @@ class CropView @JvmOverloads constructor(context: Context,
         }
 
     }
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
 
         doubleTapGesture.onTouchEvent(event)
-        val action = event?.actionMasked
-
-        event?.let {
+        val action = event.actionMasked
             if (event.pointerCount > 1){
                 isMultiTouch = true
             }
             mActivePointerId = event.getPointerId(0)
-        }
 
         when(action){
             ACTION_DOWN-> {
@@ -605,7 +580,7 @@ class CropView @JvmOverloads constructor(context: Context,
                     }
                     else ->    {
 
-                        thisOptionsView?.destroyView()
+                        thisOptionsView?.hideOptionsView(View.GONE)
                         showDrawable = false
                         changeWrapMode(MATCH_PARENT)
                     }
@@ -632,6 +607,7 @@ class CropView @JvmOverloads constructor(context: Context,
                 moveView = false
                 isMultiTouch = false
                 setBackgroundShadowBounds()
+                thisOptionsView?.hideOptionsView(View.VISIBLE)
 
             }
             ACTION_MOVE -> {
@@ -703,6 +679,7 @@ class CropView @JvmOverloads constructor(context: Context,
         }
         return true
     }
+
 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -832,8 +809,8 @@ class CropView @JvmOverloads constructor(context: Context,
     }
 
     //region: Set callbacks
-    override fun setWindowManagerCallback(onVIewCropWindowListener: OnMoveCropWindowListener){
-        this.callBackForWindowManager = onVIewCropWindowListener
+    override fun setWindowManagerCallback(vCWindow: OnMoveCropWindowListener){
+        this.callBackForWindowManager = vCWindow
     }
     fun setOnRequestTakeScreenShotListener(onRequestTakeScreenShotListener: OnRequestTakeScreenShotListener){
         this.requestTakeScreenShotCallback = onRequestTakeScreenShotListener

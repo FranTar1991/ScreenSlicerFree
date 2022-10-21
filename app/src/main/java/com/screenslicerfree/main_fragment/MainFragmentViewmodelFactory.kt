@@ -9,7 +9,7 @@ class MainFragmentViewmodelFactory (
     private val dataSource: DAOScrenshots
 ) : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainFragmentViewModel::class.java)) {
             return MainFragmentViewModel(dataSource) as T
         }

@@ -207,14 +207,15 @@ class CropViewFloatingWindowService: Service() {
 
         manager?.addView(floatingGestureView, paramsF)
         floatingGestureView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
-            override fun onViewAttachedToWindow(p0: View?) {
+
+            override fun onViewAttachedToWindow(p0: View) {
                 isGestureWindowOn = true
                 floatingGestureView?.apply{
                     setListOfAppsInException(gestureSettingsViewModel?.apps?.value)
                 }
             }
 
-            override fun onViewDetachedFromWindow(p0: View?) {
+            override fun onViewDetachedFromWindow(p0: View) {
                 isGestureWindowOn = false
             }
 
@@ -274,9 +275,9 @@ class CropViewFloatingWindowService: Service() {
             override fun onRequestScreenShot(rect: Rect) {
                 screenShotTaker?.getStartIntent(applicationContext, -1, mData)?.let {
                     screenShotTaker?.setUpScreenCapture(it, rect)
-                    if (!bannerIsAttached){
-                        setBannerAd(newPosition)
-                    }
+//                    if (!bannerIsAttached){
+//                        setBannerAd(newPosition)
+//                    }
 
                 }
             }
@@ -287,12 +288,12 @@ class CropViewFloatingWindowService: Service() {
         })
 
         floatingView?.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
-            override fun onViewAttachedToWindow(p0: View?) {
+            override fun onViewAttachedToWindow(p0: View) {
                 isCropWindowOn = true
 
             }
 
-            override fun onViewDetachedFromWindow(p0: View?) {
+            override fun onViewDetachedFromWindow(p0: View) {
               isCropWindowOn = false
             }
 
@@ -355,11 +356,12 @@ class CropViewFloatingWindowService: Service() {
 
          var TAG = "MyAddsManager"
         adBannerView.addOnAttachStateChangeListener(object: View.OnAttachStateChangeListener{
-            override fun onViewAttachedToWindow(p0: View?) {
+
+            override fun onViewAttachedToWindow(p0: View) {
                 bannerIsAttached = true
             }
 
-            override fun onViewDetachedFromWindow(p0: View?) {
+            override fun onViewDetachedFromWindow(p0: View) {
                 bannerIsAttached = false
             }
 

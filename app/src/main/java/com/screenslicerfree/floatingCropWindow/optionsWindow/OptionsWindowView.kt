@@ -1,16 +1,9 @@
 package com.screenslicerfree.floatingCropWindow.optionsWindow
+
 import android.content.Context
 import android.content.Context.WINDOW_SERVICE
-
 import android.graphics.PixelFormat
-
 import android.view.*
-
-import android.view.WindowManager
-
-import android.view.Gravity
-
-import android.view.LayoutInflater
 import android.view.MotionEvent.*
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -18,13 +11,17 @@ import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import androidx.core.graphics.drawable.DrawableCompat.setTint
 import androidx.core.view.isVisible
-
-import com.screenslicerfree.floatingCropWindow.cropWindow.CropView
-import com.screenslicerfree.utils.*
 import com.screenslicerfree.R
 import com.screenslicerfree.databinding.OptionsViewBinding
+import com.screenslicerfree.floatingCropWindow.cropWindow.CropView
+import com.screenslicerfree.utils.*
 
+
+private val downColor = R.color.primaryLightColor
+private val upColor = R.color.primaryColor
+private val disabledColor = R.color.Gray
 
 class OptionsWindowView (private val context: Context,
                          private val cropView: CropView?) : View.OnTouchListener {
@@ -46,13 +43,12 @@ class OptionsWindowView (private val context: Context,
     private var extractTxtButton: ImageView? = null
     private var copyTextBtn: ImageView? = null
     private var copyTextBk: ImageView? = null
-
     private var proImageView: ImageView? = null
 
     private var progressBar: ProgressBar? = null
     private var extractedTextEt: EditText? = null
     private var extractedTextContainer: ConstraintLayout? = null
-
+    private var isActionMove = false
 
     private var onOptionsWindowSelectedListener: OnOptionsWindowSelectedListener? = null
     private var mainContainer: ConstraintLayout? = null
@@ -63,17 +59,23 @@ class OptionsWindowView (private val context: Context,
     private var initialTouchY = 0f
 
 
+
+
     fun createView() {
+            setFloatingView()
+            setAllVariables()
+        reEnableButtons()
+    }
 
-        setFloatingView()
+    private fun setAllVariables() {
 
-       saveButton = mFloatingView?.save?.apply { setOnTouchListener(this@OptionsWindowView) }
-       deleteButton =  mFloatingView?.delete?.apply { setOnTouchListener(this@OptionsWindowView) }
-       shareButton = mFloatingView?.share?.apply { setOnTouchListener(this@OptionsWindowView) }
-       minMaxButton = mFloatingView?.minMax?.apply { setOnTouchListener(this@OptionsWindowView) }
-       editButton = mFloatingView?.edit?.apply { setOnTouchListener(this@OptionsWindowView) }
+        saveButton = mFloatingView?.save?.apply { setOnTouchListener(this@OptionsWindowView) }
+        deleteButton =  mFloatingView?.delete?.apply { setOnTouchListener(this@OptionsWindowView) }
+        shareButton = mFloatingView?.share?.apply { setOnTouchListener(this@OptionsWindowView) }
+        minMaxButton = mFloatingView?.minMax?.apply { setOnTouchListener(this@OptionsWindowView) }
+        editButton = mFloatingView?.edit?.apply { setOnTouchListener(this@OptionsWindowView) }
         extractTxtButton = mFloatingView?.extractText?.apply { setOnTouchListener(this@OptionsWindowView) }
-       copyTextBtn = mFloatingView?.copyText?.apply { setOnTouchListener(this@OptionsWindowView) }
+        copyTextBtn = mFloatingView?.copyText?.apply { setOnTouchListener(this@OptionsWindowView) }
 
         proImageView = mFloatingView?.proVector
         mainContainer = mFloatingView?.mainBtnContainer
@@ -99,7 +101,6 @@ class OptionsWindowView (private val context: Context,
                 setFocusOnThisView(false)
             }
         }
-
     }
 
     private fun setFocusOnThisView(setFocusToThisView: Boolean) {
@@ -127,6 +128,7 @@ class OptionsWindowView (private val context: Context,
         mFloatingView = OptionsViewBinding.inflate(context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
                 as LayoutInflater)
 
+
         //Add the view to the window.
          params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -141,20 +143,23 @@ class OptionsWindowView (private val context: Context,
 
         //Specify the view position
         params.gravity =
-            Gravity.CENTER or Gravity.END //Initially view will be added to top-left corner
+            Gravity.CENTER //Initially view will be added to top-left corner
 
         //Add the view to the window
 
         //Add the view to the window
         mWindowManager = context.getSystemService(WINDOW_SERVICE) as WindowManager
         mWindowManager?.addView(mFloatingView?.root, params)
+
+
+
     }
 
     fun destroyView() {
         mFloatingView?.root?.let {
             if(it.isAttachedToWindow){
                 if (mFloatingView != null) {
-                    mWindowManager?.removeView(mFloatingView?.root)
+                   mWindowManager?.removeView(mFloatingView?.root)
 
                 }
             }
@@ -172,13 +177,27 @@ class OptionsWindowView (private val context: Context,
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
 
+
+
         when(event?.actionMasked){
             ACTION_DOWN -> {
+                initialX = params.x
+                initialY = params.y
+                initialTouchX = event.rawX
+                initialTouchY = event.rawY
                 setChangeColor(v?.id, ACTION_DOWN)
+            }
+            ACTION_MOVE -> {
+                params.x = initialX + (event.rawX - initialTouchX).toInt()
+                params.y = initialY + (event.rawY - initialTouchY).toInt()
+                isActionMove = true
+                mWindowManager?.updateViewLayout(mFloatingView?.root, params)
+                return true
             }
             ACTION_UP -> {
                 setChangeColor(v?.id, ACTION_UP)
-                onTouchButton(v?.id)
+                if (!isActionMove) onTouchButton(v?.id)
+                isActionMove = false
             }
         }
 
@@ -187,35 +206,34 @@ class OptionsWindowView (private val context: Context,
 
     private fun setChangeColor(id: Int?, action: Int) {
 
-        val downColor = R.color.primaryLightColor
-        val upColor = R.color.primaryColor
+
 
         if (action == ACTION_DOWN){
 
             when(id){
-                R.id.save ->{ setTint(saveButtonBc!!, downColor) }
-                R.id.delete ->{   setTint(deleteButtonBc!!, downColor)}
-                R.id.share ->{  setTint(shareButtonBc!!, downColor)}
-                R.id.edit ->{  setTint(editButtonBc!!, downColor)}
-                R.id.min_max ->{   setTint(minMaxButtonBk!!, downColor)}
-                R.id.extract_text ->{setTint(extractTxtBc!!, downColor)}
-                R.id.copy_text ->{setTint(copyTextBk!!, downColor)}
+                R.id.save ->{ setBackColor(saveButtonBc!!, downColor) }
+                R.id.delete ->{   setBackColor(deleteButtonBc!!, downColor)}
+                R.id.share ->{  setBackColor(shareButtonBc!!, downColor)}
+                R.id.edit ->{  setBackColor(editButtonBc!!, downColor)}
+                R.id.min_max ->{   setBackColor(minMaxButtonBk!!, downColor)}
+                R.id.extract_text ->{setBackColor(extractTxtBc!!, downColor)}
+                R.id.copy_text ->{setBackColor(copyTextBk!!, downColor)}
 
             }
         } else{
             when(id){
-                R.id.save ->{ setTint(saveButtonBc!!, upColor) }
-                R.id.delete ->{   setTint(deleteButtonBc!!, upColor)}
-                R.id.share ->{  setTint(shareButtonBc!!, upColor)}
-                R.id.edit ->{  setTint(editButtonBc!!, upColor)}
-                R.id.min_max ->{   setTint(minMaxButtonBk!!, upColor)}
-                R.id.extract_text ->{setTint(extractTxtBc!!, upColor)}
-                R.id.copy_text->{setTint(copyTextBk!!, upColor)}
+                R.id.save ->{ setBackColor(saveButtonBc!!, upColor) }
+                R.id.delete ->{   setBackColor(deleteButtonBc!!, upColor)}
+                R.id.share ->{  setBackColor(shareButtonBc!!, upColor)}
+                R.id.edit ->{  setBackColor(editButtonBc!!, upColor)}
+                R.id.min_max ->{   setBackColor(minMaxButtonBk!!, upColor)}
+                R.id.extract_text ->{setBackColor(extractTxtBc!!, upColor)}
+                R.id.copy_text->{setBackColor(copyTextBk!!, upColor)}
             }
         }
     }
 
-    private fun setTint(button: ImageView, color: Int) {
+    private fun setBackColor(button: ImageView, color: Int) {
         DrawableCompat.setTint(
             DrawableCompat.wrap(button.drawable),
             ContextCompat.getColor(context, color)
@@ -283,4 +301,54 @@ class OptionsWindowView (private val context: Context,
     fun hideProgressBar() {
         progressBar?.visibility = GONE
     }
+
+     fun disableActionButtons() {
+         saveButton?.setEnabledFeature(false, null)
+         saveButtonBc?.setEnabledFeature(false, disabledColor)
+
+         deleteButton?.setEnabledFeature(false, null)
+         deleteButtonBc?.setEnabledFeature(false, disabledColor)
+
+         shareButton?.setEnabledFeature(false, null)
+         shareButtonBc?.setEnabledFeature(false, disabledColor)
+
+         editButton?.setEnabledFeature(false, null)
+         editButtonBc?.setEnabledFeature(false, disabledColor)
+
+         extractTxtButton?.setEnabledFeature(false, null)
+         extractTxtBc?.setEnabledFeature(false, disabledColor)
+    }
+
+    fun reEnableButtons(){
+        saveButton?.setEnabledFeature(true, null)
+        saveButtonBc?.setEnabledFeature(true, upColor)
+
+        deleteButton?.setEnabledFeature(true, null)
+        deleteButtonBc?.setEnabledFeature(true, upColor)
+
+        shareButton?.setEnabledFeature(true, null)
+        shareButtonBc?.setEnabledFeature(true, upColor)
+
+        editButton?.setEnabledFeature(true, null)
+        editButtonBc?.setEnabledFeature(true, upColor)
+
+        extractTxtButton?.setEnabledFeature(true, null)
+        extractTxtBc?.setEnabledFeature(true, upColor)
+
+        minMaxButton?.setEnabledFeature(true, null)
+        minMaxButtonBk?.setEnabledFeature(true, upColor)
+    }
+}
+
+fun ImageView.setEnabledFeature(enabled: Boolean, backgroundColor: Int? ){
+       isEnabled = enabled
+
+    backgroundColor?.let {
+        setTint(
+            DrawableCompat.wrap(drawable),
+            ContextCompat.getColor(context, backgroundColor)
+        )
+    }
+
+
 }

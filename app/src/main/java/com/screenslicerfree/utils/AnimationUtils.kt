@@ -29,12 +29,12 @@ fun rotateImage(view: ImageView?, trigger: ImageView?, rounds: Float = -360f*3) 
 
 private fun ObjectAnimator.disableDuringAnimation(view: View){
     addListener(object : AnimatorListenerAdapter(){
-        override fun onAnimationStart(animation: Animator?) {
+        override fun onAnimationStart(animation: Animator) {
             super.onAnimationStart(animation)
             view.isEnabled = false
         }
 
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
             super.onAnimationEnd(animation)
             view.isEnabled = true
         }
